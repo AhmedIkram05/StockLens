@@ -81,15 +81,9 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.textGroup}>
                 <Text style={styles.rowTitle}>Local Data Storage</Text>
-                <Text style={styles.rowDescription}>All processing kept on device</Text>
+                <Text style={styles.rowDescription}>All processing kept on device (No cloud Storage)</Text>
               </View>
             </View>
-            <Switch
-              value={localStorageEnabled}
-              onValueChange={setLocalStorageEnabled}
-              trackColor={{ false: '#d1d5db', true: '#10b981' }}
-              thumbColor={'#ffffff'}
-            />
           </View>
         </View>
 
