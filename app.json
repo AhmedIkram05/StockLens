@@ -4,7 +4,7 @@
     "slug": "stocklens-app",
     "version": "1.0.0",
     "orientation": "portrait",
-  "icon": "./assets/StockLens Logo T.png",
+  "icon": "./assets/StockLens_Logo_T.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -17,14 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/StockLens Logo T.png",
+        "foregroundImage": "./assets/StockLens_Logo_T.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/StockLens Logo T.png"
+      "favicon": "./assets/StockLens_Logo_T.png"
     },
     "plugins": [
       "expo-sqlite"
