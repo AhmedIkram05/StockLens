@@ -189,9 +189,9 @@ const styles = StyleSheet.create({
     borderColor: '#10b981',
     backgroundColor: '#ffffff',
     borderRadius: 8,
-    padding: 12,
+    padding: 15,
     alignItems: 'center',
-    minWidth: 120,
+    alignSelf: 'stretch',
   },
   signUpButtonText: {
     color: '#10b981',

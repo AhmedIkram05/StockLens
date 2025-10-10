@@ -99,7 +99,6 @@ export default function ScanScreen() {
             style={styles.captureButton}
             onPress={takePicture}
           >
-            <View style={styles.captureButtonInner} />
           </TouchableOpacity>
         </View>
       </View>
@@ -162,7 +161,7 @@ const styles = StyleSheet.create({
   instructionText: {
     color: '#fff',
     fontSize: 16,
-    marginTop: 20,
+    marginTop: 10,
     textAlign: 'center',
     backgroundColor: '#00000080',
     padding: 10,
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: '#000000cc',
   },
   captureButton: {
     width: 70,
@@ -182,14 +181,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#ffffff',
-  },
-  captureButtonInner: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#ffffff',
   },
   previewContainer: {
     flex: 1,
@@ -219,7 +212,7 @@ const styles = StyleSheet.create({
   },
   processButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#10b981',
     padding: 15,
     borderRadius: 8,
     marginLeft: 10,
