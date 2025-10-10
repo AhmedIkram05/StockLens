@@ -12,7 +12,7 @@ import ProfileScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ReceiptDetailsScreen from '../screens/ReceiptDetailsScreen';
-import SplashScreen from '../screens/SplashScreen';
+import SplashScreen from '../screens/OnboardingScreen';
 import { useAuth } from '../contexts/AuthContext';
 
 export type RootStackParamList = {
