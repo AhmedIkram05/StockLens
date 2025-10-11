@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
     color: palette.white,
     ...typography.button,
     marginTop: spacing.sm,
+    marginBottom: spacing.xl,
     textAlign: 'center',
     backgroundColor: alpha.overlayBlack,
     padding: spacing.sm + spacing.xs,
