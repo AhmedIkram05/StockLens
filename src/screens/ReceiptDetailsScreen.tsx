@@ -166,10 +166,18 @@ export default function ReceiptDetailsScreen() {
           {YEAR_OPTIONS.map(year => (
             <TouchableOpacity
               key={year}
-              style={[styles.yearPill, year === selectedYears ? styles.yearPillActive : styles.yearPillInactive]}
+              style={[
+                styles.yearSegment,
+                year === selectedYears ? styles.yearSegmentActive : styles.yearSegmentInactive,
+              ]}
               onPress={() => setSelectedYears(year)}
             >
-              <Text style={[styles.yearText, year === selectedYears ? styles.yearTextActive : styles.yearTextInactive]}>
+              <Text
+                style={[
+                  styles.yearText,
+                  year === selectedYears ? styles.yearTextActive : styles.yearTextInactive,
+                ]}
+              >
                 {year}Y
               </Text>
             </TouchableOpacity>
@@ -204,11 +212,17 @@ export default function ReceiptDetailsScreen() {
           {YEAR_OPTIONS.map(year => (
             <TouchableOpacity
               key={`future-${year}`}
-              style={[styles.yearPill, year === selectedFutureYears ? styles.yearPillActive : styles.yearPillInactive]}
+              style={[
+                styles.yearSegment,
+                year === selectedFutureYears ? styles.yearSegmentActive : styles.yearSegmentInactive,
+              ]}
               onPress={() => setSelectedFutureYears(year)}
             >
               <Text
-                style={[styles.yearText, year === selectedFutureYears ? styles.yearTextActive : styles.yearTextInactive]}
+                style={[
+                  styles.yearText,
+                  year === selectedFutureYears ? styles.yearTextActive : styles.yearTextInactive,
+                ]}
               >
                 {year}Y
               </Text>
@@ -277,9 +291,9 @@ type Styles = {
   projectionTitle: TextStyle;
   projectionSubtitle: TextStyle;
   yearSelector: ViewStyle;
-  yearPill: ViewStyle;
-  yearPillActive: ViewStyle;
-  yearPillInactive: ViewStyle;
+  yearSegment: ViewStyle;
+  yearSegmentActive: ViewStyle;
+  yearSegmentInactive: ViewStyle;
   yearText: TextStyle;
   yearTextActive: TextStyle;
   yearTextInactive: TextStyle;
@@ -392,24 +406,29 @@ const styles = StyleSheet.create<Styles>({
   },
   yearSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: spacing.xl + spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: alpha.faintBlack,
+    padding: spacing.xs,
   },
-  yearPill: {
+  yearSegment: {
     flex: 1,
-    marginHorizontal: spacing.xs,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    marginHorizontal: spacing.xs / 2,
+    borderRadius: radii.pill,
   },
-  yearPillActive: {
+  yearSegmentActive: {
     backgroundColor: palette.green,
+    shadowColor: palette.green,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  yearPillInactive: {
-    backgroundColor: palette.white,
-    borderWidth: 1,
-    borderColor: alpha.faintBlack,
+  yearSegmentInactive: {
+    backgroundColor: 'transparent',
   },
   yearText: {
     ...typography.captionStrong,
