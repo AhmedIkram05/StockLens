@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { authService, SignUpData } from '../services/authService';
+import { palette, alpha } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
@@ -151,31 +153,31 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.lightGray,
   },
   scrollView: {
     flex: 1,
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xxl + spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...typography.pageTitle,
+    color: palette.black,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 20,
-    color: '#666666',
+    ...typography.pageSubtitle,
+    color: palette.black,
+    opacity: 0.7,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -183,56 +185,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    color: '#000000',
+    borderColor: alpha.faintBlack,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    ...typography.body,
+    color: palette.black,
   },
   createAccountButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: palette.green,
+    borderRadius: radii.md,
+    padding: spacing.md,
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
   },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: alpha.faintBlack,
   },
   createAccountButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
   disabledButtonText: {
-    color: '#999999',
+    color: alpha.mutedBlack,
   },
   loginContainer: {
     alignItems: 'center',
   },
   loginText: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 10,
+    ...typography.caption,
+    color: alpha.subtleBlack,
+    marginBottom: spacing.sm,
   },
   loginButton: {
     borderWidth: 2,
-    borderColor: '#10b981',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: palette.green,
+    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    padding: spacing.md,
     alignItems: 'center',
     minWidth: 120,
   },
   loginButtonText: {
-    color: '#10b981',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.green,
+    ...typography.button,
   },
 });

@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { palette, alpha } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 
 export default function ScanScreen() {
   const facing: CameraType = 'back';
@@ -109,33 +111,35 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: palette.black,
   },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.xl,
+    backgroundColor: palette.lightGray,
   },
   permissionText: {
-    fontSize: 18,
+  ...typography.body,
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
+    marginBottom: spacing.lg,
+    color: palette.black,
+    opacity: 0.7,
   },
   permissionButton: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 8,
+    backgroundColor: palette.green,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
   },
   permissionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
   cameraContainer: {
     flex: 1,
+    backgroundColor: palette.black,
   },
   camera: {
     flex: 1,
@@ -154,39 +158,40 @@ const styles = StyleSheet.create({
     width: 280,
     height: 500,
     borderWidth: 2,
-    borderColor: '#10b981',
-    borderRadius: 12,
+    borderColor: palette.green,
+    borderRadius: radii.md,
     backgroundColor: 'transparent',
   },
   instructionText: {
-    color: '#fff',
-    fontSize: 16,
-    marginTop: 10,
+    color: palette.white,
+    ...typography.button,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
     textAlign: 'center',
-    backgroundColor: '#00000080',
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: alpha.overlayBlack,
+    padding: spacing.sm + spacing.xs,
+    borderRadius: radii.md,
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#000000cc',
+    padding: spacing.xl,
+    backgroundColor: alpha.deepBlack,
   },
   captureButton: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#10b981',
+    backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: palette.white,
   },
   previewContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: palette.black,
   },
   previewImage: {
     flex: 1,
@@ -194,33 +199,31 @@ const styles = StyleSheet.create({
   },
   previewButtons: {
     flexDirection: 'row',
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: spacing.xl,
+    backgroundColor: alpha.deepBlack,
   },
   retakeButton: {
     flex: 1,
-    backgroundColor: '#666',
-    padding: 15,
-    borderRadius: 8,
-    marginRight: 10,
+    backgroundColor: alpha.subtleBlack,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    marginRight: spacing.md,
     alignItems: 'center',
   },
   retakeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
   processButton: {
     flex: 1,
-    backgroundColor: '#10b981',
-    padding: 15,
-    borderRadius: 8,
-    marginLeft: 10,
+    backgroundColor: palette.green,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    marginLeft: spacing.md,
     alignItems: 'center',
   },
   processButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
 });

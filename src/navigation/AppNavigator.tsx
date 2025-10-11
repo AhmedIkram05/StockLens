@@ -2,6 +2,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+
+import { palette, alpha } from '../styles/palette';
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -43,12 +45,12 @@ function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#10b981',        // Green for active tabs
-        tabBarInactiveTintColor: '#000000',      // Black for inactive tabs
+  tabBarActiveTintColor: palette.green,
+  tabBarInactiveTintColor: palette.black,
         tabBarShowLabel: false,                     // Show tab labels with icons
         tabBarStyle: {
-          backgroundColor: '#ffffff',            // White tab bar background
-          borderTopColor: '#e0e0e0',             // Light gray border on top
+          backgroundColor: palette.white,
+          borderTopColor: alpha.faintBlack,
           borderTopWidth: 1,
         },
       }}
@@ -127,7 +129,7 @@ export default function AppNavigator() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#10b981" />
+  <ActivityIndicator size="large" color={palette.green} />
       </View>
     );
   }

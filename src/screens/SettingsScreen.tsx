@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { palette, alpha } from '../styles/palette';
+import { radii, shadows, spacing, typography } from '../styles/theme';
 
 export default function SettingsScreen() {
   const { signOutUser } = useAuth();
@@ -69,8 +71,8 @@ export default function SettingsScreen() {
             <Switch
               value={faceIdEnabled}
               onValueChange={setFaceIdEnabled}
-              trackColor={{ false: '#d1d5db', true: '#10b981' }}
-              thumbColor={'#ffffff'}
+              trackColor={{ false: alpha.faintBlack, true: palette.green }}
+              thumbColor={palette.white}
             />
           </View>
 
@@ -103,8 +105,8 @@ export default function SettingsScreen() {
             <Switch
               value={darkModeEnabled}
               onValueChange={setDarkModeEnabled}
-              trackColor={{ false: '#d1d5db', true: '#10b981' }}
-              thumbColor={'#ffffff'}
+              trackColor={{ false: alpha.faintBlack, true: palette.green }}
+              thumbColor={palette.white}
             />
           </View>
         </View>
@@ -150,78 +152,70 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.lightGray,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: spacing.xxl,
   },
   pageHeader: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
   title: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 6,
+    ...typography.pageTitle,
+    color: palette.black,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#4b5563',
+    ...typography.pageSubtitle,
+    color: alpha.subtleBlack,
   },
   section: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#9ca3af',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 12,
+    ...typography.overline,
+    color: alpha.mutedBlack,
+    marginBottom: spacing.md,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    marginBottom: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: palette.white,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.level2,
   },
   rowContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: radii.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   blueIcon: {
-    backgroundColor: '#007AFF',
+    backgroundColor: palette.blue,
   },
   grayIcon: {
-    backgroundColor: '#d1d5db',
+    backgroundColor: alpha.faintBlack,
   },
   redIcon: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: palette.red,
   },
   iconEmoji: {
     fontSize: 22,
@@ -230,20 +224,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    ...typography.bodyStrong,
+    color: palette.black,
+    marginBottom: spacing.xs,
   },
   rowDescription: {
-    fontSize: 14,
-    color: '#6b7280',
+    ...typography.caption,
+    color: alpha.subtleBlack,
   },
   arrow: {
     fontSize: 24,
-    color: '#d1d5db',
+    color: alpha.mutedBlack,
   },
   redText: {
-    color: '#FF3B30',
+    color: palette.red,
   },
 });

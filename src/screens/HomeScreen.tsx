@@ -6,6 +6,8 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 
+import { palette, alpha } from '../styles/palette';
+import { radii, shadows, spacing, typography } from '../styles/theme';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 
 type HomeNavigationProp = CompositeNavigationProp<
@@ -130,7 +132,7 @@ export default function HomeScreen() {
 
             <View style={styles.emptyStateContainer}>
               <View style={styles.checkmarkContainer}>
-                <Ionicons name="checkmark-circle" size={120} color="#10b981" />
+                <Ionicons name="checkmark-circle" size={120} color={palette.green} />
               </View>
 
               <Text style={styles.emptyTitle}>No Receipts Yet</Text>
@@ -142,7 +144,7 @@ export default function HomeScreen() {
                 style={styles.scanButton}
                 onPress={() => navigation.navigate('Scan' as never)}
               >
-                <Ionicons name="camera-outline" size={24} color="#ffffff" />
+                <Ionicons name="camera-outline" size={24} color={palette.white} />
                 <Text style={styles.scanButtonText}>Scan your first receipt</Text>
               </TouchableOpacity>
 
@@ -188,232 +190,209 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.lightGray,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    backgroundColor: '#f5f5f5', // Light gray background instead of blue
-    padding: 20,    // Reduced top padding to bring closer to status bar
+    backgroundColor: palette.lightGray,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   titlePrefix: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    color: '#000000', // Black
+    ...typography.pageTitle,
+    color: palette.black,
   },
   titleStock: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    color: '#000000', // Black
+    ...typography.pageTitle,
+    color: palette.black,
   },
   titleLens: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    color: '#10b981', // Green
+    ...typography.pageTitle,
+    color: palette.green,
   },
   subtitle: {
-    fontSize: 22,
-    fontStyle: 'italic',
-    color: '#000000', // Black
+    ...typography.pageSubtitle,
+    color: palette.black,
+    opacity: 0.7,
   },
   statsContainer: {
     flexDirection: 'row',
-    padding: 20,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
     justifyContent: 'space-between',
   },
   statCardGreen: {
-    backgroundColor: '#10b981',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: palette.green,
+    borderRadius: radii.md,
+    padding: spacing.lg,
     flex: 1,
-    marginHorizontal: 5,
+    marginHorizontal: spacing.xs,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.level2,
   },
   statCardBlue: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: palette.blue,
+    borderRadius: radii.md,
+    padding: spacing.lg,
     flex: 1,
-    marginHorizontal: 5,
+    marginHorizontal: spacing.xs,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.level2,
   },
   statValue: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
+    ...typography.metric,
+    color: palette.white,
+    marginBottom: spacing.sm,
   },
   statLabel: {
-    fontSize: 16,
-    color: '#ffffff',
+    ...typography.caption,
+    color: palette.white,
     textAlign: 'center',
     opacity: 0.9,
   },
   quickActions: {
-    padding: 20,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   sectionTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    ...typography.sectionTitle,
+    color: palette.black,
+    opacity: 0.85,
+    marginBottom: spacing.md,
   },
   recentScans: {
-    padding: 20,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   scanCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 22,
-    marginBottom: 10,
+    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    ...shadows.level1,
   },
   scanImage: {
     width: 60,
     height: 40,
-    borderRadius: 6,
-    marginRight: 15,
+    borderRadius: radii.sm,
+    marginRight: spacing.md,
   },
   scanInfo: {
     flex: 1,
   },
   scanAmount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
+    ...typography.bodyStrong,
+    color: palette.black,
+    marginBottom: spacing.xs,
   },
   scanTime: {
-    fontSize: 14,
-    color: '#666666',
+    ...typography.caption,
+    color: alpha.subtleBlack,
   },
   scanMerchant: {
-    fontSize: 14,
-    color: '#333333',
+    ...typography.captionStrong,
+    color: palette.black,
+    opacity: 0.75,
   },
   chevron: {
     fontSize: 24,
-    color: 'grey',
-    fontWeight: 'bold',
-  },
-  viewAllButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  viewAllText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: alpha.mutedBlack,
     fontWeight: '600',
   },
+  viewAllButton: {
+    backgroundColor: palette.green,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  viewAllText: {
+    color: palette.white,
+    ...typography.button,
+  },
   emptyStateContainer: {
-    padding: 20,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
     alignItems: 'center',
   },
   checkmarkContainer: {
-    marginVertical: 30,
+    marginVertical: spacing.xl,
   },
   emptyTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    ...typography.pageTitle,
+    color: palette.black,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: '#666',
+    ...typography.body,
+    color: alpha.subtleBlack,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 30,
-    paddingHorizontal: 20,
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
   scanButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 25,
+    backgroundColor: palette.green,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: spacing.xxl,
+    ...shadows.level2,
   },
   scanButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
+    color: palette.white,
+    ...typography.button,
+    marginLeft: spacing.sm,
   },
   onboardingCards: {
     width: '100%',
   },
   onboardingCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 15,
+    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    ...shadows.level1,
   },
   numberCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#10b981',
+    borderRadius: radii.pill,
+    backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: spacing.md,
   },
   numberText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: palette.white,
+    ...typography.metricSm,
   },
   cardContent: {
     flex: 1,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    ...typography.bodyStrong,
+    color: palette.black,
+    marginBottom: spacing.xs,
   },
   cardSubtitle: {
-    fontSize: 14,
-    color: '#666',
+    ...typography.caption,
+    color: alpha.subtleBlack,
     lineHeight: 20,
   },
 });

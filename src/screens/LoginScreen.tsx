@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { authService, SignInData } from '../services/authService';
+import { palette, alpha } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 
 const logoImage = require('../../assets/StockLens_Logo.png');
 
@@ -114,12 +116,13 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.lightGray,
   },
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
   logoContainer: {
     height: screenHeight / 3,
@@ -132,18 +135,18 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...typography.pageTitle,
+    color: palette.black,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 20,
-    color: '#000000',
+    ...typography.pageSubtitle,
+    color: palette.black,
+    opacity: 0.7,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -152,50 +155,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    color: '#000000',
+    borderColor: alpha.faintBlack,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    ...typography.body,
+    color: palette.black,
   },
   loginButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: palette.green,
+    borderRadius: radii.md,
+    padding: spacing.md,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
   loginButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
   signUpContainer: {
     alignItems: 'center',
   },
   signUpText: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 10,
+    ...typography.caption,
+    color: alpha.subtleBlack,
+    marginBottom: spacing.sm,
   },
   signUpButton: {
     borderWidth: 2,
-    borderColor: '#10b981',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
+    borderColor: palette.green,
+    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    padding: spacing.md,
     alignItems: 'center',
     alignSelf: 'stretch',
   },
   signUpButtonText: {
-    color: '#10b981',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.green,
+    ...typography.button,
   },
 });
