@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { palette, alpha } from '../styles/palette';
+import { radii, shadows, spacing, typography } from '../styles/theme';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 
@@ -77,6 +79,7 @@ export default function ReceiptDetailsScreen() {
   }).format(totalAmount);
 
   const formattedYearsLabel = `${selectedYears} ${selectedYears === 1 ? 'year' : 'years'}`;
+  const formattedFutureYearsLabel = `${selectedFutureYears} ${selectedFutureYears === 1 ? 'year' : 'years'}`;
 
   const renderStockCard = (investmentValue: typeof investmentOptions[number]) => {
     const futureDisplay = new Intl.NumberFormat('en-GB', {
@@ -134,7 +137,7 @@ export default function ReceiptDetailsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={20} color="#ffffff" />
+            <Ionicons name="chevron-back" size={20} color={palette.white} />
           </TouchableOpacity>
         </View>
 
@@ -143,7 +146,7 @@ export default function ReceiptDetailsScreen() {
             <Image source={{ uri: image }} style={styles.receiptImage} />
           ) : (
             <View style={styles.receiptPlaceholder}>
-              <Ionicons name="receipt-outline" size={28} color="#10b981" />
+              <Ionicons name="receipt-outline" size={28} color={palette.green} />
             </View>
           )}
 
@@ -193,8 +196,8 @@ export default function ReceiptDetailsScreen() {
         <View style={styles.sectionSpacing} />
 
         <View style={styles.futureHeader}>
-          <Text style={styles.futureTitle}>If invested today...</Text>
-          <Text style={styles.futureSubtitle}>Your {formattedAmount} could be worth in the future</Text>
+          <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
+          <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
         </View>
 
         <View style={styles.yearSelector}>
@@ -243,12 +246,12 @@ export default function ReceiptDetailsScreen() {
             )
           }
         >
-          <Ionicons name="trash-outline" size={20} color="#ffffff" style={styles.deleteIcon} />
+          <Ionicons name="trash-outline" size={20} color={palette.white} style={styles.deleteIcon} />
           <Text style={styles.deleteText}>Delete Receipt</Text>
         </TouchableOpacity>
 
         <View style={styles.warningBox}>
-          <Ionicons name="warning" size={28} color="#8a8a8aff" style={styles.warningIcon} />
+          <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
           <Text style={styles.warningText}>
             Projections are hypothetical. Past performance does not guarantee future results.
           </Text>
@@ -312,55 +315,47 @@ type Styles = {
 const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: palette.lightGray,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
   backButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: '#10b981',
+    borderRadius: radii.pill,
+    backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.level2,
   },
   receiptCard: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 18,
+    backgroundColor: palette.white,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.level2,
   },
   receiptImage: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    marginRight: 16,
+    borderRadius: radii.md,
+    marginRight: spacing.md,
   },
   receiptPlaceholder: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    marginRight: 16,
-    backgroundColor: '#f5f5f5',
+    borderRadius: radii.md,
+    marginRight: spacing.md,
+    backgroundColor: palette.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -368,145 +363,135 @@ const styles = StyleSheet.create<Styles>({
     flex: 1,
   },
   receiptMerchant: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
+    ...typography.bodyStrong,
+    color: palette.black,
+    marginBottom: spacing.xs,
   },
   receiptAmount: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 4,
+    ...typography.sectionTitle,
+    color: palette.black,
+    marginBottom: spacing.xs,
   },
   receiptDate: {
-    fontSize: 14,
-    color: '#666666',
+    ...typography.caption,
+    color: alpha.subtleBlack,
   },
   projectionHeader: {
-    marginTop: 30,
-    marginBottom: 20,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.lg,
   },
   projectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 6,
+    ...typography.sectionTitle,
+    color: palette.black,
+    marginBottom: spacing.sm,
   },
   projectionSubtitle: {
-    fontSize: 16,
-    color: '#000000',
+    ...typography.body,
+    color: palette.black,
     opacity: 0.7,
   },
   yearSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 28,
+    marginBottom: spacing.xl + spacing.sm,
   },
   yearPill: {
     flex: 1,
-    marginHorizontal: 4,
-    borderRadius: 12,
-    paddingVertical: 10,
+    marginHorizontal: spacing.xs,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   yearPillActive: {
-    backgroundColor: '#10b981',
+    backgroundColor: palette.green,
   },
   yearPillInactive: {
-    backgroundColor: '#e5e5e5',
+    backgroundColor: palette.white,
+    borderWidth: 1,
+    borderColor: alpha.faintBlack,
   },
   yearText: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...typography.captionStrong,
   },
   yearTextActive: {
-    color: '#ffffff',
+    color: palette.white,
   },
   yearTextInactive: {
-    color: '#000000',
+    color: palette.black,
     opacity: 0.6,
   },
   carouselHeader: {
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   carouselTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...typography.bodyStrong,
+    color: palette.black,
   },
   carouselSubtitle: {
-    fontSize: 14,
-    color: '#666666',
-    marginTop: 4,
+    ...typography.caption,
+    color: alpha.subtleBlack,
+    marginTop: spacing.xs,
   },
   carousel: {
-    paddingBottom: 10,
+    paddingBottom: spacing.md,
   },
   sectionSpacing: {
-    height: 32,
+    height: spacing.xxl,
   },
   futureHeader: {
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   futureTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 6,
+    ...typography.sectionTitle,
+    color: palette.black,
+    marginBottom: spacing.sm,
   },
   futureSubtitle: {
-    fontSize: 16,
-    color: '#000000',
+    ...typography.body,
+    color: palette.black,
     opacity: 0.7,
   },
   stockCard: {
     width: 260,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: palette.white,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginRight: spacing.lg,
+    ...shadows.level2,
   },
   stockCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   stockName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
+    ...typography.bodyStrong,
+    color: palette.black,
   },
   stockTicker: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
+    ...typography.captionStrong,
+    color: palette.blue,
   },
   stockValueContainer: {
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   stockValue: {
+    ...typography.sectionTitle,
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
+    color: palette.black,
   },
   stockValueCaption: {
-    fontSize: 14,
-    color: '#666666',
-    marginTop: 4,
+    ...typography.caption,
+    color: alpha.subtleBlack,
+    marginTop: spacing.xs,
   },
   divider: {
-    height: 1,
-    backgroundColor: '#000000ff',
-    marginBottom: 16,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: alpha.faintBlack,
+    marginBottom: spacing.md,
   },
   stockFooter: {
     flexDirection: 'row',
@@ -517,59 +502,52 @@ const styles = StyleSheet.create<Styles>({
     flex: 1,
   },
   footerLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 6,
-    textTransform: 'uppercase',
+    ...typography.overline,
+    color: alpha.mutedBlack,
+    marginBottom: spacing.sm,
   },
   footerValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#10b981',
+    ...typography.metricSm,
+    color: palette.green,
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: '#000000ff',
-    marginHorizontal: 12,
+    backgroundColor: alpha.faintBlack,
+    marginHorizontal: spacing.md,
   },
   deleteButton: {
-    marginTop: 36,
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    paddingVertical: 16,
+    marginTop: spacing.xxl + spacing.sm,
+    backgroundColor: palette.red,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.level2,
   },
   deleteIcon: {
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   deleteText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: palette.white,
+    ...typography.button,
   },
   warningBox: {
-    marginTop: 24,
+    marginTop: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e5e5e5',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: palette.lightGray,
+    borderRadius: radii.md,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: alpha.faintBlack,
   },
   warningIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   warningText: {
-    fontSize: 12,
-    color: '#000000',
+    ...typography.caption,
+    color: palette.black,
     opacity: 0.8,
     lineHeight: 18,
     flex: 1,

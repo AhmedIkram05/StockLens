@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Svg, { Path } from 'react-native-svg';
+import { palette } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -92,7 +94,7 @@ export default function SplashScreen() {
           <Svg width={graphWidth} height={graphHeight} viewBox={`0 0 ${graphWidth} ${graphHeight}`}>
             <Path
               d={stockPath}
-              stroke="#10b981"
+              stroke={palette.green}
               strokeWidth="12"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -114,32 +116,32 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: palette.lightGray,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 28,
-    paddingVertical: 24,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xl,
     justifyContent: 'space-between',
     overflow: 'visible',
   },
   header: {
-    marginTop: 12,
+    marginTop: spacing.md,
   },
   logoText: {
-    fontSize: 50,
+    ...typography.display,
+    color: palette.black,
     fontWeight: '800',
-    color: '#000000',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   logoAccent: {
-    color: '#10b981',
+    color: palette.green,
   },
   tagline: {
-    fontSize: 22,
-    fontStyle: 'italic',
-    color: '#1f2937',
-    marginBottom: 6,
+    ...typography.pageSubtitle,
+    color: palette.black,
+    opacity: 0.7,
+    marginBottom: spacing.sm,
   },
   graphContainer: {
     flex: 1,
@@ -153,19 +155,18 @@ const styles = StyleSheet.create({
     maxWidth: 190,
   },
   ctaButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 28,
-    paddingVertical: 18,
+    backgroundColor: palette.green,
+    borderRadius: radii.xl,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
-    shadowColor: '#10b981',
+    shadowColor: palette.green,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 3,
   },
   ctaText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '700',
+    color: palette.white,
+    ...typography.button,
   },
 });
