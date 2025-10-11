@@ -5,59 +5,6 @@ const db = SQLite.openDatabaseSync('stocklens.db');
 
 // Database table schemas
 export const DB_SCHEMAS = {
-  receipts: `
-    CREATE TABLE IF NOT EXISTS receipts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
-      image_uri TEXT,
-      total_amount REAL,
-      merchant_name TEXT,
-      date_scanned DATETIME DEFAULT CURRENT_TIMESTAMP,
-      ocr_data TEXT,
-      categories TEXT,
-      synced INTEGER DEFAULT 0
-    );
-  `,
-  user_settings: `
-    CREATE TABLE IF NOT EXISTS user_settings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL UNIQUE,
-      currency TEXT DEFAULT 'USD',
-      theme TEXT DEFAULT 'light',
-      notifications_enabled INTEGER DEFAULT 1,
-      auto_backup INTEGER DEFAULT 0
-    );
-  `,
-  spending_categories: `
-    CREATE TABLE IF NOT EXISTS spending_categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      color TEXT,
-      icon TEXT,
-      budget_limit REAL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `,
-  investment_projections: `
-    CREATE TABLE IF NOT EXISTS investment_projections (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
-      receipt_id INTEGER,
-      amount REAL NOT NULL,
-      return_rate REAL NOT NULL,
-      years INTEGER NOT NULL,
-      future_value REAL NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (receipt_id) REFERENCES receipts (id)
-    );
-  `,
-  auth_state: `
-    CREATE TABLE IF NOT EXISTS auth_state (
-      key TEXT PRIMARY KEY,
-      value TEXT
-    );
-  `,
   users: `
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,14 +15,56 @@ export const DB_SCHEMAS = {
       last_login DATETIME
     );
   `,
+  receipts: `
+    CREATE TABLE IF NOT EXISTS receipts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      image_uri TEXT,
+      total_amount REAL,
+      date_scanned DATETIME DEFAULT CURRENT_TIMESTAMP,
+      ocr_data TEXT,
+      synced INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users (uid) ON DELETE CASCADE
+    );
+  `,
+  user_settings: `
+    CREATE TABLE IF NOT EXISTS user_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL UNIQUE,
+      theme TEXT DEFAULT 'light',
+      auto_backup INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users (uid) ON DELETE CASCADE
+    );
+  `,
+  auth_state: `
+    CREATE TABLE IF NOT EXISTS auth_state (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+  `,
 };
+
+// Helpful indexes for reducing table scan costs on common queries
+const DB_INDEXES = [
+  `CREATE INDEX IF NOT EXISTS idx_receipts_user_id_synced ON receipts (user_id, synced);`,
+  `CREATE INDEX IF NOT EXISTS idx_receipts_date_scanned ON receipts (date_scanned DESC);`,
+  `CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings (user_id);`,
+];
 
 // Initialize database tables
 export const initDatabase = async (): Promise<void> => {
   try {
+    // Enforce declared foreign-key relationships for this SQLite connection
+    await db.execAsync('PRAGMA foreign_keys = ON;');
+
     // Execute all schema creation queries
     for (const schema of Object.values(DB_SCHEMAS)) {
       await db.execAsync(schema);
+    }
+
+    // Create supporting indexes after tables exist
+    for (const index of DB_INDEXES) {
+      await db.execAsync(index);
     }
     console.log('Database initialized successfully');
   } catch (error) {
