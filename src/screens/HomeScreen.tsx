@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 
 type HomeNavigationProp = CompositeNavigationProp<
@@ -48,6 +49,17 @@ export default function HomeScreen() {
   // Check if user has any scans
   const hasScans = recentScans.length > 0;
 
+  const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone } = useBreakpoint();
+  const horizontalPad = useMemo(
+    () => ({ paddingHorizontal: contentHorizontalPadding }),
+    [contentHorizontalPadding]
+  );
+  const scrollPadding = useMemo(
+    () => ({ paddingBottom: sectionVerticalSpacing }),
+    [sectionVerticalSpacing]
+  );
+  const stackStats = !isTablet && !isLargePhone;
+
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat('en-GB', {
       style: 'currency',
@@ -57,11 +69,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={scrollPadding}>
         {hasScans ? (
           // Regular dashboard with scans
           <>
-            <View style={styles.header}>
+            <View style={[styles.header, horizontalPad]}>
               <View style={styles.titleContainer}>
                 <Text style={styles.titlePrefix}>Your </Text>
                 <Text style={styles.titleStock}>Stock</Text>
@@ -70,19 +82,19 @@ export default function HomeScreen() {
               <Text style={styles.subtitle}>What if you invested instead?</Text>
             </View>
 
-            <View style={styles.statsContainer}>
-              <View style={styles.statCardGreen}>
+            <View style={[styles.statsContainer, horizontalPad, stackStats && styles.statsStacked]}>
+              <View style={[styles.statCardGreen, stackStats && styles.statCardFullWidth]}>
                 <Text style={styles.statValue}>£12,450</Text>
                 {/* Mock total possible value to be replaced with real calculation for 5 year projection */}
                 <Text style={styles.statLabel}>Total Possible Value (5 Yrs)</Text>
               </View>
-              <View style={styles.statCardBlue}>
+              <View style={[styles.statCardBlue, stackStats && styles.statCardFullWidth]}>
                 <Text style={styles.statValue}>{recentScans.length}</Text>
                 <Text style={styles.statLabel}>Receipts Scanned</Text>
               </View>
             </View>
 
-            <View style={styles.recentScans}>
+            <View style={[styles.recentScans, horizontalPad]}>
               <Text style={styles.sectionTitle}>Recent Scans</Text>
               {(showAllHistory ? allScans : recentScans).map((scan) => (
                 <TouchableOpacity
@@ -121,7 +133,7 @@ export default function HomeScreen() {
         ) : (
           // Empty state dashboard
           <>
-            <View style={styles.header}>
+            <View style={[styles.header, horizontalPad]}>
               <View style={styles.titleContainer}>
                 <Text style={styles.titlePrefix}>Your </Text>
                 <Text style={styles.titleStock}>Stock</Text>
@@ -130,7 +142,7 @@ export default function HomeScreen() {
               <Text style={styles.subtitle}>Track your missed opportunities</Text>
             </View>
 
-            <View style={styles.emptyStateContainer}>
+            <View style={[styles.emptyStateContainer, horizontalPad]}>
               <View style={styles.checkmarkContainer}>
                 <Ionicons name="checkmark-circle" size={120} color={palette.green} />
               </View>
@@ -225,9 +237,14 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+  },
+  statsStacked: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
   },
   statCardGreen: {
     backgroundColor: palette.green,
@@ -237,6 +254,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xs,
     alignItems: 'center',
     ...shadows.level2,
+    marginBottom: spacing.md,
   },
   statCardBlue: {
     backgroundColor: palette.blue,
@@ -246,6 +264,11 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xs,
     alignItems: 'center',
     ...shadows.level2,
+    marginBottom: spacing.md,
+  },
+  statCardFullWidth: {
+    width: '100%',
+    marginHorizontal: 0,
   },
   statValue: {
     ...typography.metric,

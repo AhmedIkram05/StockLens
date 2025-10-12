@@ -1,16 +1,23 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Svg, { Path } from 'react-native-svg';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const screenWidth = Dimensions.get('window').width;
+  const {
+    width: screenWidth,
+    contentHorizontalPadding,
+    sectionVerticalSpacing,
+    isSmallPhone,
+    isTablet,
+  } = useBreakpoint();
 
   const handleGetStarted = () => {
     navigation.replace('Login');
@@ -46,10 +53,10 @@ export default function SplashScreen() {
 
   // Create realistic stock chart path that fits on screen while staying smooth
   const createStockPath = () => {
-  const graphHeight = 200;
-  const graphWidth = screenWidth;
-  const startY = graphHeight - 8; // closer to the bottom edge
-  const endY = 28; // higher toward the top edge
+    const graphHeight = isTablet ? 260 : isSmallPhone ? 180 : 200;
+    const graphWidth = Math.max(screenWidth - contentHorizontalPadding * 2, 260);
+    const startY = graphHeight - 8; // closer to the bottom edge
+    const endY = 28; // higher toward the top edge
 
     const points: ChartPoint[] = [];
   points.push({ x: 0, y: startY });
@@ -80,8 +87,17 @@ export default function SplashScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
+      <View
+        style={[
+          styles.content,
+          {
+            paddingHorizontal: contentHorizontalPadding,
+            paddingVertical: sectionVerticalSpacing,
+          },
+          isSmallPhone && styles.contentCompact,
+        ]}
+      >
+        <View style={[styles.header, isSmallPhone && styles.headerCompact]}>
           <Text style={styles.logoText}>
             Stock
             <Text style={styles.logoAccent}>Lens</Text>
@@ -103,7 +119,13 @@ export default function SplashScreen() {
           </Svg>
         </View>
 
-        <View style={styles.ctaWrapper}>
+        <View
+          style={[
+            styles.ctaWrapper,
+            isSmallPhone && styles.ctaWrapperFull,
+            isTablet && styles.ctaWrapperWide,
+          ]}
+        >
           <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85} onPress={handleGetStarted}>
             <Text style={styles.ctaText}>Let&apos;s Get Started</Text>
           </TouchableOpacity>
@@ -120,13 +142,17 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
     justifyContent: 'space-between',
     overflow: 'visible',
   },
+  contentCompact: {
+    paddingVertical: spacing.lg,
+  },
   header: {
     marginTop: spacing.md,
+  },
+  headerCompact: {
+    marginTop: spacing.sm,
   },
   logoText: {
     ...typography.display,
@@ -152,7 +178,14 @@ const styles = StyleSheet.create({
   ctaWrapper: {
     alignSelf: 'flex-end',
     width: '60%',
-    maxWidth: 190,
+  },
+  ctaWrapperFull: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
+  ctaWrapperWide: {
+    width: '40%',
+    maxWidth: 320,
   },
   ctaButton: {
     backgroundColor: palette.green,

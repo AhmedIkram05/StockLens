@@ -10,12 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { authService, SignUpData } from '../services/authService';
 import { palette, alpha } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography, shadows } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
+  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,11 +71,40 @@ export default function SignUpScreen() {
     navigation.navigate('Login' as never);
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Login' as never);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.content,
+          isSmallPhone && styles.contentCompact,
+          {
+            paddingHorizontal: contentHorizontalPadding,
+            paddingBottom: sectionVerticalSpacing,
+          },
+        ]}
+      >
+        <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={20} color={palette.white} />
+          </TouchableOpacity>
+        </View>
+
         {/* Title Section */}
-        <View style={styles.titleContainer}>
+        <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
           <Text style={styles.title}>Create your account</Text>
           <Text style={styles.subtitle}>
             Start discovering your missed investment opportunities
@@ -80,7 +112,7 @@ export default function SignUpScreen() {
         </View>
 
         {/* Form Section */}
-        <View style={styles.formContainer}>
+  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -164,9 +196,15 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl + spacing.lg,
     paddingBottom: spacing.xxl,
   },
+  contentCompact: {
+    paddingTop: spacing.xxl,
+  },
   titleContainer: {
     alignItems: 'center',
     marginBottom: spacing.xxl,
+  },
+  titleContainerCompact: {
+    marginBottom: spacing.xl,
   },
   title: {
     ...typography.pageTitle,
@@ -183,6 +221,28 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
+  },
+  formContainerCompact: {
+    paddingBottom: spacing.lg,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  headerRowCompact: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.pill,
+    backgroundColor: palette.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.level2,
   },
   inputContainer: {
     marginBottom: spacing.md,
@@ -229,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
     alignItems: 'center',
-    minWidth: 120,
+    alignSelf: 'stretch',
   },
   loginButtonText: {
     color: palette.green,

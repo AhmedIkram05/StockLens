@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 
@@ -41,6 +42,7 @@ export default function ReceiptDetailsScreen() {
 
   const [selectedYears, setSelectedYears] = useState<typeof YEAR_OPTIONS[number]>(5);
   const [selectedFutureYears, setSelectedFutureYears] = useState<typeof YEAR_OPTIONS[number]>(5);
+  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet, width } = useBreakpoint();
 
   const investmentOptions = useMemo(() => {
     return STOCK_PRESETS.map(stock => {
@@ -72,6 +74,22 @@ export default function ReceiptDetailsScreen() {
     });
   }, [selectedFutureYears, totalAmount]);
 
+  const cardSpacing = isTablet ? spacing.lg : spacing.md;
+  const cardWidth = useMemo(() => {
+    if (isTablet) {
+      return Math.min(320, width * 0.38);
+    }
+    if (isSmallPhone) {
+      return Math.max(240, width * 0.72);
+    }
+    return Math.min(300, Math.max(260, width * 0.6));
+  }, [isSmallPhone, isTablet, width]);
+  const stockCardLayout = useMemo(
+    () => ({ width: cardWidth, marginRight: cardSpacing }),
+    [cardSpacing, cardWidth]
+  );
+  const snapInterval = useMemo(() => cardWidth + cardSpacing, [cardSpacing, cardWidth]);
+
   const formattedAmount = new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',
@@ -81,7 +99,10 @@ export default function ReceiptDetailsScreen() {
   const formattedYearsLabel = `${selectedYears} ${selectedYears === 1 ? 'year' : 'years'}`;
   const formattedFutureYearsLabel = `${selectedFutureYears} ${selectedFutureYears === 1 ? 'year' : 'years'}`;
 
-  const renderStockCard = (investmentValue: typeof investmentOptions[number]) => {
+  const renderStockCard = (
+    investmentValue: typeof investmentOptions[number],
+    isLastItem: boolean
+  ) => {
     const futureDisplay = new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP',
@@ -97,7 +118,7 @@ export default function ReceiptDetailsScreen() {
     const percentDisplay = `${investmentValue.percentReturn.toFixed(1)}%`;
 
     return (
-      <View style={styles.stockCard}>
+      <View style={[styles.stockCard, stockCardLayout, isLastItem && styles.stockCardLast]}>
         <View style={styles.stockCardHeader}>
           <Text style={styles.stockName}>{investmentValue.name}</Text>
           <Text style={styles.stockTicker}>{investmentValue.ticker}</Text>
@@ -129,8 +150,17 @@ export default function ReceiptDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.headerRow}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          isSmallPhone && styles.contentCompact,
+          {
+            paddingHorizontal: contentHorizontalPadding,
+            paddingBottom: sectionVerticalSpacing,
+          },
+        ]}
+      >
+    <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
@@ -157,12 +187,12 @@ export default function ReceiptDetailsScreen() {
           </View>
         </View>
 
-        <View style={styles.projectionHeader}>
+        <View style={[styles.projectionHeader, isSmallPhone && styles.projectionHeaderCompact]}>
           <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
           <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
         </View>
 
-        <View style={styles.yearSelector}>
+        <View style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]}>
           {YEAR_OPTIONS.map(year => (
             <TouchableOpacity
               key={year}
@@ -194,21 +224,29 @@ export default function ReceiptDetailsScreen() {
           horizontal
           keyExtractor={(item) => item.ticker}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carousel}
+          contentContainerStyle={[
+            styles.carousel,
+            {
+              paddingLeft: contentHorizontalPadding,
+              paddingRight: contentHorizontalPadding,
+            },
+          ]}
           snapToAlignment="start"
           decelerationRate="fast"
-          snapToInterval={280}
-          renderItem={({ item }) => renderStockCard(item)}
+          snapToInterval={snapInterval}
+          renderItem={({ item, index }) =>
+            renderStockCard(item, index === investmentOptions.length - 1)
+          }
         />
 
-        <View style={styles.sectionSpacing} />
+        <View style={[styles.sectionSpacing, { height: sectionVerticalSpacing }]} />
 
-        <View style={styles.futureHeader}>
+        <View style={[styles.futureHeader, isSmallPhone && styles.futureHeaderCompact]}>
           <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
           <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
         </View>
 
-        <View style={styles.yearSelector}>
+        <View style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]}>
           {YEAR_OPTIONS.map(year => (
             <TouchableOpacity
               key={`future-${year}`}
@@ -240,15 +278,23 @@ export default function ReceiptDetailsScreen() {
           horizontal
           keyExtractor={(item) => `future-${item.ticker}`}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carousel}
+          contentContainerStyle={[
+            styles.carousel,
+            {
+              paddingLeft: contentHorizontalPadding,
+              paddingRight: contentHorizontalPadding,
+            },
+          ]}
           snapToAlignment="start"
           decelerationRate="fast"
-          snapToInterval={280}
-          renderItem={({ item }) => renderStockCard(item)}
+          snapToInterval={snapInterval}
+          renderItem={({ item, index }) =>
+            renderStockCard(item, index === futureInvestmentOptions.length - 1)
+          }
         />
 
         <TouchableOpacity
-          style={styles.deleteButton}
+          style={[styles.deleteButton, isSmallPhone && styles.deleteButtonCompact]}
           onPress={() =>
             Alert.alert(
               'Delete receipt',
@@ -264,7 +310,7 @@ export default function ReceiptDetailsScreen() {
           <Text style={styles.deleteText}>Delete Receipt</Text>
         </TouchableOpacity>
 
-        <View style={styles.warningBox}>
+    <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact]}>
           <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
           <Text style={styles.warningText}>
             Projections are hypothetical. Past performance does not guarantee future results.
@@ -278,7 +324,9 @@ export default function ReceiptDetailsScreen() {
 type Styles = {
   container: ViewStyle;
   content: ViewStyle;
+  contentCompact: ViewStyle;
   headerRow: ViewStyle;
+  headerRowCompact: ViewStyle;
   backButton: ViewStyle;
   receiptCard: ViewStyle;
   receiptImage: ImageStyle;
@@ -288,9 +336,11 @@ type Styles = {
   receiptAmount: TextStyle;
   receiptDate: TextStyle;
   projectionHeader: ViewStyle;
+  projectionHeaderCompact: ViewStyle;
   projectionTitle: TextStyle;
   projectionSubtitle: TextStyle;
   yearSelector: ViewStyle;
+  yearSelectorCompact: ViewStyle;
   yearSegment: ViewStyle;
   yearSegmentActive: ViewStyle;
   yearSegmentInactive: ViewStyle;
@@ -303,9 +353,11 @@ type Styles = {
   carousel: ViewStyle;
   sectionSpacing: ViewStyle;
   futureHeader: ViewStyle;
+  futureHeaderCompact: ViewStyle;
   futureTitle: TextStyle;
   futureSubtitle: TextStyle;
   stockCard: ViewStyle;
+  stockCardLast: ViewStyle;
   stockCardHeader: ViewStyle;
   stockName: TextStyle;
   stockTicker: TextStyle;
@@ -319,9 +371,11 @@ type Styles = {
   footerValue: TextStyle;
   verticalDivider: ViewStyle;
   deleteButton: ViewStyle;
+  deleteButtonCompact: ViewStyle;
   deleteIcon: TextStyle;
   deleteText: TextStyle;
   warningBox: ViewStyle;
+  warningBoxCompact: ViewStyle;
   warningIcon: TextStyle;
   warningText: TextStyle;
 };
@@ -335,11 +389,18 @@ const styles = StyleSheet.create<Styles>({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
+  contentCompact: {
+    paddingBottom: spacing.xl,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     marginTop: spacing.md,
     marginBottom: spacing.lg,
+  },
+  headerRowCompact: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
   },
   backButton: {
     width: 44,
@@ -394,6 +455,10 @@ const styles = StyleSheet.create<Styles>({
     marginTop: spacing.xxl,
     marginBottom: spacing.lg,
   },
+  projectionHeaderCompact: {
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
   projectionTitle: {
     ...typography.sectionTitle,
     color: palette.black,
@@ -410,6 +475,9 @@ const styles = StyleSheet.create<Styles>({
     borderRadius: radii.pill,
     backgroundColor: alpha.faintBlack,
     padding: spacing.xs,
+  },
+  yearSelectorCompact: {
+    marginBottom: spacing.xl,
   },
   yearSegment: {
     flex: 1,
@@ -461,6 +529,9 @@ const styles = StyleSheet.create<Styles>({
   futureHeader: {
     marginBottom: spacing.lg,
   },
+  futureHeaderCompact: {
+    marginBottom: spacing.md,
+  },
   futureTitle: {
     ...typography.sectionTitle,
     color: palette.black,
@@ -472,12 +543,13 @@ const styles = StyleSheet.create<Styles>({
     opacity: 0.7,
   },
   stockCard: {
-    width: 260,
     backgroundColor: palette.white,
     borderRadius: radii.lg,
     padding: spacing.lg,
-    marginRight: spacing.lg,
     ...shadows.level2,
+  },
+  stockCardLast: {
+    marginRight: 0,
   },
   stockCardHeader: {
     flexDirection: 'row',
@@ -544,6 +616,9 @@ const styles = StyleSheet.create<Styles>({
     alignItems: 'center',
     ...shadows.level2,
   },
+  deleteButtonCompact: {
+    marginTop: spacing.xl,
+  },
   deleteIcon: {
     marginRight: spacing.sm,
   },
@@ -560,6 +635,9 @@ const styles = StyleSheet.create<Styles>({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: alpha.faintBlack,
+  },
+  warningBoxCompact: {
+    padding: spacing.md,
   },
   warningIcon: {
     marginRight: spacing.md,
