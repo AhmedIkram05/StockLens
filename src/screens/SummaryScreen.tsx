@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SummaryScreen() {
   // Placeholder values; replace with real analytics once available
@@ -71,33 +72,55 @@ export default function SummaryScreen() {
       maximumFractionDigits: 0,
     }).format(value);
 
+  const { contentHorizontalPadding, cardsPerRow, width: screenWidth, isTablet } = useBreakpoint();
+  const cardsGap = cardsPerRow === 3 ? spacing.xl : spacing.md;
+  const cardsGridStyle = React.useMemo(
+    () => ({ marginHorizontal: -(cardsGap / 2) }),
+    [cardsGap]
+  );
+  const cardWidth = React.useMemo(() => {
+    const containerWidth = Math.max(screenWidth - contentHorizontalPadding * 2, 240);
+    const totalGap = cardsGap * (cardsPerRow - 1);
+    const rawWidth = (containerWidth - totalGap) / cardsPerRow;
+    const desiredMin = isTablet ? 220 : 140;
+    const minWidth = Math.min(rawWidth, desiredMin);
+    const maxWidth = isTablet ? 280 : 220;
+    return Math.max(minWidth, Math.min(maxWidth, rawWidth));
+  }, [cardsPerRow, cardsGap, contentHorizontalPadding, isTablet, screenWidth]);
+  const cardLayoutStyle = React.useMemo(
+    () => ({ width: cardWidth, marginHorizontal: cardsGap / 2 }),
+    [cardWidth, cardsGap]
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        contentContainerStyle={[styles.contentContainer, { paddingHorizontal: contentHorizontalPadding }]}
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Summary</Text>
           <Text style={styles.subtitle}>Your investment insights at a glance</Text>
         </View>
 
-        <View style={styles.cardsGrid}>
-          <View style={[styles.card, styles.cardBlue]}>
+        <View style={[styles.cardsGrid, cardsGridStyle]}>
+          <View style={[styles.card, cardLayoutStyle, styles.cardBlue]}>
             <Text style={styles.cardValue}>{formatCurrency(totalMoneySpent)}</Text>
             <Text style={styles.cardTitle}>Total Money Spent</Text>
             <Text style={styles.cardSubtitle}>Across all scanned receipts</Text>
           </View>
 
-          <View style={[styles.card, styles.cardGreen]}>
+          <View style={[styles.card, cardLayoutStyle, styles.cardGreen]}>
             <Text style={styles.cardValue}>{formatCurrency(totalMissedFiveYears)}</Text>
             <Text style={styles.cardTitle}>Total missed opportunity</Text>
             <Text style={styles.cardSubtitle}>If invested 5 years ago</Text>
           </View>
 
-          <View style={[styles.card, styles.cardWhite]}>
+          <View style={[styles.card, cardLayoutStyle, styles.cardWhite]}>
             <Text style={[styles.cardValue, styles.cardValueDark]}>{receiptsScanned}</Text>
             <Text style={styles.cardTitleDark}>Receipts scanned</Text>
           </View>
 
-          <View style={[styles.card, styles.cardGreen]}>
+          <View style={[styles.card, cardLayoutStyle, styles.cardGreen]}>
             <Text style={styles.cardValue}>{formatCurrency(totalMissedTenYears)}</Text>
             <Text style={styles.cardTitle}>Total missed opportunity</Text>
             <Text style={styles.cardSubtitle}>If invested 10 years ago</Text>
@@ -185,10 +208,9 @@ const styles = StyleSheet.create({
   cardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   card: {
-    width: '48%',
     borderRadius: radii.md,
     padding: spacing.lg,
     marginBottom: spacing.lg,

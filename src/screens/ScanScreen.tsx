@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function ScanScreen() {
   const facing: CameraType = 'back';
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
+  const { width, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+
+  const frameDimensions = useMemo(() => {
+    const baseWidth = isTablet ? width * 0.45 : isSmallPhone ? width * 0.7 : width * 0.8;
+    const clampedWidth = Math.max(220, Math.min(baseWidth, isTablet ? 420 : 360));
+    const heightMultiplier = isTablet ? 1.2 : isSmallPhone ? 1.4 : 1.6;
+    const calculatedHeight = clampedWidth * heightMultiplier;
+    const clampedHeight = Math.max(300, Math.min(calculatedHeight, isTablet ? 520 : 480));
+    return { width: clampedWidth, height: clampedHeight };
+  }, [isSmallPhone, isTablet, width]);
 
   if (!permission) {
     return <View />;
@@ -25,7 +36,15 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.permissionContainer}>
+        <View
+          style={[
+            styles.permissionContainer,
+            {
+              paddingHorizontal: contentHorizontalPadding,
+              paddingVertical: sectionVerticalSpacing,
+            },
+          ]}
+        >
           <Text style={styles.permissionText}>
             Camera permission is required to scan receipts
           </Text>
@@ -64,7 +83,15 @@ export default function ScanScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
-          <View style={styles.previewButtons}>
+          <View
+            style={[
+              styles.previewButtons,
+              {
+                paddingHorizontal: contentHorizontalPadding,
+                paddingVertical: isSmallPhone ? spacing.lg : spacing.xl,
+              },
+            ]}
+          >
             <TouchableOpacity style={styles.retakeButton} onPress={retakePhoto}>
               <Text style={styles.retakeButtonText}>Retake</Text>
             </TouchableOpacity>
@@ -90,13 +117,21 @@ export default function ScanScreen() {
 
         {/* Camera overlay positioned absolutely */}
         <View style={styles.cameraOverlay}>
-          <View style={styles.scanFrame} />
+          <View style={[styles.scanFrame, frameDimensions]} />
           <Text style={styles.instructionText}>
             Position receipt within the frame
           </Text>
         </View>
 
-        <View style={styles.controls}>
+        <View
+          style={[
+            styles.controls,
+            {
+              paddingHorizontal: contentHorizontalPadding,
+              paddingVertical: isSmallPhone ? spacing.lg : spacing.xl,
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.captureButton}
             onPress={takePicture}

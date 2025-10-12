@@ -19,6 +19,12 @@ export const radii = {
   pill: 999,
 } as const;
 
+export const breakpoints = {
+  smallPhone: 360,
+  largePhone: 414,
+  tablet: 768,
+} as const;
+
 export const typography = {
   display: {
     fontSize: 48,

@@ -4,12 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SettingsScreen() {
   const { signOutUser } = useAuth();
   const [faceIdEnabled, setFaceIdEnabled] = useState(true);
   const [localStorageEnabled, setLocalStorageEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet } = useBreakpoint();
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -49,16 +51,31 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.pageHeader}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: contentHorizontalPadding,
+            paddingBottom: sectionVerticalSpacing,
+          },
+        ]}
+      >
+        <View style={[styles.pageHeader, isSmallPhone && styles.pageHeaderCompact]}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Manage your preferences and security</Text>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            isSmallPhone && styles.sectionCompact,
+            isTablet && styles.sectionWide,
+          ]}
+        >
           <Text style={styles.sectionLabel}>Security</Text>
 
-          <View style={styles.row}>
+          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
             <View style={styles.rowContent}>
               <View style={[styles.iconContainer, styles.blueIcon]}>
                 <Text style={styles.iconEmoji}>🔐</Text>
@@ -76,7 +93,7 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View style={styles.row}>
+          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
             <View style={styles.rowContent}>
               <View style={[styles.iconContainer, styles.grayIcon]}>
                 <Text style={styles.iconEmoji}>🛡️</Text>
@@ -89,10 +106,16 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            isSmallPhone && styles.sectionCompact,
+            isTablet && styles.sectionWide,
+          ]}
+        >
           <Text style={styles.sectionLabel}>Preferences</Text>
 
-          <View style={styles.row}>
+          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
             <View style={styles.rowContent}>
               <View style={[styles.iconContainer, styles.blueIcon]}>
                 <Text style={styles.iconEmoji}>🌙</Text>
@@ -111,10 +134,19 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            isSmallPhone && styles.sectionCompact,
+            isTablet && styles.sectionWide,
+          ]}
+        >
           <Text style={styles.sectionLabel}>Account</Text>
 
-          <TouchableOpacity style={styles.row} onPress={handleSignOut}>
+          <TouchableOpacity
+            style={[styles.row, isSmallPhone && styles.rowCompact]}
+            onPress={handleSignOut}
+          >
             <View style={styles.rowContent}>
               <View style={[styles.iconContainer, styles.redIcon]}>
                 <Text style={styles.iconEmoji}>🚪</Text>
@@ -128,10 +160,19 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            isSmallPhone && styles.sectionCompact,
+            isTablet && styles.sectionWide,
+          ]}
+        >
           <Text style={styles.sectionLabel}>Data Management</Text>
 
-          <TouchableOpacity style={styles.row} onPress={handleClearData}>
+          <TouchableOpacity
+            style={[styles.row, isSmallPhone && styles.rowCompact]}
+            onPress={handleClearData}
+          >
             <View style={styles.rowContent}>
               <View style={[styles.iconContainer, styles.redIcon]}>
                 <Text style={styles.iconEmoji}>🗑️</Text>
@@ -161,9 +202,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   pageHeader: {
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
+  },
+  pageHeaderCompact: {
+    paddingTop: spacing.sm,
   },
   title: {
     ...typography.pageTitle,
@@ -175,8 +218,13 @@ const styles = StyleSheet.create({
     color: alpha.subtleBlack,
   },
   section: {
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  sectionCompact: {
+    paddingVertical: spacing.sm,
+  },
+  sectionWide: {
+    paddingVertical: spacing.lg,
   },
   sectionLabel: {
     ...typography.overline,
@@ -193,6 +241,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginBottom: spacing.md,
     ...shadows.level2,
+  },
+  rowCompact: {
+    paddingVertical: spacing.sm,
   },
   rowContent: {
     flexDirection: 'row',

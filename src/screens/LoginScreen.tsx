@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { authService, SignInData } from '../services/authService';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const logoImage = require('../../assets/StockLens_Logo.png');
 
@@ -21,6 +22,7 @@ const { height: screenHeight } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const { contentHorizontalPadding, isSmallPhone } = useBreakpoint();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -53,9 +55,9 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+  <View style={[styles.content, { paddingHorizontal: contentHorizontalPadding }] }>
         {/* Logo Section - 1/3 of screen */}
-        <View style={styles.logoContainer}>
+  <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
           <Image
             source={logoImage}
             style={styles.logo}
@@ -64,7 +66,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Title Section */}
-        <View style={styles.titleContainer}>
+  <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
           <Text style={styles.title}>Welcome to StockLens</Text>
           <Text style={styles.subtitle}>
             Scan your spending{'\n'}See your missed investing
@@ -72,7 +74,7 @@ export default function LoginScreen() {
         </View>
 
         {/* Form Section */}
-        <View style={styles.formContainer}>
+  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -124,10 +126,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xl,
   },
+  formContainerCompact: {
+    paddingBottom: spacing.lg,
+  },
   logoContainer: {
     height: screenHeight / 3,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logoContainerCompact: {
+    height: screenHeight / 4,
   },
   logo: {
     width: 200,
@@ -136,6 +144,9 @@ const styles = StyleSheet.create({
   titleContainer: {
     alignItems: 'center',
     marginBottom: spacing.xxl,
+  },
+  titleContainerCompact: {
+    marginBottom: spacing.xl,
   },
   title: {
     ...typography.pageTitle,
