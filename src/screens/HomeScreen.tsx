@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
@@ -9,40 +9,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { stockService, receiptService } from '../services/dataService';
+import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
   StackNavigationProp<RootStackParamList>
 >;
-// Temporary mock data for recent scans - to be replaced with real data from backend
 export default function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const [showAllHistory, setShowAllHistory] = useState(false);
 
-  const recentScans = useMemo(
-    () => [
-      {
-        id: 'receipt-001',
-        merchant: 'Tesco Superstore',
-        amount: 42.78,
-        date: '15 Sep 2025',
-        time: '2 hours ago',
-        image:
-          'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=200&q=60',
-      },
-      {
-        id: 'receipt-002',
-        merchant: 'Starbucks',
-        amount: 8.5,
-        date: '14 Sep 2025',
-        time: '1 day ago',
-        image:
-          'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=60',
-      },
-    ],
-    []
-  );
+  const { user } = useAuth();
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [receiptsLoading, setReceiptsLoading] = useState(true);
+  const [receiptsError, setReceiptsError] = useState<string | null>(null);
 
   const allScans = recentScans;
 
@@ -67,6 +49,99 @@ export default function HomeScreen() {
       minimumFractionDigits: 2,
     }).format(amount);
 
+  // live portfolio projection (MVP) — compute example projection using 3 tickers
+  const [portfolioProjection, setPortfolioProjection] = useState<number | null>(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(true);
+  const [portfolioError, setPortfolioError] = useState<string | null>(null);
+
+  // totalSpend derived from receipts (replaces placeholder)
+  const [totalSpend, setTotalSpend] = useState<number>(0);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadReceipts() {
+      setReceiptsLoading(true);
+      setReceiptsError(null);
+      try {
+        if (!user?.uid) {
+          setRecentScans([]);
+          return;
+        }
+        const receipts = await receiptService.getByUserId(user.uid);
+        if (!mounted) return;
+        // Map to UI-friendly shape (minimal)
+        const mapped = receipts.map(r => ({
+          id: String(r.id),
+          merchant: r.ocr_data ? r.ocr_data.split('\n')[0] : 'Receipt',
+          amount: r.total_amount || 0,
+          date: r.date_scanned || '',
+          time: '',
+          image: r.image_uri || undefined,
+        }));
+        if (mounted) setRecentScans(mapped.slice(0, 10));
+      } catch (err: any) {
+        if (mounted) setReceiptsError(err?.message || String(err));
+      } finally {
+        if (mounted) setReceiptsLoading(false);
+      }
+    }
+
+    loadReceipts();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.uid]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadProjection() {
+      setPortfolioLoading(true);
+      setPortfolioError(null);
+      try {
+        // ensure receipts are loaded and compute total spend
+        try {
+          if (user?.uid) {
+            const receipts = await receiptService.getByUserId(user.uid);
+            const sum = receipts.reduce((s, r) => s + (r.total_amount || 0), 0);
+            if (mounted) setTotalSpend(sum);
+          }
+        } catch (e) {
+          // ignore and continue with totalSpend state (defaults to 0)
+        }
+
+        const effectiveTotal = totalSpend || 0;
+        const tickers = ['NVDA', 'TSLA', 'MSFT'];
+        const perTicker = effectiveTotal / tickers.length || 0;
+        const results = await Promise.all(
+          tickers.map(async t => {
+            try {
+              const data = await stockService.getHistoricalForTicker(t, 5);
+              const first = data[0]?.adjustedClose ?? data[0]?.close;
+              const last = data[data.length - 1]?.adjustedClose ?? data[data.length - 1]?.close;
+              if (!first || !last) return perTicker; // fallback: no growth
+              const cagr = Math.pow(last / first, 1 / 5) - 1;
+              const future = perTicker * Math.pow(1 + cagr, 5);
+              return future;
+            } catch (e) {
+              return perTicker * 1.15; // fallback 15% growth
+            }
+          })
+        );
+        if (!mounted) return;
+        const totalFuture = results.reduce((s, v) => s + v, 0);
+        setPortfolioProjection(totalFuture);
+      } catch (err: any) {
+        if (mounted) setPortfolioError(err?.message || String(err));
+      } finally {
+        if (mounted) setPortfolioLoading(false);
+      }
+    }
+    loadProjection();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={scrollPadding}>
@@ -84,10 +159,9 @@ export default function HomeScreen() {
 
             <View style={[styles.statsContainer, horizontalPad, stackStats && styles.statsStacked]}>
               <View style={[styles.statCardGreen, stackStats && styles.statCardFullWidth]}>
-                <Text style={styles.statValue}>£12,450</Text>
-                {/* Mock total possible value to be replaced with real calculation for 5 year projection */}
-                <Text style={styles.statLabel}>Total Possible Value (5 Yrs)</Text>
-              </View>
+                  <Text style={styles.statValue}>{portfolioLoading ? '—' : portfolioProjection ? formatAmount(Math.round(portfolioProjection)) : '—'}</Text>
+                  <Text style={styles.statLabel}>{portfolioLoading ? 'Calculating...' : portfolioError ? 'Projection unavailable' : 'Total Possible Value (5 Yrs)'}</Text>
+                </View>
               <View style={[styles.statCardBlue, stackStats && styles.statCardFullWidth]}>
                 <Text style={styles.statValue}>{recentScans.length}</Text>
                 <Text style={styles.statLabel}>Receipts Scanned</Text>

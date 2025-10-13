@@ -4,37 +4,118 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useEffect, useState } from 'react';
+import { stockService, receiptService } from '../services/dataService';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SummaryScreen() {
-  // Placeholder values; replace with real analytics once available
-  const totalMoneySpent = 12450;
-  const totalMissedFiveYears = 18720;
-  const receiptsScanned = 68;
-  const totalMissedTenYears = 27430;
+  const { user } = useAuth();
+  const [totalMoneySpent, setTotalMoneySpent] = useState<number>(0);
+  const [totalMissedFiveYears, setTotalMissedFiveYears] = useState<number>(0);
+  const [receiptsScanned, setReceiptsScanned] = useState<number>(0);
+  const [totalMissedTenYears, setTotalMissedTenYears] = useState<number>(0);
 
-  const topStocks = [
+  const initialTopStocks = [
     {
       company: 'NVIDIA Corporation',
       ticker: 'NVDA',
       sector: 'AI/Semiconductors',
-      growth: '+180%',
+      growth: '—',
       period: '5Y est.',
     },
     {
       company: 'Tesla Inc',
       ticker: 'TSLA',
       sector: 'Electric Vehicles',
-      growth: '+145%',
+      growth: '—',
       period: '5Y est.',
     },
     {
       company: 'Microsoft Corporation',
       ticker: 'MSFT',
       sector: 'Cloud/AI',
-      growth: '+120%',
+      growth: '—',
       period: '5Y est.',
     },
   ];
+
+  const [topStocks, setTopStocks] = useState(initialTopStocks);
+  const [loadingStocks, setLoadingStocks] = useState(true);
+  const [stocksError, setStocksError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadTotals() {
+      try {
+        if (!user?.uid) return;
+        const receipts = await receiptService.getByUserId(user.uid);
+        const total = receipts.reduce((s, r) => s + (r.total_amount || 0), 0);
+        if (!mounted) return;
+        setTotalMoneySpent(total);
+        setReceiptsScanned(receipts.length);
+
+        const tickers = ['NVDA', 'TSLA', 'MSFT'];
+        const perTicker = total / Math.max(1, tickers.length);
+        const futures = await Promise.all(
+          tickers.map(async t => {
+            try {
+              const data = await stockService.getHistoricalForTicker(t, 5);
+              const first = data[0]?.adjustedClose ?? data[0]?.close;
+              const last = data[data.length - 1]?.adjustedClose ?? data[data.length - 1]?.close;
+              if (!first || !last) return perTicker;
+              const cagr = Math.pow(last / first, 1 / 5) - 1;
+              return perTicker * Math.pow(1 + cagr, 5);
+            } catch (e) {
+              return perTicker * 1.15;
+            }
+          })
+        );
+        const totalFuture5 = futures.reduce((s, v) => s + v, 0);
+        if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
+        const totalFuture10 = futures.reduce((s, v) => s + v, 0) * 1.5;
+        if (mounted) setTotalMissedTenYears(Math.round(totalFuture10));
+      } catch (err) {
+        // ignore errors for now
+      }
+    }
+
+    loadTotals();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.uid]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setLoadingStocks(true);
+      setStocksError(null);
+      try {
+        const promises = initialTopStocks.map(async s => {
+          const data = await stockService.getHistoricalForTicker(s.ticker, 5);
+          if (!data || data.length < 2) return { ...s, growth: 'N/A' };
+          const first = data[0].adjustedClose ?? data[0].close;
+          const last = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
+          const pct = ((last / first - 1) * 100);
+          const sign = pct >= 0 ? '+' : '';
+          return { ...s, growth: `${sign}${Math.round(pct)}%` };
+        });
+
+        const resolved = await Promise.all(promises);
+        if (mounted) setTopStocks(resolved as any);
+      } catch (err: any) {
+        if (mounted) setStocksError(err?.message || String(err));
+      } finally {
+        if (mounted) setLoadingStocks(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const quickStats = [
     { label: 'Average per receipt', value: '£12.35' },
@@ -132,18 +213,28 @@ export default function SummaryScreen() {
         </View>
 
         <View style={styles.stockList}>
-          {topStocks.map((stock, index) => (
-            <View key={stock.ticker} style={[styles.stockRow, index < topStocks.length - 1 && styles.rowDivider]}>
-              <View style={styles.stockInfo}>
-                <Text style={styles.stockCompany}>{stock.company}</Text>
-                <Text style={styles.stockMeta}>{`${stock.ticker} • ${stock.sector}`}</Text>
-              </View>
-              <View style={styles.stockGrowthContainer}>
-                <Text style={styles.stockGrowth}>{stock.growth}</Text>
-                <Text style={styles.stockPeriod}>{stock.period}</Text>
-              </View>
+          {loadingStocks ? (
+            <View style={{ padding: spacing.md }}>
+              <Text style={{ color: palette.black }}>Loading stocks...</Text>
             </View>
-          ))}
+          ) : stocksError ? (
+            <View style={{ padding: spacing.md }}>
+              <Text style={{ color: palette.red }}>Failed to load stocks: {stocksError}</Text>
+            </View>
+          ) : (
+            topStocks.map((stock, index) => (
+              <View key={stock.ticker} style={[styles.stockRow, index < topStocks.length - 1 && styles.rowDivider]}>
+                <View style={styles.stockInfo}>
+                  <Text style={styles.stockCompany}>{stock.company}</Text>
+                  <Text style={styles.stockMeta}>{`${stock.ticker} • ${stock.sector}`}</Text>
+                </View>
+                <View style={styles.stockGrowthContainer}>
+                  <Text style={styles.stockGrowth}>{stock.growth}</Text>
+                  <Text style={styles.stockPeriod}>{stock.period}</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.sectionHeader}>

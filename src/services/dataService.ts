@@ -1,4 +1,5 @@
 import { databaseService } from './database';
+import { alphaVantageService, OHLCV } from './alphaVantageService';
 
 export interface Receipt {
   id?: number;
@@ -147,5 +148,39 @@ export const userService = {
   deleteByUid: async (uid: string) => {
     const query = 'DELETE FROM users WHERE uid = ?';
     await databaseService.executeNonQuery(query, [uid]);
+  },
+};
+
+// --- Minimal stock data helper (MVP) ---
+/**
+ * Fetch historical OHLCV for a symbol for the last `years` years.
+ * Uses daily series for 1 year or less, otherwise monthly series.
+ */
+export const stockService = {
+  getHistoricalForTicker: async (symbol: string, years = 5): Promise<OHLCV[]> => {
+    try {
+      if (years <= 1) {
+        const daily = await alphaVantageService.getDailyAdjusted(symbol);
+        // keep approximately last 365 days
+        const cutoff = new Date();
+        cutoff.setFullYear(cutoff.getFullYear() - 1);
+        return daily.filter(d => new Date(d.date) >= cutoff);
+      } else {
+        const monthly = await alphaVantageService.getMonthlyAdjusted(symbol);
+        const monthsNeeded = Math.max(12 * years, 12);
+        return monthly.slice(-monthsNeeded);
+      }
+    } catch (error: any) {
+      // Bubble up descriptive error for UI to show
+      throw new Error(`Failed to fetch historical data for ${symbol}: ${error?.message || error}`);
+    }
+  },
+
+  getQuote: async (symbol: string) => {
+    try {
+      return await alphaVantageService.getQuote(symbol);
+    } catch (error: any) {
+      throw new Error(`Failed to fetch quote for ${symbol}: ${error?.message || error}`);
+    }
   },
 };
