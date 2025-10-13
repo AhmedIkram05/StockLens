@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,17 @@ const STOCK_PRESETS = [
   { name: 'Tesla', ticker: 'TSLA', returnRate: 0.28 },
 ];
 
+import { stockService } from '../services/dataService';
+
+// compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
+function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
+  if (!data || data.length < 2 || years <= 0) return null;
+  const first = data[0].adjustedClose ?? data[0].close;
+  const last = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
+  if (!first || !last || first <= 0) return null;
+  return Math.pow(last / first, 1 / years) - 1;
+}
+
 export default function ReceiptDetailsScreen() {
   const navigation = useNavigation();
   const route = useRoute<ReceiptDetailsRouteProp>();
@@ -46,6 +57,7 @@ export default function ReceiptDetailsScreen() {
 
   const investmentOptions = useMemo(() => {
     return STOCK_PRESETS.map(stock => {
+      // placeholder until live data replaces it asynchronously
       const futureValue = totalAmount * Math.pow(1 + stock.returnRate, selectedYears);
       const gain = futureValue - totalAmount;
       const percentReturn = ((futureValue / totalAmount) - 1) * 100;
@@ -74,6 +86,50 @@ export default function ReceiptDetailsScreen() {
     });
   }, [selectedFutureYears, totalAmount]);
 
+  // historical CAGRs per ticker and years (e.g. { NVDA: {5: 0.18, 3: 0.22} })
+  const [historicalRates, setHistoricalRates] = useState<Record<string, Record<number, number>>>({});
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+
+  // load historical rates whenever selectedYears changes
+  useEffect(() => {
+    let mounted = true;
+    async function loadHistoricalForYears(years: number) {
+      setRatesLoading(true);
+      setRatesError(null);
+      try {
+        const promises = STOCK_PRESETS.map(async s => {
+          try {
+            const data = await stockService.getHistoricalForTicker(s.ticker, years);
+            const cagr = computeCAGR(data as any, years);
+            return { ticker: s.ticker, total: cagr };
+          } catch (e: any) {
+            return { ticker: s.ticker, total: null };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        if (!mounted) return;
+        const map: Record<string, Record<number, number>> = { ...historicalRates };
+        results.forEach((r: any) => {
+          if (!map[r.ticker]) map[r.ticker] = {};
+          if (r.total !== null && r.total !== undefined) map[r.ticker][years] = r.total as number;
+        });
+        if (mounted) setHistoricalRates(map);
+      } catch (err: any) {
+        if (mounted) setRatesError(err?.message || String(err));
+      } finally {
+        if (mounted) setRatesLoading(false);
+      }
+    }
+
+    loadHistoricalForYears(selectedYears);
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYears]);
+
   const cardSpacing = isTablet ? spacing.lg : spacing.md;
   const cardWidth = useMemo(() => {
     if (isTablet) {
@@ -101,21 +157,52 @@ export default function ReceiptDetailsScreen() {
 
   const renderStockCard = (
     investmentValue: typeof investmentOptions[number],
-    isLastItem: boolean
+    isLastItem: boolean,
+    years: number = selectedYears,
+    mode: 'past' | 'future' = 'past'
   ) => {
+    // Past (historical) uses API-derived total return (last/first - 1) for the selected years when available
+    // Future uses preset annual returnRate and the formula amount * (1 + return_rate)^years
+    let computedFutureValue: number;
+    let computedGain: number;
+    let computedPercentReturn: number;
+
+    if (mode === 'past') {
+      const cagr = historicalRates[investmentValue.ticker]?.[years];
+      if (cagr !== undefined && cagr !== null) {
+        // historical CAGR -> compute future value over the period (equivalent to last/first)
+        computedFutureValue = totalAmount * Math.pow(1 + cagr, years);
+        computedGain = computedFutureValue - totalAmount;
+        computedPercentReturn = cagr * 100;
+      } else {
+        // fallback to preset annual rate if no historical CAGR
+        const rate = investmentValue.returnRate;
+        computedFutureValue = totalAmount * Math.pow(1 + rate, years);
+        computedGain = computedFutureValue - totalAmount;
+        computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
+      }
+    } else {
+      // future mode — prefer historical CAGR for same period when available, otherwise use preset
+      const cagr = historicalRates[investmentValue.ticker]?.[years];
+      const rate = cagr !== undefined && cagr !== null ? cagr : investmentValue.returnRate;
+      computedFutureValue = totalAmount * Math.pow(1 + rate, years);
+      computedGain = computedFutureValue - totalAmount;
+      computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
+    }
+
     const futureDisplay = new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP',
       minimumFractionDigits: 2,
-    }).format(investmentValue.futureValue);
+    }).format(computedFutureValue);
 
     const gainDisplay = new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP',
       minimumFractionDigits: 2,
-    }).format(investmentValue.gain);
+    }).format(computedGain);
 
-    const percentDisplay = `${investmentValue.percentReturn.toFixed(1)}%`;
+    const percentDisplay = `${computedPercentReturn.toFixed(1)}%`;
 
     return (
       <View style={[styles.stockCard, stockCardLayout, isLastItem && styles.stockCardLast]}>
@@ -235,7 +322,7 @@ export default function ReceiptDetailsScreen() {
           decelerationRate="fast"
           snapToInterval={snapInterval}
           renderItem={({ item, index }) =>
-            renderStockCard(item, index === investmentOptions.length - 1)
+            renderStockCard(item, index === investmentOptions.length - 1, selectedYears, 'past')
           }
         />
 
@@ -289,7 +376,7 @@ export default function ReceiptDetailsScreen() {
           decelerationRate="fast"
           snapToInterval={snapInterval}
           renderItem={({ item, index }) =>
-            renderStockCard(item, index === futureInvestmentOptions.length - 1)
+            renderStockCard(item, index === futureInvestmentOptions.length - 1, selectedFutureYears, 'future')
           }
         />
 
