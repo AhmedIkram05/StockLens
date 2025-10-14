@@ -70,6 +70,17 @@ export const receiptService = {
     await databaseService.executeNonQuery(query, [id]);
   },
 
+  // Delete all receipts for a given user or all receipts when userId is not provided
+  deleteAll: async (userId?: string): Promise<void> => {
+    if (userId) {
+      const query = 'DELETE FROM receipts WHERE user_id = ?';
+      await databaseService.executeNonQuery(query, [userId]);
+    } else {
+      const query = 'DELETE FROM receipts';
+      await databaseService.executeNonQuery(query, []);
+    }
+  },
+
   // Get unsynced receipts
   getUnsynced: async (userId: string): Promise<Receipt[]> => {
     const query = 'SELECT * FROM receipts WHERE user_id = ? AND synced = 0';

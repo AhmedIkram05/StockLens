@@ -17,6 +17,9 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { receiptService } from '../services/dataService';
+import { TextInput } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 
@@ -35,24 +38,52 @@ import { stockService } from '../services/dataService';
 // compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
 function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
   if (!data || data.length < 2 || years <= 0) return null;
-  const first = data[0].adjustedClose ?? data[0].close;
-  const last = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
-  if (!first || !last || first <= 0) return null;
-  return Math.pow(last / first, 1 / years) - 1;
+  const firstVal = data[0].adjustedClose ?? data[0].close;
+  const lastVal = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
+  if (!firstVal || !lastVal || firstVal <= 0) return null;
+
+  // compute actual time span in years between first and last data points
+  try {
+    const firstDate = new Date(data[0].date);
+    const lastDate = new Date(data[data.length - 1].date);
+    const msPerYear = 1000 * 60 * 60 * 24 * 365.25;
+    const actualYears = (lastDate.getTime() - firstDate.getTime()) / msPerYear;
+    if (!(actualYears > 0)) return null;
+    return Math.pow(lastVal / firstVal, 1 / actualYears) - 1;
+  } catch (e) {
+    // fallback to using provided years if date parsing fails
+    return Math.pow(lastVal / firstVal, 1 / years) - 1;
+  }
 }
 
 export default function ReceiptDetailsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<ReceiptDetailsRouteProp>();
   const {
-    totalAmount,
-    merchantName,
+    receiptId,
+    totalAmount: initialAmount,
+    merchantName: initialMerchant,
     date,
     image,
   } = route.params;
 
   const [selectedYears, setSelectedYears] = useState<typeof YEAR_OPTIONS[number]>(5);
   const [selectedFutureYears, setSelectedFutureYears] = useState<typeof YEAR_OPTIONS[number]>(5);
+  // Keep the amount as a string for reliable decimal input, parse to number on save
+  const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
+  const [amount, setAmount] = useState<number>(initialAmount ?? 0);
+  const [merchant, setMerchant] = useState<string>(initialMerchant ?? '');
+  const [saving, setSaving] = useState(false);
+
+  // Use editable amount (parsed from string) as the base for projections and displays
+  // Keep `amount` in sync with `amountStr` for computed projections
+  useEffect(() => {
+    const parsed = Number(String(amountStr).replace(/,/g, '.'));
+    setAmount(Number.isFinite(parsed) ? parsed : 0);
+  }, [amountStr]);
+
+  const totalAmount = amount;
+  const { userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet, width } = useBreakpoint();
 
   const investmentOptions = useMemo(() => {
@@ -152,6 +183,12 @@ export default function ReceiptDetailsScreen() {
     minimumFractionDigits: 2,
   }).format(totalAmount);
 
+  const formattedEditableAmount = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: 2,
+  }).format(amount || 0);
+
   const formattedYearsLabel = `${selectedYears} ${selectedYears === 1 ? 'year' : 'years'}`;
   const formattedFutureYearsLabel = `${selectedFutureYears} ${selectedFutureYears === 1 ? 'year' : 'years'}`;
 
@@ -182,9 +219,8 @@ export default function ReceiptDetailsScreen() {
         computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
       }
     } else {
-      // future mode — prefer historical CAGR for same period when available, otherwise use preset
-      const cagr = historicalRates[investmentValue.ticker]?.[years];
-      const rate = cagr !== undefined && cagr !== null ? cagr : investmentValue.returnRate;
+      // future mode — use the preset annual returnRate (simulated projection)
+      const rate = investmentValue.returnRate;
       computedFutureValue = totalAmount * Math.pow(1 + rate, years);
       computedGain = computedFutureValue - totalAmount;
       computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
@@ -268,9 +304,87 @@ export default function ReceiptDetailsScreen() {
           )}
 
           <View style={styles.receiptInfo}>
-            <Text style={styles.receiptMerchant}>{merchantName}</Text>
-            <Text style={styles.receiptAmount}>{formattedAmount}</Text>
-            <Text style={styles.receiptDate}>{date}</Text>
+            <Text style={styles.receiptMerchant}>{merchant}</Text>
+            <Text style={styles.receiptAmount}>{formattedEditableAmount}</Text>
+            <Text style={styles.receiptDate}>{new Date(date).toLocaleString()}</Text>
+          </View>
+        </View>
+
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
+          <Text style={{ ...typography.overline, marginBottom: spacing.xs }}>Merchant</Text>
+          <TextInput
+            value={merchant}
+            onChangeText={setMerchant}
+            placeholder="Merchant name"
+            style={{
+              backgroundColor: palette.white,
+              padding: spacing.md,
+              borderRadius: radii.md,
+              marginBottom: spacing.md,
+            }}
+          />
+
+          <Text style={{ ...typography.overline, marginBottom: spacing.xs }}>Amount</Text>
+          <TextInput
+            keyboardType="decimal-pad"
+            value={amountStr}
+            onChangeText={setAmountStr}
+            placeholder="0.00"
+            style={{
+              backgroundColor: palette.white,
+              padding: spacing.md,
+              borderRadius: radii.md,
+              marginBottom: spacing.md,
+            }}
+          />
+
+          <View style={{ flexDirection: 'row', marginTop: spacing.md }}>
+            <TouchableOpacity
+              style={[styles.saveButton, { flex: 1 }]}
+              onPress={async () => {
+                // Save to local DB with validation
+                try {
+                  setSaving(true);
+                  const uid = userProfile?.uid || 'local';
+
+                  // Parse amount string to number (handle commas as decimal separators)
+                  const parsed = Number(String(amountStr).replace(/,/g, '.'));
+                  if (!Number.isFinite(parsed) || parsed <= 0) {
+                    setSaving(false);
+                    Alert.alert('Invalid amount', 'Please enter a valid amount (e.g. 12.34)');
+                    return;
+                  }
+
+                  if (receiptId) {
+                    await receiptService.update(Number(receiptId), { total_amount: parsed, ocr_data: '', synced: 0 });
+                  } else {
+                    const id = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, ocr_data: '', synced: 0 });
+                    if (id && Number(id) > 0) {
+                      await receiptService.update(Number(id), { date_scanned: new Date(date).toISOString() });
+                    } else if (!id) {
+                      throw new Error('Failed to create receipt');
+                    }
+                  }
+
+                  setSaving(false);
+                  Alert.alert('Saved', 'Receipt saved locally');
+                  navigation.navigate('MainTabs' as any);
+                } catch (e: any) {
+                  setSaving(false);
+                  console.error('Save error', e);
+                  Alert.alert('Save Error', e?.message || 'Failed to save receipt');
+                }
+              }}
+            >
+              <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.cancelButton, { flex: 1 }]}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -388,7 +502,24 @@ export default function ReceiptDetailsScreen() {
               'Are you sure you want to delete this receipt?',
               [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      if (!receiptId) {
+                        Alert.alert('Cannot delete', 'Receipt has not been saved yet');
+                        return;
+                      }
+                      await receiptService.delete(Number(receiptId));
+                      Alert.alert('Deleted', 'Receipt deleted');
+                      navigation.navigate('MainTabs' as any);
+                    } catch (e: any) {
+                      console.error('Delete error', e);
+                      Alert.alert('Delete failed', e?.message || 'Failed to delete receipt');
+                    }
+                  }
+                },
               ]
             )
           }
@@ -465,6 +596,10 @@ type Styles = {
   warningBoxCompact: ViewStyle;
   warningIcon: TextStyle;
   warningText: TextStyle;
+  saveButton: ViewStyle;
+  saveButtonText: TextStyle;
+  cancelButton: ViewStyle;
+  cancelButtonText: TextStyle;
 };
 
 const styles = StyleSheet.create<Styles>({
@@ -736,5 +871,28 @@ const styles = StyleSheet.create<Styles>({
     lineHeight: 18,
     flex: 1,
     textAlign: 'left',
+  },
+  saveButton: {
+    backgroundColor: palette.green,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  saveButtonText: {
+    color: palette.white,
+    ...typography.button,
+  },
+  cancelButton: {
+    backgroundColor: alpha.subtleBlack,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    color: palette.white,
+    ...typography.button,
   },
 });

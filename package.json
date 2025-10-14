@@ -17,6 +17,7 @@
     "expo": "~54.0.13",
     "expo-camera": "~17.0.8",
     "expo-constants": "^18.0.9",
+    "expo-image-manipulator": "^14.0.7",
     "expo-image-picker": "~17.0.8",
     "expo-linear-gradient": "~15.0.7",
     "expo-media-library": "~18.2.0",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "expo-module-scripts": "^5.0.7",
     "typescript": "~5.9.2"
   },
   "private": true

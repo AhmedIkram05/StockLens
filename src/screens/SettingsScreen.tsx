@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { receiptService } from '../services/dataService';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SettingsScreen() {
-  const { signOutUser } = useAuth();
+  const { signOutUser, userProfile } = useAuth();
   const [faceIdEnabled, setFaceIdEnabled] = useState(true);
   const [localStorageEnabled, setLocalStorageEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
@@ -43,7 +44,17 @@ export default function SettingsScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => Alert.alert('Data Cleared', 'All scanned data has been cleared locally.'),
+          onPress: async () => {
+            try {
+              // If user is signed in, only delete their receipts; otherwise delete all local receipts
+              const uid = userProfile?.uid;
+              await receiptService.deleteAll(uid);
+              Alert.alert('Data Cleared', 'All scanned data has been cleared locally.');
+            } catch (err: any) {
+              console.error('Failed to clear receipts', err);
+              Alert.alert('Error', err?.message || 'Failed to clear scanned data');
+            }
+          },
         },
       ]
     );

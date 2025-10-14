@@ -29,5 +29,9 @@
     "plugins": [
       "expo-sqlite"
     ]
+    ,
+    "extra": {
+      "OCR_SPACE_API_KEY": "K86345927288957"
+    }
   }
 }
