@@ -34,6 +34,7 @@ const STOCK_PRESETS = [
 ];
 
 import { stockService } from '../services/dataService';
+import { subscribe } from '../services/eventBus';
 
 // compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
 function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
@@ -154,8 +155,16 @@ export default function ReceiptDetailsScreen() {
     }
 
     loadHistoricalForYears(selectedYears);
+    const unsub = subscribe('historical-updated', (payload) => {
+      // payload may contain symbol/interval; refresh if it's one of our tracked tickers
+      const updatedTicker = payload?.symbol as string | undefined;
+      if (!updatedTicker || STOCK_PRESETS.some(s => s.ticker === updatedTicker)) {
+        loadHistoricalForYears(selectedYears).catch(() => {});
+      }
+    });
     return () => {
       mounted = false;
+      unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYears]);

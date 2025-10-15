@@ -133,6 +133,14 @@ export default function ScanScreen() {
 
   async function processReceiptHandler() {
     if (!photo) return;
+    // small helper to avoid hanging promises (timeout)
+    const withTimeout = async <T,>(p: Promise<T>, ms = 20000): Promise<T> => {
+      return await Promise.race([
+        p,
+        new Promise<T>((_res, rej) => setTimeout(() => rej(new Error('Operation timed out')), ms)),
+      ] as any);
+    };
+
     try {
       setProcessing(true);
       const extras = (Constants as any).manifest?.extra || (Constants as any).expoConfig?.extra || {};
@@ -148,20 +156,21 @@ export default function ScanScreen() {
       let attempts = 0;
       const maxAttempts = 3; // initial + 2 preprocessing retries
 
-      // helper to preprocess image and return base64
+      // helper to preprocess image and return base64 (with timeout)
       const preprocessAndGetBase64 = async (uri: string) => {
         try {
           // Dynamic import to avoid top-level type dependency issues in TS
           const ImageManipulator = (await import('expo-image-manipulator')) as any;
           // Resize to improve OCR accuracy, keep aspect ratio
-          const manipResult = await ImageManipulator.manipulateAsync(
+          const manipPromise = ImageManipulator.manipulateAsync(
             uri,
             [{ resize: { width: 1600 } }],
             { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG, base64: true }
           );
-          return manipResult.base64 || null;
-        } catch (e) {
-          console.warn('Preprocess failed', e);
+          const manipResult = await withTimeout(manipPromise, 20000) as any;
+          return manipResult?.base64 || null;
+        } catch (e: any) {
+          console.warn('Preprocess failed', e?.message || e);
           return null;
         }
       };
@@ -172,18 +181,18 @@ export default function ScanScreen() {
         try {
           if (attempts === 1) {
             if (photoBase64) {
-              result = await recognizeBase64WithOCRSpace(photoBase64, apiKey);
+              result = await withTimeout(recognizeBase64WithOCRSpace(photoBase64, apiKey), 25000);
             } else {
               // try using manipulated base64 directly from uri
               const pre = await preprocessAndGetBase64(photo);
-              if (pre) result = await recognizeBase64WithOCRSpace(pre, apiKey);
-              else result = await recognizeImageWithOCRSpace(photo, apiKey);
+              if (pre) result = await withTimeout(recognizeBase64WithOCRSpace(pre, apiKey), 25000);
+              else result = await withTimeout(recognizeImageWithOCRSpace(photo, apiKey), 25000);
             }
           } else {
             // subsequent attempts: preprocess then call base64 endpoint
             const pre = await preprocessAndGetBase64(photo);
-            if (pre) result = await recognizeBase64WithOCRSpace(pre, apiKey);
-            else result = await recognizeImageWithOCRSpace(photo, apiKey);
+            if (pre) result = await withTimeout(recognizeBase64WithOCRSpace(pre, apiKey), 25000);
+            else result = await withTimeout(recognizeImageWithOCRSpace(photo, apiKey), 25000);
           }
         } catch (e: any) {
           console.warn(`OCR attempt ${attempts} failed`, e?.message || e);

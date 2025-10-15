@@ -6,6 +6,7 @@ import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
 import { stockService, receiptService } from '../services/dataService';
+import { subscribe } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SummaryScreen() {
@@ -80,8 +81,13 @@ export default function SummaryScreen() {
     }
 
     loadTotals();
+    const unsub = subscribe('historical-updated', () => {
+      // re-run totals when historical data updates
+      loadTotals().catch(() => {});
+    });
     return () => {
       mounted = false;
+      unsub();
     };
   }, [user?.uid]);
 
@@ -112,8 +118,12 @@ export default function SummaryScreen() {
     }
 
     load();
+    const unsub = subscribe('historical-updated', () => {
+      load().catch(() => {});
+    });
     return () => {
       mounted = false;
+      unsub();
     };
   }, []);
 

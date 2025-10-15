@@ -33,7 +33,9 @@ export const receiptService = {
       receipt.ocr_data,
       receipt.synced || 0,
     ];
-    return await databaseService.executeNonQuery(query, params);
+    const id = await databaseService.executeNonQuery(query, params);
+
+    return id;
   },
 
   // Get all receipts for a user
@@ -198,3 +200,44 @@ export const stockService = {
     }
   },
 };
+
+// --- One-time historical prefetch helpers ---
+const PREFETCH_MARKER_SYMBOL = '__stocklens_prefetch_done__';
+const PREFETCH_TICKERS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'TSLA'];
+
+async function ensureHistoricalPrefetch() {
+  try {
+    // Check if marker exists in alpha_cache
+    const rows = await databaseService.executeQuery(
+      'SELECT * FROM alpha_cache WHERE symbol = ? LIMIT 1',
+      [PREFETCH_MARKER_SYMBOL]
+    );
+    if (rows && rows.length > 0) return; // already done
+
+    // Fetch monthly for each ticker (durable write is handled inside alphaVantageService)
+    for (const t of PREFETCH_TICKERS) {
+      try {
+        // monthly fetch will persist raw JSON to alpha_cache in alphaVantageService
+        await alphaVantageService.getMonthlyAdjusted(t);
+        // fetch daily as well to populate 1-year window
+        await alphaVantageService.getDailyAdjusted(t);
+      } catch (e) {
+        // ignore per-ticker errors
+      }
+    }
+
+    // insert a marker row to indicate prefetch complete
+    try {
+      await databaseService.executeNonQuery(
+        `INSERT OR REPLACE INTO alpha_cache (symbol, interval, params, fetched_at, raw_json) VALUES (?, ?, ?, ?, ?)`,
+        [PREFETCH_MARKER_SYMBOL, 'meta', '', new Date().toISOString(), JSON.stringify({ done: true })]
+      );
+    } catch (e) {
+      /* ignore */
+    }
+  } catch (e) {
+    // best-effort
+  }
+}
+
+export { ensureHistoricalPrefetch };
