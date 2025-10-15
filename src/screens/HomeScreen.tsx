@@ -24,15 +24,13 @@ export default function HomeScreen() {
   const [showAllHistory, setShowAllHistory] = useState(false);
 
   const { user } = useAuth();
-  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [allScans, setAllScans] = useState<any[]>([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [receiptsError, setReceiptsError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const allScans = recentScans;
-
   // Check if user has any scans
-  const hasScans = recentScans.length > 0;
+  const hasScans = allScans.length > 0;
 
   const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone } = useBreakpoint();
   const horizontalPad = useMemo(
@@ -60,6 +58,31 @@ export default function HomeScreen() {
   // totalSpend derived from receipts (replaces placeholder)
   const [totalSpend, setTotalSpend] = useState<number>(0);
 
+  // Friendly relative date for receipt cards
+  const formatReceiptLabel = (isoDate?: string) => {
+    if (!isoDate) return 'Receipt';
+    try {
+      const d = new Date(isoDate);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHours = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffSec < 60) return `${diffSec}s ago`;
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays <= 7) return `${diffDays} days ago`;
+
+      // older: show localized short date (e.g., 15 Oct 2025)
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return 'Receipt';
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     async function loadReceipts() {
@@ -67,7 +90,7 @@ export default function HomeScreen() {
       setReceiptsError(null);
       try {
         if (!user?.uid) {
-          setRecentScans([]);
+          setAllScans([]);
           return;
         }
         const receipts = await receiptService.getByUserId(user.uid);
@@ -75,13 +98,13 @@ export default function HomeScreen() {
         // Map to UI-friendly shape (minimal)
         const mapped = receipts.map(r => ({
           id: String(r.id),
-          merchant: r.ocr_data ? r.ocr_data.split('\n')[0] : 'Receipt',
+          merchant: formatReceiptLabel(r.date_scanned),
           amount: r.total_amount || 0,
           date: r.date_scanned || '',
           time: '',
           image: r.image_uri || undefined,
         }));
-        if (mounted) setRecentScans(mapped.slice(0, 10));
+        if (mounted) setAllScans(mapped);
       } catch (err: any) {
         if (mounted) setReceiptsError(err?.message || String(err));
       } finally {
@@ -109,13 +132,13 @@ export default function HomeScreen() {
         const receipts = await receiptService.getByUserId(user.uid);
         const mapped = receipts.map(r => ({
           id: String(r.id),
-          merchant: r.ocr_data ? r.ocr_data.split('\n')[0] : 'Receipt',
+          merchant: formatReceiptLabel(r.date_scanned),
           amount: r.total_amount || 0,
           date: r.date_scanned || '',
           time: '',
           image: r.image_uri || undefined,
         }));
-        setRecentScans(mapped.slice(0, 10));
+        setAllScans(mapped);
       }
     } catch (e) {
       // noop
@@ -142,7 +165,7 @@ export default function HomeScreen() {
         }
 
         const effectiveTotal = totalSpend || 0;
-        const tickers = ['NVDA', 'TSLA', 'MSFT'];
+  const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
         const perTicker = effectiveTotal / tickers.length || 0;
         const results = await Promise.all(
           tickers.map(async t => {
@@ -199,25 +222,27 @@ export default function HomeScreen() {
                   <Text style={styles.statLabel}>{portfolioLoading ? 'Calculating...' : portfolioError ? 'Projection unavailable' : 'Total Possible Value (5 Yrs)'}</Text>
                 </View>
               <View style={[styles.statCardBlue, stackStats && styles.statCardFullWidth]}>
-                <Text style={styles.statValue}>{recentScans.length}</Text>
+                <Text style={styles.statValue}>{allScans.length}</Text>
                 <Text style={styles.statLabel}>Receipts Scanned</Text>
               </View>
             </View>
 
             <View style={[styles.recentScans, horizontalPad]}>
               <Text style={styles.sectionTitle}>Recent Scans</Text>
-              {(showAllHistory ? allScans : recentScans).map((scan) => (
+              {(() => {
+                const preview = allScans.slice(0, 3);
+                const list = showAllHistory ? allScans : preview;
+                return list.map((scan) => (
                 <TouchableOpacity
                   key={scan.id}
                   style={styles.scanCard}
                   onPress={() =>
                     navigation.navigate('ReceiptDetails', {
-                      receiptId: scan.id,
-                      merchantName: scan.merchant,
-                      totalAmount: scan.amount,
-                      date: scan.date,
-                      image: scan.image,
-                    })
+                          receiptId: scan.id,
+                          totalAmount: scan.amount,
+                          date: scan.date,
+                          image: scan.image,
+                        })
                   }
                 >
                   <Image source={{ uri: scan.image }} style={styles.scanImage} />
@@ -228,7 +253,8 @@ export default function HomeScreen() {
                   </View>
                   <Text style={styles.chevron}>›</Text>
                 </TouchableOpacity>
-              ))}
+                ));
+              })()}
 
               <TouchableOpacity
                 style={styles.viewAllButton}

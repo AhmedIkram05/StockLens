@@ -30,7 +30,7 @@ export const receiptService = {
       receipt.user_id,
       receipt.image_uri,
       receipt.total_amount,
-      receipt.ocr_data,
+      receipt.ocr_data || '',
       receipt.synced || 0,
     ];
     const id = await databaseService.executeNonQuery(query, params);
@@ -53,7 +53,7 @@ export const receiptService = {
 
   // Update a receipt
   update: async (id: number, receipt: Partial<Receipt>): Promise<void> => {
-    const allowedFields: Array<keyof Receipt> = ['user_id', 'image_uri', 'total_amount', 'date_scanned', 'ocr_data', 'synced'];
+  const allowedFields: Array<keyof Receipt> = ['user_id', 'image_uri', 'total_amount', 'date_scanned', 'ocr_data', 'synced'];
     const fields = Object.keys(receipt).filter(key => allowedFields.includes(key as keyof Receipt) && receipt[key as keyof Receipt] !== undefined);
     if (fields.length === 0) {
       return;
@@ -203,7 +203,7 @@ export const stockService = {
 
 // --- One-time historical prefetch helpers ---
 const PREFETCH_MARKER_SYMBOL = '__stocklens_prefetch_done__';
-const PREFETCH_TICKERS = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'TSLA'];
+export const PREFETCH_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
 
 async function ensureHistoricalPrefetch() {
   try {

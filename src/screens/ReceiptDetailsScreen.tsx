@@ -26,15 +26,17 @@ type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 const YEAR_OPTIONS = [1, 3, 5, 10, 20] as const;
 
 const STOCK_PRESETS = [
+  { name: 'NVIDIA', ticker: 'NVDA', returnRate: 0.24 },
   { name: 'Apple', ticker: 'AAPL', returnRate: 0.18 },
   { name: 'Microsoft', ticker: 'MSFT', returnRate: 0.15 },
-  { name: 'NVIDIA', ticker: 'NVDA', returnRate: 0.24 },
-  { name: 'Amazon', ticker: 'AMZN', returnRate: 0.12 },
   { name: 'Tesla', ticker: 'TSLA', returnRate: 0.28 },
+  { name: 'Nike', ticker: 'NKE', returnRate: 0.12 },
 ];
 
 import { stockService } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
+import { emit } from '../services/eventBus';
+import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
 
 // compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
 function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
@@ -63,7 +65,6 @@ export default function ReceiptDetailsScreen() {
   const {
     receiptId,
     totalAmount: initialAmount,
-    merchantName: initialMerchant,
     date,
     image,
   } = route.params;
@@ -131,8 +132,7 @@ export default function ReceiptDetailsScreen() {
       try {
         const promises = STOCK_PRESETS.map(async s => {
           try {
-            const data = await stockService.getHistoricalForTicker(s.ticker, years);
-            const cagr = computeCAGR(data as any, years);
+            const cagr = await getHistoricalCAGRFromToday(s.ticker, years);
             return { ticker: s.ticker, total: cagr };
           } catch (e: any) {
             return { ticker: s.ticker, total: null };
@@ -218,16 +218,18 @@ export default function ReceiptDetailsScreen() {
         // historical CAGR -> compute future value over the period (equivalent to last/first)
         computedFutureValue = totalAmount * Math.pow(1 + cagr, years);
         computedGain = computedFutureValue - totalAmount;
-        computedPercentReturn = cagr * 100;
+        // show cumulative percent over the whole period (not annualized)
+        computedPercentReturn = (Math.pow(1 + cagr, years) - 1) * 100;
       } else {
-        // fallback to preset annual rate if no historical CAGR
+        // fallback to historical calculation at render time (best-effort) or preset if unavailable
+        // use projectUsingHistoricalCAGR synchronously is not possible; fallback to preset rate
         const rate = investmentValue.returnRate;
         computedFutureValue = totalAmount * Math.pow(1 + rate, years);
         computedGain = computedFutureValue - totalAmount;
         computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
       }
     } else {
-      // future mode — use the preset annual returnRate (simulated projection)
+      // future mode — use the unified projectionService (but we already precompute historicalRates for past mode)
       const rate = investmentValue.returnRate;
       computedFutureValue = totalAmount * Math.pow(1 + rate, years);
       computedGain = computedFutureValue - totalAmount;
@@ -246,7 +248,10 @@ export default function ReceiptDetailsScreen() {
       minimumFractionDigits: 2,
     }).format(computedGain);
 
-    const percentDisplay = `${computedPercentReturn.toFixed(1)}%`;
+  const percentDisplay = `${computedPercentReturn.toFixed(1)}%`;
+
+  // color: green for positive or zero, red for negative
+  const valueColor = computedPercentReturn >= 0 ? palette.green : palette.red;
 
     return (
       <View style={[styles.stockCard, stockCardLayout, isLastItem && styles.stockCardLast]}>
@@ -265,14 +270,14 @@ export default function ReceiptDetailsScreen() {
         <View style={styles.stockFooter}>
           <View style={styles.stockFooterItem}>
             <Text style={styles.footerLabel}>Return</Text>
-            <Text style={styles.footerValue}>{percentDisplay}</Text>
+            <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
           </View>
 
           <View style={styles.verticalDivider} />
 
           <View style={styles.stockFooterItem}>
             <Text style={styles.footerLabel}>Gained</Text>
-            <Text style={styles.footerValue}>{gainDisplay}</Text>
+            <Text style={[styles.footerValue, { color: computedGain >= 0 ? palette.green : palette.red }]}>{gainDisplay}</Text>
           </View>
         </View>
       </View>
@@ -312,7 +317,6 @@ export default function ReceiptDetailsScreen() {
           )}
 
           <View style={styles.receiptInfo}>
-            <Text style={styles.receiptMerchant}>{initialMerchant}</Text>
             <Text style={styles.receiptAmount}>{formattedEditableAmount}</Text>
             <Text style={styles.receiptDate}>{new Date(date).toLocaleString()}</Text>
           </View>
@@ -339,32 +343,52 @@ export default function ReceiptDetailsScreen() {
             <TouchableOpacity
               style={[styles.saveButton, { flex: 1 }]}
               onPress={async () => {
-                // Save to local DB with validation
+                // Save to local DB with validation. This handler will update existing receipts
+                // or create a new one if no receiptId was provided.
                 try {
                   setSaving(true);
                   const uid = userProfile?.uid || 'local';
 
-                  // Parse amount string to number (handle commas as decimal separators)
-                  const parsed = Number(String(amountStr).replace(/,/g, '.'));
+                  // Normalize common decimal separators and strip currency symbols/spaces
+                  const cleaned = String(amountStr).replace(/[^0-9.,-]/g, '').trim();
+                  const normalized = cleaned.replace(/,/g, '.');
+                  const parsed = Number(normalized);
+
                   if (!Number.isFinite(parsed) || parsed <= 0) {
                     setSaving(false);
                     Alert.alert('Invalid amount', 'Please enter a valid amount (e.g. 12.34)');
                     return;
                   }
 
+                  let savedId: number | null = null;
                   if (receiptId) {
-                    await receiptService.update(Number(receiptId), { total_amount: parsed, ocr_data: '', synced: 0 });
+                    await receiptService.update(Number(receiptId), { total_amount: parsed, synced: 0 });
+                    savedId = Number(receiptId);
                   } else {
-                    const id = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, ocr_data: '', synced: 0 });
-                    if (id && Number(id) > 0) {
-                      await receiptService.update(Number(id), { date_scanned: new Date(date).toISOString() });
-                    } else if (!id) {
+                    const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, synced: 0 });
+                    if (created && Number(created) > 0) {
+                      savedId = Number(created);
+                      // attempt to set scanned date if provided
+                      try {
+                        await receiptService.update(savedId, { date_scanned: new Date(date).toISOString() });
+                      } catch (e) {
+                        // non-fatal
+                      }
+                    } else {
                       throw new Error('Failed to create receipt');
                     }
                   }
 
+                  // Emit receipts-changed so lists refresh immediately
+                  try {
+                    emit('receipts-changed', { id: savedId });
+                  } catch (e) {
+                    // swallow emit errors
+                  }
+
                   setSaving(false);
                   Alert.alert('Saved', 'Receipt saved locally');
+                  // Prefer navigating back to main tabs where receipts list lives
                   navigation.navigate('MainTabs' as any);
                 } catch (e: any) {
                   setSaving(false);
@@ -509,6 +533,8 @@ export default function ReceiptDetailsScreen() {
                         return;
                       }
                       await receiptService.delete(Number(receiptId));
+                      // notify listeners that receipts changed
+                      try { emit('receipts-changed', { id: Number(receiptId), action: 'deleted' }); } catch (e) {}
                       Alert.alert('Deleted', 'Receipt deleted');
                       navigation.navigate('MainTabs' as any);
                     } catch (e: any) {

@@ -163,6 +163,24 @@ export const alphaVantageService = {
     return parsed;
   },
 
+  // Read cached monthly adjusted raw JSON from the durable alpha_cache table without network.
+  // Returns parsed OHLCV[] when present and parsable, otherwise null.
+  getCachedMonthlyAdjusted: async (symbol: string): Promise<OHLCV[] | null> => {
+    try {
+      const rows = await databaseService.executeQuery(
+        'SELECT raw_json, fetched_at FROM alpha_cache WHERE symbol = ? AND interval = ? AND params = ? LIMIT 1',
+        [symbol, 'monthly', '']
+      );
+      if (!rows || rows.length === 0) return null;
+      const row = rows[0];
+      const json = JSON.parse(row.raw_json);
+      const parsed = parseMonthlyAdjusted(json);
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  },
+
   getDailyAdjusted: async (symbol: string): Promise<OHLCV[]> => {
     const key = getApiKey();
     if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_KEY in expo extra or environment.');

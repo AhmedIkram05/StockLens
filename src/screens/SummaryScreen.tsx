@@ -6,8 +6,10 @@ import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
 import { stockService, receiptService } from '../services/dataService';
+import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
 import { subscribe } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
+import CompoundCalculatorCard from '../components/CompoundCalculatorCard';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
@@ -16,33 +18,7 @@ export default function SummaryScreen() {
   const [receiptsScanned, setReceiptsScanned] = useState<number>(0);
   const [totalMissedTenYears, setTotalMissedTenYears] = useState<number>(0);
 
-  const initialTopStocks = [
-    {
-      company: 'NVIDIA Corporation',
-      ticker: 'NVDA',
-      sector: 'AI/Semiconductors',
-      growth: '—',
-      period: '5Y est.',
-    },
-    {
-      company: 'Tesla Inc',
-      ticker: 'TSLA',
-      sector: 'Electric Vehicles',
-      growth: '—',
-      period: '5Y est.',
-    },
-    {
-      company: 'Microsoft Corporation',
-      ticker: 'MSFT',
-      sector: 'Cloud/AI',
-      growth: '—',
-      period: '5Y est.',
-    },
-  ];
-
-  const [topStocks, setTopStocks] = useState(initialTopStocks);
-  const [loadingStocks, setLoadingStocks] = useState(true);
-  const [stocksError, setStocksError] = useState<string | null>(null);
+  // Top-3 stocks removed; replaced by compound calculator card.
 
   useEffect(() => {
     let mounted = true;
@@ -55,25 +31,40 @@ export default function SummaryScreen() {
         setTotalMoneySpent(total);
         setReceiptsScanned(receipts.length);
 
-        const tickers = ['NVDA', 'TSLA', 'MSFT'];
+        const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
         const perTicker = total / Math.max(1, tickers.length);
         const futures = await Promise.all(
           tickers.map(async t => {
             try {
-              const data = await stockService.getHistoricalForTicker(t, 5);
-              const first = data[0]?.adjustedClose ?? data[0]?.close;
-              const last = data[data.length - 1]?.adjustedClose ?? data[data.length - 1]?.close;
-              if (!first || !last) return perTicker;
-              const cagr = Math.pow(last / first, 1 / 5) - 1;
-              return perTicker * Math.pow(1 + cagr, 5);
+              // Use unified historical CAGR computed from today - 5 years to today
+              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
+              return futureValue;
             } catch (e) {
-              return perTicker * 1.15;
+              // fallback: use preset projection for perTicker
+              try {
+                const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
+                return futureValue;
+              } catch {
+                return perTicker * 1.15;
+              }
             }
           })
         );
         const totalFuture5 = futures.reduce((s, v) => s + v, 0);
         if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
-        const totalFuture10 = futures.reduce((s, v) => s + v, 0) * 1.5;
+        // For 10y, compute projection using historical 10-year CAGR if available per ticker, else extrapolate from 5y
+        const futures10 = await Promise.all(
+          tickers.map(async t => {
+            try {
+              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 10);
+              return futureValue;
+            } catch {
+              // fallback: extrapolate 10y from 5y result conservatively
+              return (perTicker * 1.15) * 1.5;
+            }
+          })
+        );
+        const totalFuture10 = futures10.reduce((s, v) => s + v, 0);
         if (mounted) setTotalMissedTenYears(Math.round(totalFuture10));
       } catch (err) {
         // ignore errors for now
@@ -91,41 +82,7 @@ export default function SummaryScreen() {
     };
   }, [user?.uid]);
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      setLoadingStocks(true);
-      setStocksError(null);
-      try {
-        const promises = initialTopStocks.map(async s => {
-          const data = await stockService.getHistoricalForTicker(s.ticker, 5);
-          if (!data || data.length < 2) return { ...s, growth: 'N/A' };
-          const first = data[0].adjustedClose ?? data[0].close;
-          const last = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
-          const pct = ((last / first - 1) * 100);
-          const sign = pct >= 0 ? '+' : '';
-          return { ...s, growth: `${sign}${Math.round(pct)}%` };
-        });
-
-        const resolved = await Promise.all(promises);
-        if (mounted) setTopStocks(resolved as any);
-      } catch (err: any) {
-        if (mounted) setStocksError(err?.message || String(err));
-      } finally {
-        if (mounted) setLoadingStocks(false);
-      }
-    }
-
-    load();
-    const unsub = subscribe('historical-updated', () => {
-      load().catch(() => {});
-    });
-    return () => {
-      mounted = false;
-      unsub();
-    };
-  }, []);
+  // Top-3 stocks removed — no longer computing nor fetching here.
 
   const quickStats = [
     { label: 'Average per receipt', value: '£12.35' },
@@ -193,6 +150,8 @@ export default function SummaryScreen() {
           <Text style={styles.subtitle}>Your investment insights at a glance</Text>
         </View>
 
+        {/* (Compound calculator will be shown below in place of Top‑3) */}
+
         <View style={[styles.cardsGrid, cardsGridStyle]}>
           <View style={[styles.card, cardLayoutStyle, styles.cardBlue]}>
             <Text style={styles.cardValue}>{formatCurrency(totalMoneySpent)}</Text>
@@ -218,33 +177,9 @@ export default function SummaryScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top 3 Future Stocks (5Y Projection)</Text>
-        </View>
-
-        <View style={styles.stockList}>
-          {loadingStocks ? (
-            <View style={{ padding: spacing.md }}>
-              <Text style={{ color: palette.black }}>Loading stocks...</Text>
-            </View>
-          ) : stocksError ? (
-            <View style={{ padding: spacing.md }}>
-              <Text style={{ color: palette.red }}>Failed to load stocks: {stocksError}</Text>
-            </View>
-          ) : (
-            topStocks.map((stock, index) => (
-              <View key={stock.ticker} style={[styles.stockRow, index < topStocks.length - 1 && styles.rowDivider]}>
-                <View style={styles.stockInfo}>
-                  <Text style={styles.stockCompany}>{stock.company}</Text>
-                  <Text style={styles.stockMeta}>{`${stock.ticker} • ${stock.sector}`}</Text>
-                </View>
-                <View style={styles.stockGrowthContainer}>
-                  <Text style={styles.stockGrowth}>{stock.growth}</Text>
-                  <Text style={styles.stockPeriod}>{stock.period}</Text>
-                </View>
-              </View>
-            ))
-          )}
+        {/* Compound interest calculator card (replaces Top 3) */}
+        <View style={{ width: '100%', marginTop: spacing.md }}>
+          <CompoundCalculatorCard defaultContribution={25} defaultYears={5} />
         </View>
 
         <View style={styles.sectionHeader}>

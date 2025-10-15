@@ -24,7 +24,6 @@ export type RootStackParamList = {
   MainTabs: undefined;
   ReceiptDetails: {
     receiptId: string;
-    merchantName: string;
     totalAmount: number;
     date: string;
     image?: string;

@@ -89,7 +89,11 @@ export default function ScanScreen() {
         } catch (e) {
           // ignore
         }
-        Alert.alert('Success', 'Receipt captured! Tap Process Receipt to OCR');
+        // Auto-process immediately after capture. Pass captured URI/base64 directly
+        // to avoid race conditions with state updates.
+        (async () => {
+          await processReceiptHandler(photo.uri, (photo as any).base64 || null);
+        })();
       } catch (error) {
         Alert.alert('Error', 'Failed to capture image');
       }
@@ -122,17 +126,16 @@ export default function ScanScreen() {
             <TouchableOpacity style={styles.retakeButton} onPress={retakePhoto}>
               <Text style={styles.retakeButtonText}>Retake</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.processButton} onPress={processReceiptHandler}>
-              <Text style={styles.processButtonText}>Process Receipt</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
     );
   }
 
-  async function processReceiptHandler() {
-    if (!photo) return;
+  async function processReceiptHandler(overrideUri?: string | null, overrideBase64?: string | null) {
+    const photoUri = overrideUri ?? photo;
+    const photoB64 = overrideBase64 ?? photoBase64;
+    if (!photoUri) return;
     // small helper to avoid hanging promises (timeout)
     const withTimeout = async <T,>(p: Promise<T>, ms = 20000): Promise<T> => {
       return await Promise.race([
@@ -151,7 +154,7 @@ export default function ScanScreen() {
         return;
       }
       // Try OCR, preferring base64. If no text, retry after preprocessing (resize/compress)
-      const { recognizeBase64WithOCRSpace } = await import('../services/ocrService');
+  const { recognizeBase64WithOCRSpace, recognizeImageWithOCRSpace: recognizeImageWithOCRSpaceLocal } = await import('../services/ocrService');
       let result: any = null;
       let attempts = 0;
       const maxAttempts = 3; // initial + 2 preprocessing retries
@@ -179,20 +182,20 @@ export default function ScanScreen() {
       while (attempts < maxAttempts) {
         attempts += 1;
         try {
-          if (attempts === 1) {
-            if (photoBase64) {
-              result = await withTimeout(recognizeBase64WithOCRSpace(photoBase64, apiKey), 25000);
+            if (attempts === 1) {
+            if (photoB64) {
+              result = await withTimeout(recognizeBase64WithOCRSpace(photoB64, apiKey), 25000);
             } else {
               // try using manipulated base64 directly from uri
-              const pre = await preprocessAndGetBase64(photo);
+              const pre = await preprocessAndGetBase64(photoUri);
               if (pre) result = await withTimeout(recognizeBase64WithOCRSpace(pre, apiKey), 25000);
-              else result = await withTimeout(recognizeImageWithOCRSpace(photo, apiKey), 25000);
+              else result = await withTimeout(recognizeImageWithOCRSpaceLocal(photoUri, apiKey), 25000);
             }
           } else {
             // subsequent attempts: preprocess then call base64 endpoint
-            const pre = await preprocessAndGetBase64(photo);
+            const pre = await preprocessAndGetBase64(photoUri);
             if (pre) result = await withTimeout(recognizeBase64WithOCRSpace(pre, apiKey), 25000);
-            else result = await withTimeout(recognizeImageWithOCRSpace(photo, apiKey), 25000);
+            else result = await withTimeout(recognizeImageWithOCRSpaceLocal(photoUri, apiKey), 25000);
           }
         } catch (e: any) {
           console.warn(`OCR attempt ${attempts} failed`, e?.message || e);
@@ -209,7 +212,7 @@ export default function ScanScreen() {
 
       setProcessing(false);
 
-      const ocrText: string = (result && result.text) ? result.text : '';
+  const ocrText: string = (result && result.text) ? result.text : '';
 
       if (!ocrText || !ocrText.trim()) {
         Alert.alert(
@@ -217,7 +220,7 @@ export default function ScanScreen() {
           'We could not detect text on the receipt after multiple attempts. Would you like to try again or enter details manually?',
           [
             { text: 'Retry', onPress: () => processReceiptHandler() },
-            { text: 'Enter Manually', onPress: () => navigation.navigate('ReceiptDetails' as any, { receiptId: '', merchantName: '', totalAmount: 0, date: new Date().toISOString(), image: photo }) },
+            { text: 'Enter Manually', onPress: () => navigation.navigate('ReceiptDetails' as any, { receiptId: '', totalAmount: 0, date: new Date().toISOString(), image: photo }) },
             { text: 'Cancel', style: 'cancel' },
           ]
         );
@@ -232,19 +235,39 @@ export default function ScanScreen() {
       const scannedAt = new Date();
 
       const amountToPass = chosenAmount != null ? chosenAmount : 0;
-      navigation.navigate('ReceiptDetails' as any, {
-        receiptId: '',
-        merchantName: '',
-        totalAmount: amountToPass,
-        date: scannedAt.toISOString(),
-        image: photo,
-      });
+      // Auto-save receipt to local DB and navigate to details with the saved id
+      try {
+        const createdId = await receiptService.create({
+          user_id: userProfile?.uid || 'anon',
+          image_uri: photoUri as string,
+          total_amount: amountToPass,
+          ocr_data: ocrText,
+          synced: 0,
+        });
+        // update date_scanned to precise scannedAt
+        await receiptService.update(Number(createdId), { date_scanned: scannedAt.toISOString() });
+        navigation.navigate('ReceiptDetails' as any, {
+          receiptId: String(createdId),
+          totalAmount: amountToPass,
+          date: scannedAt.toISOString(),
+          image: photo,
+        });
+      } catch (e) {
+        console.warn('Failed to save receipt', e);
+        // fallback: still navigate to details allowing manual save
+        navigation.navigate('ReceiptDetails' as any, {
+          receiptId: '',
+          totalAmount: amountToPass,
+          date: scannedAt.toISOString(),
+          image: photo,
+        });
+      }
     } catch (err: any) {
       setProcessing(false);
       console.error('OCR process error', err);
       Alert.alert('OCR Error', err.message || 'Failed to process receipt', [
         { text: 'Retry', onPress: () => processReceiptHandler() },
-        { text: 'Enter Manually', onPress: () => navigation.navigate('ReceiptDetails' as any, { receiptId: '', merchantName: '', totalAmount: 0, date: new Date().toISOString(), image: photo }) },
+            { text: 'Enter Manually', onPress: () => navigation.navigate('ReceiptDetails' as any, { receiptId: '', totalAmount: 0, date: new Date().toISOString(), image: photo }) },
         { text: 'Cancel', style: 'cancel' },
       ]);
     }

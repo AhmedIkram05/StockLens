@@ -78,6 +78,21 @@ export const initDatabase = async (): Promise<void> => {
     for (const index of DB_INDEXES) {
       await db.execAsync(index);
     }
+    // Ensure receipts table has an ocr_data column; if missing, add it.
+    try {
+      const cols: any[] = await db.getAllAsync("PRAGMA table_info('receipts')");
+      const hasOcr = cols.some(c => c.name === 'ocr_data');
+      if (!hasOcr) {
+        try {
+          await db.execAsync('ALTER TABLE receipts ADD COLUMN ocr_data TEXT;');
+          console.log('Added ocr_data column to receipts table');
+        } catch (e) {
+          console.warn('Failed to add ocr_data column (it may already exist):', e);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to verify receipts table columns:', e);
+    }
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
