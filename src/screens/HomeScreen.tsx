@@ -10,6 +10,8 @@ import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { stockService, receiptService } from '../services/dataService';
+import { subscribe } from '../services/eventBus';
+import { RefreshControl } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 
@@ -25,6 +27,7 @@ export default function HomeScreen() {
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [receiptsError, setReceiptsError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const allScans = recentScans;
 
@@ -87,10 +90,39 @@ export default function HomeScreen() {
     }
 
     loadReceipts();
+    // subscribe to receipts-changed event so UI refreshes immediately
+    const unsub = subscribe('receipts-changed', async (payload) => {
+      // if payload includes userId and it doesn't match current user, ignore
+      if (payload?.userId && payload.userId !== user?.uid) return;
+      await loadReceipts();
+    });
     return () => {
       mounted = false;
+      unsub();
     };
   }, [user?.uid]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (user?.uid) {
+        const receipts = await receiptService.getByUserId(user.uid);
+        const mapped = receipts.map(r => ({
+          id: String(r.id),
+          merchant: r.ocr_data ? r.ocr_data.split('\n')[0] : 'Receipt',
+          amount: r.total_amount || 0,
+          date: r.date_scanned || '',
+          time: '',
+          image: r.image_uri || undefined,
+        }));
+        setRecentScans(mapped.slice(0, 10));
+      }
+    } catch (e) {
+      // noop
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -144,7 +176,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={scrollPadding}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={scrollPadding}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {hasScans ? (
           // Regular dashboard with scans
           <>
