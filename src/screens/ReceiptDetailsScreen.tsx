@@ -72,7 +72,6 @@ export default function ReceiptDetailsScreen() {
   // Keep the amount as a string for reliable decimal input, parse to number on save
   const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
   const [amount, setAmount] = useState<number>(initialAmount ?? 0);
-  const [merchant, setMerchant] = useState<string>(initialMerchant ?? '');
   const [saving, setSaving] = useState(false);
 
   // Use editable amount (parsed from string) as the base for projections and displays
@@ -304,25 +303,14 @@ export default function ReceiptDetailsScreen() {
           )}
 
           <View style={styles.receiptInfo}>
-            <Text style={styles.receiptMerchant}>{merchant}</Text>
+            <Text style={styles.receiptMerchant}>{initialMerchant}</Text>
             <Text style={styles.receiptAmount}>{formattedEditableAmount}</Text>
             <Text style={styles.receiptDate}>{new Date(date).toLocaleString()}</Text>
           </View>
         </View>
 
         <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
-          <Text style={{ ...typography.overline, marginBottom: spacing.xs }}>Merchant</Text>
-          <TextInput
-            value={merchant}
-            onChangeText={setMerchant}
-            placeholder="Merchant name"
-            style={{
-              backgroundColor: palette.white,
-              padding: spacing.md,
-              borderRadius: radii.md,
-              marginBottom: spacing.md,
-            }}
-          />
+          {/* Merchant is shown from OCR but not editable because we don't persist it yet */}
 
           <Text style={{ ...typography.overline, marginBottom: spacing.xs }}>Amount</Text>
           <TextInput

@@ -1,5 +1,6 @@
 import { databaseService } from './database';
 import { alphaVantageService, OHLCV } from './alphaVantageService';
+import { emit } from './eventBus';
 
 export interface Receipt {
   id?: number;
@@ -79,6 +80,8 @@ export const receiptService = {
       const query = 'DELETE FROM receipts';
       await databaseService.executeNonQuery(query, []);
     }
+    // Notify listeners that receipts have changed so UI can refresh
+    try { emit('receipts-changed', { userId }); } catch (e) { /* ignore */ }
   },
 
   // Get unsynced receipts
