@@ -27,6 +27,17 @@ export const DB_SCHEMAS = {
       FOREIGN KEY (user_id) REFERENCES users (uid) ON DELETE CASCADE
     );
   `,
+  alpha_cache: `
+    CREATE TABLE IF NOT EXISTS alpha_cache (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      symbol TEXT NOT NULL,
+      interval TEXT NOT NULL,
+      params TEXT DEFAULT '',
+      fetched_at DATETIME NOT NULL,
+      raw_json TEXT NOT NULL,
+      UNIQUE(symbol, interval, params)
+    );
+  `,
   user_settings: `
     CREATE TABLE IF NOT EXISTS user_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,6 +60,7 @@ const DB_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_receipts_user_id_synced ON receipts (user_id, synced);`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_date_scanned ON receipts (date_scanned DESC);`,
   `CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings (user_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_alpha_cache_symbol_interval ON alpha_cache (symbol, interval);`,
 ];
 
 // Initialize database tables
@@ -94,6 +106,16 @@ export const databaseService = {
     } catch (error) {
       console.error('Non-query error:', error);
       throw error;
+    }
+  },
+  
+  // Prune alpha_cache entries older than `days` days (based on fetched_at)
+  pruneAlphaCacheOlderThan: async (days: number) => {
+    try {
+      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      await databaseService.executeNonQuery('DELETE FROM alpha_cache WHERE fetched_at IS NOT NULL AND fetched_at < ?', [cutoff]);
+    } catch (e) {
+      console.warn('pruneAlphaCacheOlderThan failed', e);
     }
   },
 };
