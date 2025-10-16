@@ -29,61 +29,50 @@ export const typography = {
   display: {
     fontSize: 48,
     fontWeight: '700',
-    lineHeight: 52,
   },
   pageTitle: {
-    fontSize: 42,
+    fontSize: 34,
     fontWeight: '700',
   },
   pageSubtitle: {
-    fontSize: 22,
-    lineHeight: 22,
+    fontSize: 20,
     fontStyle: 'italic',
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '700',
-    lineHeight: 28,
   },
   subtitle: {
     fontSize: 18,
     fontWeight: '500',
-    lineHeight: 24,
   },
   metric: {
     fontSize: 32,
     fontWeight: '700',
-    lineHeight: 36,
   },
   metricSm: {
     fontSize: 18,
     fontWeight: '700',
-    lineHeight: 22,
   },
   body: {
     fontSize: 16,
     fontWeight: '400',
-    lineHeight: 22,
   },
   bodyStrong: {
     fontSize: 16,
     fontWeight: '600',
-    lineHeight: 22,
   },
   caption: {
     fontSize: 14,
     fontWeight: '400',
-    lineHeight: 18,
   },
   captionStrong: {
     fontSize: 14,
     fontWeight: '600',
-    lineHeight: 18,
   },
   button: {
     fontSize: 16,
     fontWeight: '600',
-    lineHeight: 20,
   },
   overline: {
     fontSize: 12,

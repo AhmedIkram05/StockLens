@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
+import { ScrollView } from 'react-native';
+import { emit } from '../services/eventBus';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { receiptService } from '../services/dataService';
@@ -196,7 +198,7 @@ export default function SettingsScreen() {
             <Text style={[styles.arrow, styles.redText]}>›</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+  </ScrollView>
     </SafeAreaView>
   );
 }

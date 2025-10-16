@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  ScrollView,
   FlatList,
   Alert,
 } from 'react-native';
@@ -19,6 +18,7 @@ import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { receiptService } from '../services/dataService';
 import { TextInput } from 'react-native';
+import ConfirmScanModal from '../components/ConfirmScanModal';
 import { useAuth } from '../contexts/AuthContext';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
@@ -37,6 +37,8 @@ import { stockService } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
 import { emit } from '../services/eventBus';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
+import YearSelector from '../components/YearSelector';
+import { ScrollView } from 'react-native';
 
 // compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
 function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
@@ -75,6 +77,7 @@ export default function ReceiptDetailsScreen() {
   const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
   const [amount, setAmount] = useState<number>(initialAmount ?? 0);
   const [saving, setSaving] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState<boolean>(false);
 
   // Use editable amount (parsed from string) as the base for projections and displays
   // Keep `amount` in sync with `amountStr` for computed projections
@@ -83,9 +86,30 @@ export default function ReceiptDetailsScreen() {
     setAmount(Number.isFinite(parsed) ? parsed : 0);
   }, [amountStr]);
 
+  // show confirmation modal after a fresh scan (new receipt with OCR-provided total)
+  useEffect(() => {
+    const isNewScan = !receiptId && initialAmount != null;
+    if (isNewScan) setConfirmVisible(true);
+  }, [receiptId, initialAmount]);
+
   const totalAmount = amount;
   const { userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet, width } = useBreakpoint();
+
+  const reloadReceipt = async () => {
+    try {
+      if (receiptId) {
+        const num = Number(receiptId);
+        const r = await receiptService.getById(num);
+        if (r) {
+          setAmount(r.total_amount || 0);
+          setAmountStr(r.total_amount != null ? String(r.total_amount) : '');
+        }
+      }
+    } catch (e) {
+      // noop
+    }
+  };
 
   const investmentOptions = useMemo(() => {
     return STOCK_PRESETS.map(stock => {
@@ -322,119 +346,69 @@ export default function ReceiptDetailsScreen() {
           </View>
         </View>
 
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
-          {/* Merchant is shown from OCR but not editable because we don't persist it yet */}
+        {/* Amount is shown in the top receipt card; duplicate body display removed */}
 
-          <Text style={{ ...typography.overline, marginBottom: spacing.xs }}>Amount</Text>
-          <TextInput
-            keyboardType="decimal-pad"
-            value={amountStr}
-            onChangeText={setAmountStr}
-            placeholder="0.00"
-            style={{
-              backgroundColor: palette.white,
-              padding: spacing.md,
-              borderRadius: radii.md,
-              marginBottom: spacing.md,
-            }}
-          />
-
-          <View style={{ flexDirection: 'row', marginTop: spacing.md }}>
-            <TouchableOpacity
-              style={[styles.saveButton, { flex: 1 }]}
-              onPress={async () => {
-                // Save to local DB with validation. This handler will update existing receipts
-                // or create a new one if no receiptId was provided.
-                try {
-                  setSaving(true);
-                  const uid = userProfile?.uid || 'local';
-
-                  // Normalize common decimal separators and strip currency symbols/spaces
-                  const cleaned = String(amountStr).replace(/[^0-9.,-]/g, '').trim();
-                  const normalized = cleaned.replace(/,/g, '.');
-                  const parsed = Number(normalized);
-
-                  if (!Number.isFinite(parsed) || parsed <= 0) {
-                    setSaving(false);
-                    Alert.alert('Invalid amount', 'Please enter a valid amount (e.g. 12.34)');
-                    return;
-                  }
-
-                  let savedId: number | null = null;
-                  if (receiptId) {
-                    await receiptService.update(Number(receiptId), { total_amount: parsed, synced: 0 });
-                    savedId = Number(receiptId);
-                  } else {
-                    const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, synced: 0 });
-                    if (created && Number(created) > 0) {
-                      savedId = Number(created);
-                      // attempt to set scanned date if provided
-                      try {
-                        await receiptService.update(savedId, { date_scanned: new Date(date).toISOString() });
-                      } catch (e) {
-                        // non-fatal
-                      }
-                    } else {
-                      throw new Error('Failed to create receipt');
-                    }
-                  }
-
-                  // Emit receipts-changed so lists refresh immediately
-                  try {
-                    emit('receipts-changed', { id: savedId });
-                  } catch (e) {
-                    // swallow emit errors
-                  }
-
-                  setSaving(false);
-                  Alert.alert('Saved', 'Receipt saved locally');
-                  // Prefer navigating back to main tabs where receipts list lives
-                  navigation.navigate('MainTabs' as any);
-                } catch (e: any) {
-                  setSaving(false);
-                  console.error('Save error', e);
-                  Alert.alert('Save Error', e?.message || 'Failed to save receipt');
-                }
-              }}
-            >
-              <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.cancelButton, { flex: 1 }]}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ConfirmScanModal
+          visible={confirmVisible}
+          scannedTotal={initialAmount}
+          onConfirm={async () => {
+            // save scanned amount
+            try {
+              setSaving(true);
+              const uid = userProfile?.uid || 'local';
+              const parsed = Number(String(initialAmount).replace(/,/g, '.'));
+              let savedId: number | null = null;
+              if (receiptId) {
+                await receiptService.update(Number(receiptId), { total_amount: parsed, synced: 0 });
+                savedId = Number(receiptId);
+              } else {
+                const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, synced: 0 });
+                if (created && Number(created) > 0) savedId = Number(created);
+              }
+              try { emit('receipts-changed', { id: savedId }); } catch (e) {}
+              setSaving(false);
+              setConfirmVisible(false);
+              navigation.navigate('MainTabs' as any);
+            } catch (e: any) {
+              setSaving(false);
+              Alert.alert('Save Error', e?.message || 'Failed to save receipt');
+            }
+          }}
+          onRescan={() => {
+            setConfirmVisible(false);
+            navigation.navigate('Scan' as any);
+          }}
+          onManual={async (v: number) => {
+            // save manual entry
+            try {
+              setSaving(true);
+              const uid = userProfile?.uid || 'local';
+              let savedId: number | null = null;
+              if (receiptId) {
+                await receiptService.update(Number(receiptId), { total_amount: v, synced: 0 });
+                savedId = Number(receiptId);
+              } else {
+                const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: v, synced: 0 });
+                if (created && Number(created) > 0) savedId = Number(created);
+              }
+              try { emit('receipts-changed', { id: savedId }); } catch (e) {}
+              setSaving(false);
+              setConfirmVisible(false);
+              navigation.navigate('MainTabs' as any);
+            } catch (e: any) {
+              setSaving(false);
+              Alert.alert('Save Error', e?.message || 'Failed to save receipt');
+            }
+          }}
+          onClose={() => setConfirmVisible(false)}
+        />
 
         <View style={[styles.projectionHeader, isSmallPhone && styles.projectionHeaderCompact]}>
           <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
           <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
         </View>
 
-        <View style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]}>
-          {YEAR_OPTIONS.map(year => (
-            <TouchableOpacity
-              key={year}
-              style={[
-                styles.yearSegment,
-                year === selectedYears ? styles.yearSegmentActive : styles.yearSegmentInactive,
-              ]}
-              onPress={() => setSelectedYears(year)}
-            >
-              <Text
-                style={[
-                  styles.yearText,
-                  year === selectedYears ? styles.yearTextActive : styles.yearTextInactive,
-                ]}
-              >
-                {year}Y
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <YearSelector options={[1, 3, 5, 10, 20]} value={selectedYears} onChange={setSelectedYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
 
         <View style={styles.carouselHeader}>
           <Text style={styles.carouselTitle}>Investment Outlook</Text>
@@ -468,27 +442,7 @@ export default function ReceiptDetailsScreen() {
           <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
         </View>
 
-        <View style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]}>
-          {YEAR_OPTIONS.map(year => (
-            <TouchableOpacity
-              key={`future-${year}`}
-              style={[
-                styles.yearSegment,
-                year === selectedFutureYears ? styles.yearSegmentActive : styles.yearSegmentInactive,
-              ]}
-              onPress={() => setSelectedFutureYears(year)}
-            >
-              <Text
-                style={[
-                  styles.yearText,
-                  year === selectedFutureYears ? styles.yearTextActive : styles.yearTextInactive,
-                ]}
-              >
-                {year}Y
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <YearSelector options={[1, 3, 5, 10, 20]} value={selectedFutureYears} onChange={setSelectedFutureYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
 
         <View style={styles.carouselHeader}>
           <Text style={styles.carouselTitle}>Potential Growth</Text>
@@ -557,7 +511,7 @@ export default function ReceiptDetailsScreen() {
             Projections are hypothetical. Past performance does not guarantee future results.
           </Text>
         </View>
-      </ScrollView>
+  </ScrollView>
     </SafeAreaView>
   );
 }
