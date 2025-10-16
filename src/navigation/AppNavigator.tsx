@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ReceiptDetailsScreen from '../screens/ReceiptDetailsScreen';
+import CalculatorScreen from '../screens/CalculatorScreen';
 import SplashScreen from '../screens/OnboardingScreen';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   MainTabs: undefined;
+  Calculator: undefined;
   ReceiptDetails: {
     receiptId: string;
     totalAmount: number;
@@ -139,6 +141,7 @@ export default function AppNavigator() {
         {user ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen name="Calculator" component={CalculatorScreen} />
             <Stack.Screen name="ReceiptDetails" component={ReceiptDetailsScreen} />
           </>
         ) : (

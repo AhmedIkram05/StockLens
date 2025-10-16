@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -57,6 +57,10 @@ export default function HomeScreen() {
 
   // totalSpend derived from receipts (replaces placeholder)
   const [totalSpend, setTotalSpend] = useState<number>(0);
+
+  const totalMoneySpentDerived = useMemo(() => {
+    return allScans.reduce((s, r) => s + (r.amount || 0), 0);
+  }, [allScans]);
 
   // Friendly relative date for receipt cards
   const formatReceiptLabel = (isoDate?: string) => {
@@ -202,7 +206,6 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={scrollPadding}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {hasScans ? (
           // Regular dashboard with scans
@@ -218,9 +221,10 @@ export default function HomeScreen() {
 
             <View style={[styles.statsContainer, horizontalPad, stackStats && styles.statsStacked]}>
               <View style={[styles.statCardGreen, stackStats && styles.statCardFullWidth]}>
-                  <Text style={styles.statValue}>{portfolioLoading ? '—' : portfolioProjection ? formatAmount(Math.round(portfolioProjection)) : '—'}</Text>
-                  <Text style={styles.statLabel}>{portfolioLoading ? 'Calculating...' : portfolioError ? 'Projection unavailable' : 'Total Possible Value (5 Yrs)'}</Text>
-                </View>
+                <Text style={styles.statValue}>{formatAmount(totalMoneySpentDerived)}</Text>
+                <Text style={styles.statLabel}>Total Money Spent</Text>
+                <Text style={styles.statSubtitle}>Across all scanned receipts</Text>
+              </View>
               <View style={[styles.statCardBlue, stackStats && styles.statCardFullWidth]}>
                 <Text style={styles.statValue}>{allScans.length}</Text>
                 <Text style={styles.statLabel}>Receipts Scanned</Text>
@@ -401,6 +405,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...shadows.level2,
     marginBottom: spacing.md,
+  },
+  statSubtitle: {
+    ...typography.caption,
+    color: palette.white,
+    opacity: 0.9,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   statCardFullWidth: {
     width: '100%',

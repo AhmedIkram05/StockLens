@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
@@ -7,16 +7,22 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
 import { stockService, receiptService } from '../services/dataService';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
+import { ScrollView } from 'react-native';
+import { ensureHistoricalPrefetch, PREFETCH_TICKERS } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
-import CompoundCalculatorCard from '../components/CompoundCalculatorCard';
+import { useNavigation } from '@react-navigation/native';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
   const [totalMoneySpent, setTotalMoneySpent] = useState<number>(0);
   const [totalMissedFiveYears, setTotalMissedFiveYears] = useState<number>(0);
   const [receiptsScanned, setReceiptsScanned] = useState<number>(0);
+  const [highestImpactReceipt, setHighestImpactReceipt] = useState<any | null>(null);
   const [totalMissedTenYears, setTotalMissedTenYears] = useState<number>(0);
+  const [avgPerReceipt, setAvgPerReceipt] = useState<number>(0);
+  const [mostActiveMonth, setMostActiveMonth] = useState<string | null>(null);
+  const [bestByPeriod, setBestByPeriod] = useState<Record<number, { symbol: string; rate: number }>>({});
 
   // Top-3 stocks removed; replaced by compound calculator card.
 
@@ -30,8 +36,30 @@ export default function SummaryScreen() {
         if (!mounted) return;
         setTotalMoneySpent(total);
         setReceiptsScanned(receipts.length);
+        setAvgPerReceipt(receipts.length > 0 ? total / receipts.length : 0);
 
-        const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
+        // highest impact receipt (largest total_amount)
+        const highest = receipts.slice().sort((a, b) => (b.total_amount || 0) - (a.total_amount || 0))[0] ?? null;
+        setHighestImpactReceipt(highest ?? null);
+
+        // most active month: month with most receipts
+        if (receipts.length > 0) {
+          const counts: Record<string, number> = {};
+          receipts.forEach(r => {
+            const d = r.date_scanned ? new Date(r.date_scanned) : new Date();
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            counts[key] = (counts[key] || 0) + 1;
+          });
+          const sortedMonths = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+          if (sortedMonths.length > 0) {
+            const top = sortedMonths[0];
+            const [y, m] = top.split('-');
+            const monthName = new Date(Number(y), Number(m) - 1, 1).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+            setMostActiveMonth(monthName);
+          }
+        }
+
+  const tickers = PREFETCH_TICKERS;
         const perTicker = total / Math.max(1, tickers.length);
         const futures = await Promise.all(
           tickers.map(async t => {
@@ -50,8 +78,8 @@ export default function SummaryScreen() {
             }
           })
         );
-        const totalFuture5 = futures.reduce((s, v) => s + v, 0);
-        if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
+  const totalFuture5 = futures.reduce((s, v) => s + v, 0);
+  if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
         // For 10y, compute projection using historical 10-year CAGR if available per ticker, else extrapolate from 5y
         const futures10 = await Promise.all(
           tickers.map(async t => {
@@ -66,12 +94,41 @@ export default function SummaryScreen() {
         );
         const totalFuture10 = futures10.reduce((s, v) => s + v, 0);
         if (mounted) setTotalMissedTenYears(Math.round(totalFuture10));
+
+        // Compute best performing ticker per period (1,3,5,10,20)
+        const periods = [1, 3, 5, 10, 20];
+        const bests: Record<number, { symbol: string; rate: number }> = {};
+        await Promise.all(
+          periods.map(async years => {
+            let bestSym = '';
+            let bestRate = -Infinity;
+            await Promise.all(
+              tickers.map(async t => {
+                try {
+                  const cagr = await getHistoricalCAGRFromToday(t, years);
+                  const rate = cagr ?? 0;
+                  if (rate > bestRate) {
+                    bestRate = rate;
+                    bestSym = t;
+                  }
+                } catch (e) {
+                  // ignore per-ticker failures
+                }
+              })
+            );
+            bests[years] = { symbol: bestSym, rate: isFinite(bestRate) ? bestRate : 0 };
+          })
+        );
+        if (mounted) setBestByPeriod(bests);
       } catch (err) {
         // ignore errors for now
       }
     }
 
-    loadTotals();
+    // Ensure local prefetch/cache of common tickers to avoid hitting API limits
+    ensureHistoricalPrefetch().catch(() => {});
+
+  loadTotals();
     const unsub = subscribe('historical-updated', () => {
       // re-run totals when historical data updates
       loadTotals().catch(() => {});
@@ -81,6 +138,13 @@ export default function SummaryScreen() {
       unsub();
     };
   }, [user?.uid]);
+
+  const reloadTotals = async () => {
+    // re-run same loadTotals behavior by emitting a historical-updated or calling ensureHistoricalPrefetch
+    try {
+      await ensureHistoricalPrefetch();
+    } catch {}
+  };
 
   // Top-3 stocks removed — no longer computing nor fetching here.
 
@@ -139,6 +203,7 @@ export default function SummaryScreen() {
     () => ({ width: cardWidth, marginHorizontal: cardsGap / 2 }),
     [cardWidth, cardsGap]
   );
+  const navigation = useNavigation();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -153,50 +218,54 @@ export default function SummaryScreen() {
         {/* (Compound calculator will be shown below in place of Top‑3) */}
 
         <View style={[styles.cardsGrid, cardsGridStyle]}>
-          <View style={[styles.card, cardLayoutStyle, styles.cardBlue]}>
-            <Text style={styles.cardValue}>{formatCurrency(totalMoneySpent)}</Text>
-            <Text style={styles.cardTitle}>Total Money Spent</Text>
-            <Text style={styles.cardSubtitle}>Across all scanned receipts</Text>
-          </View>
-
-          <View style={[styles.card, cardLayoutStyle, styles.cardGreen]}>
-            <Text style={styles.cardValue}>{formatCurrency(totalMissedFiveYears)}</Text>
-            <Text style={styles.cardTitle}>Total missed opportunity</Text>
-            <Text style={styles.cardSubtitle}>If invested 5 years ago</Text>
-          </View>
-
+          {/* Highest impact receipt */}
           <View style={[styles.card, cardLayoutStyle, styles.cardWhite]}>
-            <Text style={[styles.cardValue, styles.cardValueDark]}>{receiptsScanned}</Text>
-            <Text style={styles.cardTitleDark}>Receipts scanned</Text>
+            <Text style={[styles.cardTitleDark]}>Highest impact receipt</Text>
+            {highestImpactReceipt ? (
+              <>
+                <Text style={[styles.cardValue, styles.cardValueDark]}>
+                  {highestImpactReceipt.total_amount ? formatCurrency(highestImpactReceipt.total_amount) : '—'}
+                </Text>
+                <Text style={styles.cardSubtitleDark} numberOfLines={2}>
+                  {highestImpactReceipt.ocr_data ? JSON.stringify(highestImpactReceipt.ocr_data).slice(0, 80) : 'Receipt details'}
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.cardSubtitleDark}>No receipts yet</Text>
+            )}
           </View>
 
+          {/* Average per receipt */}
+          <View style={[styles.card, cardLayoutStyle, styles.cardBlue]}>
+            <Text style={styles.cardTitle}>Average per receipt</Text>
+            <Text style={styles.cardValue}>{formatCurrency(Math.round(avgPerReceipt || 0))}</Text>
+            <Text style={styles.cardSubtitle}>Calculated across scanned receipts</Text>
+          </View>
+
+          {/* Most active month */}
           <View style={[styles.card, cardLayoutStyle, styles.cardGreen]}>
-            <Text style={styles.cardValue}>{formatCurrency(totalMissedTenYears)}</Text>
-            <Text style={styles.cardTitle}>Total missed opportunity</Text>
-            <Text style={styles.cardSubtitle}>If invested 10 years ago</Text>
+            <Text style={styles.cardTitle}>Most active month</Text>
+            <Text style={styles.cardValue}>{mostActiveMonth ?? '—'}</Text>
+            <Text style={styles.cardSubtitle}>Month with most receipts</Text>
           </View>
         </View>
 
-        {/* Compound interest calculator card (replaces Top 3) */}
+        {/* Compound interest calculator CTA (navigates to full page) */}
         <View style={{ width: '100%', marginTop: spacing.md }}>
-          <CompoundCalculatorCard defaultContribution={25} defaultYears={5} />
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quick Stats</Text>
-        </View>
-
-        <View style={styles.quickStatsRow}>
-          {quickStats.map((stat, index) => (
-            <View
-              key={stat.label}
-              style={[styles.quickStatCard, index === 0 && styles.quickStatCardMargin]}
-            >
-              <Text style={styles.quickStatValue}>{stat.value}</Text>
-              <Text style={styles.quickStatLabel}>{stat.label}</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Open compound interest calculator page"
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Calculator' as never)}
+          >
+            <View style={[styles.card, { padding: spacing.lg, backgroundColor: palette.white }]}> 
+              <Text style={styles.cardTitleDark}>Compound interest calculator</Text>
+              <Text style={styles.cardSubtitleDark}>Open calculator page</Text>
             </View>
-          ))}
+          </TouchableOpacity>
         </View>
+
+        {/* Quick stats removed per request */}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Investment Insights</Text>
@@ -213,7 +282,7 @@ export default function SummaryScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
+  </ScrollView>
     </SafeAreaView>
   );
 }
@@ -406,4 +475,5 @@ const styles = StyleSheet.create({
     color: palette.black,
     opacity: 0.6,
   },
+  
 });

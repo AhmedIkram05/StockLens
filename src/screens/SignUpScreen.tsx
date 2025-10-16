@@ -5,9 +5,9 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Alert,
 } from 'react-native';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -177,7 +177,7 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+  </ScrollView>
     </SafeAreaView>
   );
 }
