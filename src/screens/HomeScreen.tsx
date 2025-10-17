@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp, useIsFocused } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -87,63 +87,68 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadReceipts() {
-      setReceiptsLoading(true);
-      setReceiptsError(null);
-      try {
-        if (!user?.uid) {
-          setAllScans([]);
-          return;
-        }
-        const receipts = await receiptService.getByUserId(user.uid);
-        if (!mounted) return;
-        // Map to UI-friendly shape (minimal)
-        const mapped = receipts.map(r => ({
-          id: String(r.id),
-          merchant: formatReceiptLabel(r.date_scanned),
-          amount: r.total_amount || 0,
-          date: r.date_scanned || '',
-          time: '',
-          image: r.image_uri || undefined,
-        }));
-        if (mounted) setAllScans(mapped);
-      } catch (err: any) {
-        if (mounted) setReceiptsError(err?.message || String(err));
-      } finally {
-        if (mounted) setReceiptsLoading(false);
-      }
-    }
+  const isFocused = useIsFocused();
 
-    loadReceipts();
+  const mountedRef = useRef(true);
+
+  const fetchReceipts = useCallback(async (opts: { silent?: boolean } = {}) => {
+    if (!opts.silent) setReceiptsLoading(true);
+    setReceiptsError(null);
+    try {
+      if (!user?.uid) {
+        setAllScans([]);
+        return;
+      }
+      const receipts = await receiptService.getByUserId(user.uid);
+      if (!mountedRef.current) return;
+      // Map to UI-friendly shape (minimal)
+      const mapped = receipts.map(r => ({
+        id: String(r.id),
+        merchant: formatReceiptLabel(r.date_scanned),
+        amount: r.total_amount || 0,
+        date: r.date_scanned || '',
+        time: '',
+        image: r.image_uri || undefined,
+      }));
+      setAllScans(mapped);
+    } catch (err: any) {
+      if (mountedRef.current) setReceiptsError(err?.message || String(err));
+    } finally {
+      if (mountedRef.current && !opts.silent) setReceiptsLoading(false);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    // initial load
+    fetchReceipts().catch(() => {});
+
     // subscribe to receipts-changed event so UI refreshes immediately
     const unsub = subscribe('receipts-changed', async (payload) => {
       // if payload includes userId and it doesn't match current user, ignore
       if (payload?.userId && payload.userId !== user?.uid) return;
-      await loadReceipts();
+      await fetchReceipts({ silent: true });
     });
+
     return () => {
-      mounted = false;
-      unsub();
+      mountedRef.current = false;
+      try { unsub(); } catch (e) {}
     };
-  }, [user?.uid]);
+  }, [fetchReceipts]);
+
+  // Poll while focused
+  useEffect(() => {
+    if (!isFocused) return;
+    const id = setInterval(() => {
+      fetchReceipts({ silent: true }).catch(() => {});
+    }, 30000); // 30s
+    return () => clearInterval(id);
+  }, [isFocused, fetchReceipts]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      if (user?.uid) {
-        const receipts = await receiptService.getByUserId(user.uid);
-        const mapped = receipts.map(r => ({
-          id: String(r.id),
-          merchant: formatReceiptLabel(r.date_scanned),
-          amount: r.total_amount || 0,
-          date: r.date_scanned || '',
-          time: '',
-          image: r.image_uri || undefined,
-        }));
-        setAllScans(mapped);
-      }
+      await fetchReceipts();
     } catch (e) {
       // noop
     } finally {
@@ -294,7 +299,7 @@ export default function HomeScreen() {
 
               <TouchableOpacity
                 style={styles.scanButton}
-                onPress={() => navigation.navigate('Scan' as never)}
+                onPress={() => navigation.navigate('MainTabs' as any, { screen: 'Scan' })}
               >
                 <Ionicons name="camera-outline" size={24} color={palette.white} />
                 <Text style={styles.scanButtonText}>Scan your first receipt</Text>

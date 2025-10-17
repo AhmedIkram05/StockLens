@@ -5,7 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { palette, alpha } from '../styles/palette';
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
@@ -49,11 +51,28 @@ function MainTabNavigator() {
   tabBarActiveTintColor: palette.green,
   tabBarInactiveTintColor: palette.black,
         tabBarShowLabel: false,                     // Show tab labels with icons
+        // make the tab bar itself transparent and positioned absolute so
+        // screens can render behind it and the native safe area is respected
         tabBarStyle: {
-          backgroundColor: palette.white,
-          borderTopColor: alpha.faintBlack,
-          borderTopWidth: 1,
+          backgroundColor: 'transparent',
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowColor: 'transparent',
+          height: Platform.OS === 'ios' ? 72 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 18 : 12,
         },
+        // provide a background behind the transparent tab bar that matches app background
+        tabBarBackground: () => (
+          Platform.OS === 'ios' ? (
+            <BlurView intensity={60} tint="light" style={{ flex: 1 }} />
+          ) : (
+            <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: palette.lightGray }} />
+          )
+        ),
       }}
     >
       <Tab.Screen

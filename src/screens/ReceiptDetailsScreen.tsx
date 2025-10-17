@@ -18,7 +18,6 @@ import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { receiptService } from '../services/dataService';
 import { TextInput } from 'react-native';
-import ConfirmScanModal from '../components/ConfirmScanModal';
 import { useAuth } from '../contexts/AuthContext';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
@@ -77,7 +76,6 @@ export default function ReceiptDetailsScreen() {
   const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
   const [amount, setAmount] = useState<number>(initialAmount ?? 0);
   const [saving, setSaving] = useState(false);
-  const [confirmVisible, setConfirmVisible] = useState<boolean>(false);
 
   // Use editable amount (parsed from string) as the base for projections and displays
   // Keep `amount` in sync with `amountStr` for computed projections
@@ -86,11 +84,7 @@ export default function ReceiptDetailsScreen() {
     setAmount(Number.isFinite(parsed) ? parsed : 0);
   }, [amountStr]);
 
-  // show confirmation modal after a fresh scan (new receipt with OCR-provided total)
-  useEffect(() => {
-    const isNewScan = !receiptId && initialAmount != null;
-    if (isNewScan) setConfirmVisible(true);
-  }, [receiptId, initialAmount]);
+  // (Confirm scan modal removed)
 
   const totalAmount = amount;
   const { userProfile } = useAuth();
@@ -348,60 +342,7 @@ export default function ReceiptDetailsScreen() {
 
         {/* Amount is shown in the top receipt card; duplicate body display removed */}
 
-        <ConfirmScanModal
-          visible={confirmVisible}
-          scannedTotal={initialAmount}
-          onConfirm={async () => {
-            // save scanned amount
-            try {
-              setSaving(true);
-              const uid = userProfile?.uid || 'local';
-              const parsed = Number(String(initialAmount).replace(/,/g, '.'));
-              let savedId: number | null = null;
-              if (receiptId) {
-                await receiptService.update(Number(receiptId), { total_amount: parsed, synced: 0 });
-                savedId = Number(receiptId);
-              } else {
-                const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: parsed, synced: 0 });
-                if (created && Number(created) > 0) savedId = Number(created);
-              }
-              try { emit('receipts-changed', { id: savedId }); } catch (e) {}
-              setSaving(false);
-              setConfirmVisible(false);
-              navigation.navigate('MainTabs' as any);
-            } catch (e: any) {
-              setSaving(false);
-              Alert.alert('Save Error', e?.message || 'Failed to save receipt');
-            }
-          }}
-          onRescan={() => {
-            setConfirmVisible(false);
-            navigation.navigate('Scan' as any);
-          }}
-          onManual={async (v: number) => {
-            // save manual entry
-            try {
-              setSaving(true);
-              const uid = userProfile?.uid || 'local';
-              let savedId: number | null = null;
-              if (receiptId) {
-                await receiptService.update(Number(receiptId), { total_amount: v, synced: 0 });
-                savedId = Number(receiptId);
-              } else {
-                const created = await receiptService.create({ user_id: uid, image_uri: image, total_amount: v, synced: 0 });
-                if (created && Number(created) > 0) savedId = Number(created);
-              }
-              try { emit('receipts-changed', { id: savedId }); } catch (e) {}
-              setSaving(false);
-              setConfirmVisible(false);
-              navigation.navigate('MainTabs' as any);
-            } catch (e: any) {
-              setSaving(false);
-              Alert.alert('Save Error', e?.message || 'Failed to save receipt');
-            }
-          }}
-          onClose={() => setConfirmVisible(false)}
-        />
+        {/* ConfirmScanModal removed */}
 
         <View style={[styles.projectionHeader, isSmallPhone && styles.projectionHeaderCompact]}>
           <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
