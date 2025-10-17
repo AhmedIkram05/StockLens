@@ -129,13 +129,20 @@ export default function SummaryScreen() {
     ensureHistoricalPrefetch().catch(() => {});
 
   loadTotals();
-    const unsub = subscribe('historical-updated', () => {
+    const unsubHist = subscribe('historical-updated', () => {
       // re-run totals when historical data updates
+      loadTotals().catch(() => {});
+    });
+    // Also refresh when receipts change (delete/create/update)
+    const unsubReceipts = subscribe('receipts-changed', (payload) => {
+      // if payload includes userId and it doesn't match current user, ignore
+      if (payload?.userId && payload.userId !== user?.uid) return;
       loadTotals().catch(() => {});
     });
     return () => {
       mounted = false;
-      unsub();
+      try { unsubHist(); } catch (e) {}
+      try { unsubReceipts(); } catch (e) {}
     };
   }, [user?.uid]);
 
@@ -205,6 +212,18 @@ export default function SummaryScreen() {
   );
   const navigation = useNavigation();
 
+  // Helper to derive the subtitle for a receipt: always use the formatted scan date
+  const getReceiptSubtitle = (r: any) => {
+    if (!r) return 'No receipts yet';
+    try {
+      const d = r.date_scanned ? new Date(r.date_scanned) : null;
+      if (d) return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+      // ignore and fallback
+    }
+    return 'Receipt';
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -227,7 +246,7 @@ export default function SummaryScreen() {
                   {highestImpactReceipt.total_amount ? formatCurrency(highestImpactReceipt.total_amount) : '—'}
                 </Text>
                 <Text style={styles.cardSubtitleDark} numberOfLines={2}>
-                  {highestImpactReceipt.ocr_data ? JSON.stringify(highestImpactReceipt.ocr_data).slice(0, 80) : 'Receipt details'}
+                  {getReceiptSubtitle(highestImpactReceipt)}
                 </Text>
               </>
             ) : (

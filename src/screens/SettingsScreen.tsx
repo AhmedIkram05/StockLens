@@ -8,8 +8,12 @@ import { receiptService } from '../services/dataService';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function SettingsScreen() {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { signOutUser, userProfile } = useAuth();
   const [faceIdEnabled, setFaceIdEnabled] = useState(true);
   const [localStorageEnabled, setLocalStorageEnabled] = useState(true);
