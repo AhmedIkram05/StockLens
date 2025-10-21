@@ -4,6 +4,7 @@ import { ScrollView } from 'react-native';
 import { emit } from '../services/eventBus';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import * as biometric from '../hooks/useBiometricAuth';
 import { receiptService } from '../services/dataService';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
@@ -39,6 +40,34 @@ export default function SettingsScreen() {
         },
       ]
     );
+  };
+
+  // Load current biometric enabled state
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const enabled = await biometric.isBiometricEnabled();
+        if (mounted) setFaceIdEnabled(enabled);
+      } catch (err) {
+        console.warn('Failed to read biometric state', err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleToggleFaceId = async (val: boolean) => {
+    setFaceIdEnabled(val);
+    try {
+      if (!val) {
+        await biometric.clearBiometricCredentials();
+      } else {
+        // enabling biometric without credentials will not make it usable until user signs in and opts in
+        await biometric.setBiometricEnabled(true);
+      }
+    } catch (err) {
+      console.warn('Failed to update biometric setting', err);
+    }
   };
 
   const handleClearData = () => {
@@ -104,7 +133,7 @@ export default function SettingsScreen() {
             </View>
             <Switch
               value={faceIdEnabled}
-              onValueChange={setFaceIdEnabled}
+              onValueChange={handleToggleFaceId}
               trackColor={{ false: alpha.faintBlack, true: palette.green }}
               thumbColor={palette.white}
             />
