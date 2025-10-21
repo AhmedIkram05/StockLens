@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { authService, SignInData } from '../services/authService';
+import * as biometric from '../hooks/useBiometricAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -23,6 +25,7 @@ const { height: screenHeight } = Dimensions.get('window');
 export default function LoginScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, isSmallPhone } = useBreakpoint();
+  const { markSignedIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -35,6 +38,35 @@ export default function LoginScreen() {
     try {
       const signInData: SignInData = { email, password };
       await authService.signIn(signInData);
+        // prevent immediate lock for this sign-in session
+        try { markSignedIn(); } catch {}
+      // After successful sign in, give the user option to enable biometrics
+      try {
+        const available = await biometric.isBiometricAvailable();
+        if (available) {
+          // Ask user
+          Alert.alert(
+            'Enable Biometrics?',
+            'Would you like to use Face ID / Touch ID for future logins?',
+            [
+              { text: 'No', style: 'cancel' },
+              {
+                text: 'Yes',
+                onPress: async () => {
+                  try {
+                    await biometric.saveBiometricCredentials(email, password);
+                    Alert.alert('Enabled', 'Biometric login enabled');
+                  } catch (err) {
+                    console.warn('Failed to save biometric credentials', err);
+                  }
+                },
+              },
+            ]
+          );
+        }
+      } catch (e) {
+        console.warn('Biometric prompt failed', e);
+      }
       // Navigation will be handled automatically by the auth state change
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign in';

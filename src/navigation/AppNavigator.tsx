@@ -19,11 +19,13 @@ import ReceiptDetailsScreen from '../screens/ReceiptDetailsScreen';
 import CalculatorScreen from '../screens/CalculatorScreen';
 import SplashScreen from '../screens/OnboardingScreen';
 import { useAuth } from '../contexts/AuthContext';
+import LockScreen from '../screens/LockScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   SignUp: undefined;
+  Lock: undefined;
   MainTabs: undefined;
   Calculator: undefined;
   ReceiptDetails: {
@@ -144,7 +146,23 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, locked, unlockWithBiometrics } = useAuth();
+
+  // If a signed-in user exists and the UI is locked, try to auto-unlock using biometrics once
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!loading && user && locked) {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          unlockWithBiometrics();
+        }
+      } catch (err) {
+        // swallow
+      }
+    })();
+    return () => { mounted = false; };
+  }, [loading, user, locked]);
 
   if (loading) {
     return (
@@ -153,16 +171,20 @@ export default function AppNavigator() {
       </View>
     );
   }
-
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-            <Stack.Screen name="Calculator" component={CalculatorScreen} />
-            <Stack.Screen name="ReceiptDetails" component={ReceiptDetailsScreen} />
-          </>
+          // If user is signed in but locked, show LockScreen; otherwise show main app
+          locked ? (
+            <Stack.Screen name="Lock" component={LockScreen} />
+          ) : (
+            <>
+              <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+              <Stack.Screen name="Calculator" component={CalculatorScreen} />
+              <Stack.Screen name="ReceiptDetails" component={ReceiptDetailsScreen} />
+            </>
+          )
         ) : (
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
