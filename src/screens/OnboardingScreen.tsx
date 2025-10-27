@@ -4,12 +4,13 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import Svg, { Path } from 'react-native-svg';
+import OnboardingCandles from '../components/OnboardingCandles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
-export default function SplashScreen() {
+export default function OnboardingScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const {
     width: screenWidth,
@@ -23,67 +24,16 @@ export default function SplashScreen() {
     navigation.replace('Login');
   };
 
-  type ChartPoint = { x: number; y: number };
-
-  const toSmoothPath = (pts: ChartPoint[]) => {
-    if (pts.length < 2) {
-      return '';
-    }
-
-    const segments: string[] = [`M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`];
-
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] ?? pts[i];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[i + 2] ?? p2;
-
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
-      const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
-      const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-      segments.push(
-        `C${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`
-      );
-    }
-
-    return segments.join(' ');
-  };
-
-  // Create realistic stock chart path that fits on screen while staying smooth
-  const createStockPath = () => {
-    const graphHeight = isTablet ? 260 : isSmallPhone ? 180 : 200;
-    const graphWidth = Math.max(screenWidth - contentHorizontalPadding * 2, 260);
-    const startY = graphHeight - 8; // closer to the bottom edge
-    const endY = 28; // higher toward the top edge
-
-    const points: ChartPoint[] = [];
-  points.push({ x: 0, y: startY });
-
-    const numPoints = 18;
-    for (let i = 1; i < numPoints - 1; i++) {
-      const progress = i / (numPoints - 1);
-      const x = progress * graphWidth;
-
-      const baseY = startY - progress * (startY - endY);
-      const wave = Math.sin(progress * Math.PI * 1.2) + Math.sin(progress * Math.PI * 2.4) * 0.45;
-  const variance = wave * 18; // softer oscillation
-  const clampedY = Math.max(endY - 18, Math.min(startY + 18, baseY + variance));
-
-      points.push({ x, y: clampedY });
-    }
-
-  points.push({ x: graphWidth, y: endY });
-
-    return {
-      path: toSmoothPath(points),
-      width: graphWidth,
-      height: graphHeight,
-    };
-  };
-
-  const { path: stockPath, width: graphWidth, height: graphHeight } = createStockPath();
+  // Graph sizing is computed here. Make the onboarding graph visually larger
+  // and match the page content width so it aligns with other UI.
+  const graphHeight = isTablet ? 420 : isSmallPhone ? 280 : 360;
+  // Make the graph width match the page content width so it aligns with
+  // other UI elements that use `contentHorizontalPadding`.
+  const graphWidth = Math.max(240, screenWidth - contentHorizontalPadding * 2);
+  const insets = useSafeAreaInsets();
+  // compute right padding so chart aligns with the page content area and avoids home-indicator/notch clipping
+  // Use the content horizontal padding as the baseline so the chart lines up with other content.
+  const chartRightPad = Math.max(insets.right, contentHorizontalPadding);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,17 +56,8 @@ export default function SplashScreen() {
           <Text style={styles.tagline}>See your missed Investing</Text>
         </View>
 
-        <View style={styles.graphContainer}>
-          <Svg width={graphWidth} height={graphHeight} viewBox={`0 0 ${graphWidth} ${graphHeight}`}>
-            <Path
-              d={stockPath}
-              stroke={palette.green}
-              strokeWidth="12"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </Svg>
+        <View style={[styles.graphContainer]}>
+          <OnboardingCandles width={graphWidth} height={graphHeight} count={18} leftPad={0} rightPad={chartRightPad} />
         </View>
 
         <View
@@ -170,7 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   graphContainer: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'visible',
