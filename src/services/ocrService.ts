@@ -11,27 +11,35 @@ export type OcrResult = {
 };
 
 async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult> {
-  const resp = await fetch('https://api.ocr.space/parse/image', {
-    method: 'POST',
-    headers: { apikey: apiKey } as any,
-    body: formData as any,
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`OCR.Space request failed: ${resp.status} ${txt}`);
+  try {
+    console.debug('[ocrService] sending request to OCR.Space');
+    const resp = await fetch('https://api.ocr.space/parse/image', {
+      method: 'POST',
+      headers: { apikey: apiKey } as any,
+      body: formData as any,
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`OCR.Space request failed: ${resp.status} ${txt}`);
+    }
+    const json = await resp.json();
+    const isErrored = json?.IsErroredOnProcessing;
+    const parsed = json?.ParsedResults?.[0];
+    const text = parsed?.ParsedText ?? '';
+    if (isErrored) {
+      const msg = json?.ErrorMessage || parsed?.ErrorMessage || 'OCR.Space reported an error';
+      console.warn('[ocrService] OCR.Space error', msg, json);
+      return { text: '', raw: json, success: false, errorMessage: String(msg) };
+    }
+    if (!text || text.trim().length === 0) {
+      console.warn('[ocrService] OCR.Space returned empty ParsedText', json);
+      return { text: '', raw: json, success: false, errorMessage: 'No text detected in image' };
+    }
+    return { text, raw: json, success: true };
+  } catch (e: any) {
+    console.error('[ocrService] doOcrForm failed', e?.message || e);
+    throw e;
   }
-  const json = await resp.json();
-  const isErrored = json?.IsErroredOnProcessing;
-  const parsed = json?.ParsedResults?.[0];
-  const text = parsed?.ParsedText ?? '';
-  if (isErrored) {
-    const msg = json?.ErrorMessage || parsed?.ErrorMessage || 'OCR.Space reported an error';
-    return { text: '', raw: json, success: false, errorMessage: String(msg) };
-  }
-  if (!text || text.trim().length === 0) {
-    return { text: '', raw: json, success: false, errorMessage: 'No text detected in image' };
-  }
-  return { text, raw: json, success: true };
 }
 
 export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: string): Promise<OcrResult> {
@@ -43,6 +51,9 @@ export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: strin
   const formData = new FormData();
   // @ts-ignore
   formData.append('file', { uri, name: filename, type });
+  console.debug('[ocrService] recognizeImageWithOCRSpace - file upload', { filename, type });
+  // try the newer OCR engine when available
+  formData.append('OCREngine', '2');
   formData.append('language', 'eng');
   formData.append('isOverlayRequired', 'false');
   return doOcrForm(formData, apiKey);
@@ -54,15 +65,23 @@ export async function recognizeBase64WithOCRSpace(base64Data: string, apiKey: st
   if (!payload.startsWith('data:')) payload = `data:image/jpeg;base64,${payload}`;
   const formData = new FormData();
   formData.append('base64Image', payload as any);
+  try {
+    const len = (payload.split(',')[1] || '').length;
+    console.debug('[ocrService] recognizeBase64WithOCRSpace - base64 length', len);
+  } catch (e) {}
+  // try the newer OCR engine when available
+  formData.append('OCREngine', '2');
   formData.append('language', 'eng');
   formData.append('isOverlayRequired', 'false');
   return doOcrForm(formData, apiKey);
 }
 
-export async function preprocessImageToBase64(uri: string, targetWidth = 1400): Promise<string | null> {
+export async function preprocessImageToBase64(uri: string, targetWidth = 2200): Promise<string | null> {
   try {
     const ImageManipulator = await import('expo-image-manipulator');
-    const manip = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: targetWidth } }], { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true });
+    // increase default resolution and reduce compression to preserve small text
+    const manip = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: targetWidth } }], { compress: 1.0, format: ImageManipulator.SaveFormat.JPEG, base64: true });
+    if (manip?.base64) console.debug('[ocrService] preprocessImageToBase64 produced base64 length', manip.base64.length);
     return manip?.base64 || null;
   } catch (e: any) {
     console.warn('preprocessImageToBase64 failed', e?.message || e);
