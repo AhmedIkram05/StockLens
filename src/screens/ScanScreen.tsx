@@ -156,6 +156,19 @@ export default function ScanScreen() {
     pendingRef.current = { draftId: null, ocrText: null, photoUri: null, amount: null };
   };
 
+  // Delete a draft receipt (used when user chooses to rescan and we don't want
+  // to keep the lightweight draft row that was created when the photo was taken)
+  const discardDraft = async (draftId?: number | null) => {
+    const id = draftId ?? draftReceiptId;
+    if (!id) return;
+    try {
+      await receiptService.delete(Number(id));
+      try { emit('receipts-changed', { id }); } catch (e) {}
+    } catch (e) {
+      // ignore delete errors
+    }
+  };
+
   if (photo) {
     return (
       <SafeAreaView style={styles.container}>
@@ -253,6 +266,21 @@ export default function ScanScreen() {
 
         let ocrText = ocrResult?.text || '';
         setOcrRaw(ocrText || null);
+
+        // If OCR service reported an error flag, surface it and abort early so
+        // the user isn't left on a permanent 'Processing...' overlay.
+        if (ocrResult && ocrResult.success === false) {
+          const msg = ocrResult.errorMessage || 'OCR provider returned an error';
+          console.warn('OCR service error', msg, ocrResult.raw || '');
+          if (!skipOverlay) {
+            Alert.alert('OCR Error', String(msg));
+          }
+          if (onSuggestion) try { onSuggestion(null, ocrText || null); } catch (e) {}
+          if (!skipOverlay) setProcessing(false);
+          setOcrStatus('failed');
+          pendingRef.current = { draftId: draftIdArg ?? draftReceiptId ?? null, ocrText: ocrText || null, photoUri: photoUri || null, amount: null };
+          return;
+        }
         // Minimal debug output for tuning
 
         // If OCR returned no text, try a couple of low-risk fallbacks:
@@ -418,7 +446,7 @@ export default function ScanScreen() {
           setManualModalVisible(true);
         }
       } },
-      { text: 'Rescan', onPress: () => { resetCamera(); } },
+  { text: 'Rescan', onPress: async () => { try { await discardDraft(draftId); } catch (e) {} resetCamera(); } },
     ];
 
     Alert.alert('Confirm scanned total', displayAmount, buttons, { cancelable: true });
