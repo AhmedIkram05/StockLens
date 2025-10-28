@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { palette, alpha } from '../styles/palette';
-import { radii, shadows, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography } from '../styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import YearSelector from '../components/YearSelector';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
-import PrimaryButton from '../components/PrimaryButton';
+import { formatCurrencyRounded } from '../utils/formatters';
 import BackButton from '../components/BackButton';
 
 export default function CalculatorScreen() {
@@ -44,7 +43,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...shadows.level2,
     borderBottomWidth: 1,
     borderBottomColor: palette.lightGray,
   },
@@ -143,7 +141,6 @@ const styles = StyleSheet.create({
     color: palette.black,
     borderWidth: 1,
     borderColor: alpha.faintBlack,
-    ...shadows.level1,
   },
   rowButtons: { flexDirection: 'row', marginTop: spacing.md },
   smallButton: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.md, backgroundColor: 'transparent', marginRight: spacing.sm },
@@ -201,7 +198,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.level2,
   },
   footerFixed: {
     position: 'absolute',
@@ -215,7 +211,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xxl,
     borderRadius: radii.lg,
-    ...shadows.level2,
   },
   footerButtonText: { ...typography.bodyStrong, color: palette.white },
 });
@@ -223,9 +218,6 @@ const styles = StyleSheet.create({
 function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaultContribution?: number; defaultYears?: number }) {
   const { isTablet } = useBreakpoint();
   const yearsOptions = [1, 3, 5, 10, 20];
-  const containerWidthRef = useRef<number>(0);
-  const containerHeightRef = useRef<number>(0);
-  const animatedX = useRef(new Animated.Value(0)).current;
   const [principalStr, setPrincipalStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
   const [frequency, setFrequency] = useState<'monthly' | 'annually'>('monthly');
@@ -267,29 +259,15 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
   }, [P, PMT, r, n, t]);
 
   // animate pill when years changes
-  useEffect(() => {
-    if (containerWidthRef.current <= 0) return;
-    const width = containerWidthRef.current;
-    const pad = spacing.xs;
-    const totalMargins = spacing.xs * yearsOptions.length;
-    const segmentWidth = (width - pad * 2 - totalMargins) / yearsOptions.length;
-    const idx = yearsOptions.indexOf(years);
-    if (idx < 0) return;
-    const target = idx * (segmentWidth + spacing.xs) + pad;
-    Animated.timing(animatedX, {
-      toValue: target,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }, [years, animatedX]);
+  // Removed unused animation: the previous pill animation relied on
+  // container dimensions that weren't set. Keeping UI simple and static.
 
   const cumulativePct = useMemo(() => {
     if (totalContrib <= 0) return 0;
     return (fvTotal / totalContrib - 1) * 100;
   }, [fvTotal, totalContrib]);
 
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(Math.round(v));
+  const formatCurrency = (v: number) => formatCurrencyRounded(v);
 
   return (
     <View style={[styles.calcContainer]}>

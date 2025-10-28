@@ -88,3 +88,61 @@ export async function preprocessImageToBase64(uri: string, targetWidth = 2200): 
     return null;
   }
 }
+
+/**
+ * High-level OCR flow used by UI: try base64 upload first (fast), fallback to
+ * file upload when base64 yields no text, and optionally re-run preprocessing
+ * at a higher resolution and retry base64.
+ */
+export async function performOcrWithFallback(imageUri: string, base64Data: string | null, apiKey: string): Promise<OcrResult> {
+  if (!apiKey) throw new Error('OCR Space API key is required');
+  let b64 = base64Data || null;
+  let ocrResult: OcrResult | undefined;
+
+  try {
+    // Ensure we have a base64 payload when possible
+    if (!b64) {
+      b64 = await preprocessImageToBase64(imageUri, 1400);
+    }
+
+    if (b64) {
+      try {
+        ocrResult = await recognizeBase64WithOCRSpace(b64, apiKey);
+      } catch (e) {
+        ocrResult = { text: '', raw: null, success: false, errorMessage: String(e) } as OcrResult;
+      }
+    }
+
+    // If base64 returned empty text, try file upload (some platforms/providers handle multipart better)
+    if ((!ocrResult || !ocrResult.text || !ocrResult.text.trim()) && imageUri) {
+      try {
+        const fileTry = await recognizeImageWithOCRSpace(imageUri, apiKey);
+        if (fileTry && fileTry.text && fileTry.text.trim().length > 0) {
+          ocrResult = fileTry;
+        }
+      } catch (e) {
+        // swallow - we'll try a higher-res preprocess next
+      }
+    }
+
+    // If still no text, try a higher resolution preprocess and retry base64
+    if ((!ocrResult || !ocrResult.text || !ocrResult.text.trim()) && imageUri) {
+      try {
+        const bigger = await preprocessImageToBase64(imageUri, 2000);
+        if (bigger) {
+          const tryB = await recognizeBase64WithOCRSpace(bigger, apiKey);
+          if (tryB && tryB.text && tryB.text.trim().length > 0) {
+            ocrResult = tryB;
+          }
+        }
+      } catch (e) {
+        // final fallback ignored
+      }
+    }
+
+    return ocrResult || { text: '', raw: null, success: false, errorMessage: 'No OCR result' };
+  } catch (e: any) {
+    console.error('[ocrService] performOcrWithFallback error', e?.message || e);
+    return { text: '', raw: null, success: false, errorMessage: String(e) };
+  }
+}
