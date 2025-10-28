@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import { useAuth } from '../contexts/AuthContext';
-import * as biometric from '../hooks/useBiometricAuth';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import PageHeader from '../components/PageHeader';
 import Logo from '../components/Logo';
@@ -22,19 +21,14 @@ export default function LockScreen() {
   const handleBiometric = async () => {
     setLoading(true);
     try {
-      const available = await biometric.isBiometricAvailable();
-      if (!available) {
-        Alert.alert('Biometrics Unavailable', 'Your device does not support biometrics or none are enrolled.');
-        setLoading(false);
-        return;
-      }
       const ok = await unlockWithBiometrics();
       if (!ok) Alert.alert('Unlock failed', 'Could not unlock using biometrics');
     } catch (err) {
       console.warn(err);
       Alert.alert('Error', 'Biometric unlock failed');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleManual = async () => {

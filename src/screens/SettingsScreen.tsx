@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
-import { ScrollView } from 'react-native';
-import { emit } from '../services/eventBus';
+import { View, Text, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import SettingRow from '../components/SettingRow';
@@ -9,19 +7,14 @@ import { useAuth } from '../contexts/AuthContext';
 import * as biometric from '../hooks/useBiometricAuth';
 import { receiptService } from '../services/dataService';
 import { palette, alpha } from '../styles/palette';
-import { radii, shadows, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function SettingsScreen() {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { signOutUser, userProfile } = useAuth();
   const [faceIdEnabled, setFaceIdEnabled] = useState(true);
-  const [localStorageEnabled, setLocalStorageEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet } = useBreakpoint();
+  const { isSmallPhone, isTablet } = useBreakpoint();
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -208,18 +201,6 @@ const styles = StyleSheet.create({
   },
   iconEmoji: {
     fontSize: 22,
-  },
-  textGroup: {
-    flex: 1,
-  },
-  rowTitle: {
-    ...typography.bodyStrong,
-    color: palette.black,
-    marginBottom: spacing.xs,
-  },
-  rowDescription: {
-    ...typography.caption,
-    color: alpha.subtleBlack,
   },
   arrow: {
     fontSize: 24,

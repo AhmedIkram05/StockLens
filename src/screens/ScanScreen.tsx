@@ -15,7 +15,7 @@ import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Constants from 'expo-constants';
 import * as MediaLibrary from 'expo-media-library';
-import { recognizeImageWithOCRSpace, recognizeBase64WithOCRSpace } from '../services/ocrService';
+import { performOcrWithFallback } from '../services/ocrService';
 import { parseAmountFromOcrText } from '../services/receiptParser';
 import { receiptService } from '../services/dataService';
 import { emit } from '../services/eventBus';
@@ -23,6 +23,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import ManualEntryModal from '../components/ManualEntryModal';
 import CameraControls from '../components/CameraControls';
+import { formatCurrencyGBP } from '../utils/formatters';
+import showConfirmationPrompt from '../components/ConfirmationPrompt';
 
 export default function ScanScreen() {
   const { userProfile } = useAuth();
@@ -33,9 +35,8 @@ export default function ScanScreen() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [draftReceiptId, setDraftReceiptId] = useState<number | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [ocrSuggestion, setOcrSuggestion] = useState<number | null>(null);
-  const [ocrStatus, setOcrStatus] = useState<'idle' | 'scanning' | 'done' | 'failed'>('idle');
   const [ocrRaw, setOcrRaw] = useState<string | null>(null);
+  
   const [manualModalVisible, setManualModalVisible] = useState(false);
   const [manualEntryText, setManualEntryText] = useState<string>('');
   const pendingRef = useRef<{ draftId: number | null; ocrText: string | null; photoUri: string | null; amount: number | null }>({ draftId: null, ocrText: null, photoUri: null, amount: null });
@@ -43,14 +44,8 @@ export default function ScanScreen() {
   const { width, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
   const insets = useSafeAreaInsets();
 
-  const frameDimensions = useMemo(() => {
-    const baseWidth = isTablet ? width * 0.45 : isSmallPhone ? width * 0.7 : width * 0.8;
-    const clampedWidth = Math.max(220, Math.min(baseWidth, isTablet ? 420 : 360));
-    const heightMultiplier = isTablet ? 1.2 : isSmallPhone ? 1.4 : 1.6;
-    const calculatedHeight = clampedWidth * heightMultiplier;
-    const clampedHeight = Math.max(300, Math.min(calculatedHeight, isTablet ? 520 : 480));
-    return { width: clampedWidth, height: clampedHeight };
-  }, [isSmallPhone, isTablet, width]);
+  // frameDimensions previously used for a rectangular overlay — removed to
+  // simplify UI; Camera fills the view and preview shows the captured image.
 
   if (!permission) {
     return <View />;
@@ -125,18 +120,11 @@ export default function ScanScreen() {
         }
 
         // Run OCR in background and populate a suggestion when ready so the user can accept it on iOS
-        setOcrSuggestion(null);
-        setOcrStatus('scanning');
+        
         (async () => {
           // run OCR in background and update suggestion via callback
           await processReceiptHandler(photo.uri, (photo as any).base64 || null, createdDraftId, (amount, ocrText) => {
-            if (amount != null) {
-              setOcrSuggestion(amount);
-              setOcrStatus('done');
-            } else {
-              setOcrSuggestion(null);
-              setOcrStatus('failed');
-            }
+            // suggestion handled via pendingRef and UI prompt
             // store the OCR text for later save
             pendingRef.current = { draftId: createdDraftId, ocrText: ocrText || null, photoUri: photo.uri, amount: amount };
           });
@@ -194,7 +182,7 @@ export default function ScanScreen() {
               <Text style={styles.processingText}>Processing...</Text>
             </View>
           )}
-    {/* No Android manual fallback — manual entry is via iOS native prompt only */}
+  {/* Android uses the ManualEntryModal above; iOS uses a native prompt where available */}
         </View>
       </SafeAreaView>
     );
@@ -210,10 +198,7 @@ export default function ScanScreen() {
     const photoUri = overrideUri ?? photo;
     const photoB64 = overrideBase64 ?? photoBase64;
     if (!photoUri) return;
-    // Minimal flow:
-    // 1) Preprocess to base64 (resize) when possible
-    // 2) Send base64 to OCR.Space (fallback to file upload)
-    // 3) Parse total using parser and show confirmation
+    // Minimal flow: call service helper that encapsulates preprocessing + fallbacks
     if (!skipOverlay) setProcessing(true);
     try {
       const extras = (Constants as any).manifest?.extra || (Constants as any).expoConfig?.extra || {};
@@ -224,129 +209,69 @@ export default function ScanScreen() {
         return;
       }
 
-      // Preprocess -> base64
-      let b64: string | null = photoB64 || null;
-      if (!b64) {
-        try {
-          const { preprocessImageToBase64 } = await import('../services/ocrService');
-          b64 = await preprocessImageToBase64(photoUri, 1400);
-        } catch (e) {
-          b64 = null;
-        }
-      }
-
-      let ocrResult;
-      if (b64) {
-        const methodUsed = b64 ? 'base64' : 'file';
-        try {
-          if (b64) {
-            ocrResult = await recognizeBase64WithOCRSpace(b64, apiKey);
-          } else {
-            ocrResult = await recognizeImageWithOCRSpace(photoUri, apiKey);
-          }
-        } catch (e: any) {
-          ocrResult = { text: '', raw: null, success: false, errorMessage: e?.message || String(e) } as any;
-        }
-
-        let ocrText = ocrResult?.text || '';
-        setOcrRaw(ocrText || null);
-
-        // If OCR service reported an error flag, surface it and abort early so
-        // the user isn't left on a permanent 'Processing...' overlay.
-        if (ocrResult && ocrResult.success === false) {
-          const msg = ocrResult.errorMessage || 'OCR provider returned an error';
-          console.warn('OCR service error', msg, ocrResult.raw || '');
-          if (!skipOverlay) {
-            Alert.alert('OCR Error', String(msg));
-          }
-          if (onSuggestion) try { onSuggestion(null, ocrText || null); } catch (e) {}
-          if (!skipOverlay) setProcessing(false);
-          setOcrStatus('failed');
-          pendingRef.current = { draftId: draftIdArg ?? draftReceiptId ?? null, ocrText: ocrText || null, photoUri: photoUri || null, amount: null };
-          return;
-        }
-        // Minimal debug output for tuning
-
-        // If OCR returned no text, try a couple of low-risk fallbacks:
-        // 1) If we used base64, try file upload (some platforms/providers handle multipart better)
-        // 2) Re-preprocess at a larger width and retry base64
-        if (!ocrText || !ocrText.trim()) {
-          try {
-            // fallback 1: try file upload when initial used base64
-            if (b64) {
-              try {
-                const tryFile = await recognizeImageWithOCRSpace(photoUri, apiKey);
-                if (tryFile?.text && tryFile.text.trim().length > 0) {
-                  ocrResult = tryFile;
-                  ocrText = tryFile.text;
-                  setOcrRaw(ocrText);
-                }
-              } catch (e) {
-              }
-            }
-
-            // fallback 2: re-run preprocessing at higher resolution and retry base64 upload
-            if ((!ocrText || !ocrText.trim()) && photoUri) {
-              try {
-                // small delay to avoid hitting provider too quickly
-                await new Promise(res => setTimeout(res, 300));
-                const { preprocessImageToBase64 } = await import('../services/ocrService');
-                const bigger = await preprocessImageToBase64(photoUri, 2000);
-                if (bigger) {
-                  const tryB = await recognizeBase64WithOCRSpace(bigger, apiKey);
-                  if (tryB?.text && tryB.text.trim().length > 0) {
-                    ocrResult = tryB;
-                    ocrText = tryB.text;
-                    setOcrRaw(ocrText);
-                  }
-                }
-              } catch (e) {
-              }
-            }
-          } catch (e) {
-            // swallow fallback errors - we'll handle empty result below
-          }
-        }
-      } else {
-        ocrResult = await recognizeImageWithOCRSpace(photoUri, apiKey);
-      }
-
-  const ocrText = ocrResult?.text || '';
-  setOcrRaw(ocrText || null);
-  // Minimal debug output for tuning — shows up in device logs
+      const result = await performOcrWithFallback(photoUri, photoB64 || null, apiKey);
+      const ocrText = result?.text || '';
+      setOcrRaw(ocrText || null);
 
       if (!ocrText || !ocrText.trim()) {
-        // When OCR returns empty text, surface fuller details to device logs to aid debugging.
-        try {
-          // Log the raw JSON (truncated), success flag and any error message from OCR service
-        } catch (e) {
-          // ignore logging errors
-        }
         if (onSuggestion) try { onSuggestion(null, ocrText || null); } catch (e) {}
         if (!skipOverlay) {
           const draft = draftIdArg ?? draftReceiptId ?? null;
-          pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri || null, amount: null };
-          showConfirmationAlert(null, draft, ocrText || null, photoUri || null);
-        } else {
-          setOcrStatus('failed');
+          pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri ?? null, amount: null };
+          // show prompt (preserves existing Confirm / Enter manually / Rescan options)
+          const displayAmount = 'No amount detected';
+          showConfirmationPrompt(displayAmount, {
+            onConfirm: async () => { await saveAndNavigate(0, draft, ocrText || null, photoUri || null); },
+            onEnterManually: () => {
+              // keep existing iOS-native prompt behaviour in the screen
+              if (Platform.OS === 'ios' && (Alert as any).prompt) {
+                (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
+                  const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+                  const parsed = Number(cleaned);
+                  if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
+                  await saveAndNavigate(parsed, draft, ocrText || null, photoUri || null);
+                }, 'plain-text', '');
+              } else {
+                setManualEntryText('');
+                setManualModalVisible(true);
+              }
+            },
+            onRescan: async () => { try { await discardDraft(draft); } catch (e) {} resetCamera(); },
+          });
         }
         return;
       }
 
-  const parsed = parseAmountFromOcrText(ocrText);
-      // treat <=0 as no detection
+      const parsed = parseAmountFromOcrText(ocrText);
       const amount = parsed != null && parsed > 0 ? parsed : null;
       if (onSuggestion) try { onSuggestion(amount, ocrText); } catch (e) {}
 
       const draft = draftIdArg ?? draftReceiptId ?? null;
-      pendingRef.current = { draftId: draft, ocrText, photoUri: photoUri || null, amount: amount };
-      showConfirmationAlert(amount, draft, ocrText, photoUri || null);
+      pendingRef.current = { draftId: draft, ocrText, photoUri: photoUri ?? null, amount: amount };
+      const displayAmount = amount != null ? formatCurrencyGBP(amount) : 'No amount detected';
+      showConfirmationPrompt(displayAmount, {
+        onConfirm: async () => { await saveAndNavigate(amount ?? 0, draft, ocrText || null, photoUri || null); },
+        onEnterManually: () => {
+          if (Platform.OS === 'ios' && (Alert as any).prompt) {
+            (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
+              const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+              const parsed2 = Number(cleaned);
+              if (!Number.isFinite(parsed2) || parsed2 <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
+              await saveAndNavigate(parsed2, draft, ocrText || null, photoUri || null);
+            }, 'plain-text', amount != null ? String(amount) : '');
+          } else {
+            setManualEntryText(amount != null ? String(amount) : '');
+            setManualModalVisible(true);
+          }
+        },
+        onRescan: async () => { try { await discardDraft(draft); } catch (e) {} resetCamera(); },
+      });
       return;
-    } catch (err: any) {
+  } catch (err: any) {
       console.error('OCR process error', err);
       if (!skipOverlay) Alert.alert('OCR Error', err?.message || 'Failed to process receipt');
       if (onSuggestion) try { onSuggestion(null, null); } catch (e) {}
-      setOcrStatus('failed');
+      
     } finally {
       if (!skipOverlay) setProcessing(false);
     }
@@ -361,14 +286,12 @@ export default function ScanScreen() {
           ref={cameraRef}
         />
 
-  {/* overlay removed — only camera preview shown */}
 
         <CameraControls
           onCapture={takePicture}
           bottomOffset={insets.bottom + (isSmallPhone ? spacing.lg : spacing.xl)}
           horizontalPadding={contentHorizontalPadding}
         />
-    {/* manual entry removed: only Confirm / Rescan flow remains */}
       </View>
     </SafeAreaView>
   );
@@ -394,30 +317,7 @@ export default function ScanScreen() {
     }
   }
 
-  function showConfirmationAlert(amount: number | null, draftId: number | null, ocrText: string | null, photoUri: string | null) {
-    const displayAmount = amount != null ? new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount) : 'No amount detected';
-    const buttons: any[] = [
-      { text: 'Confirm', onPress: async () => { await saveAndNavigate(amount ?? 0, draftId, ocrText, photoUri); } },
-      { text: 'Enter manually', onPress: () => {
-        // Use native iOS prompt when available. On Android open an in-app modal for manual entry
-        if (Platform.OS === 'ios' && (Alert as any).prompt) {
-          (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
-            const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-            const parsed = Number(cleaned);
-            if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-            await saveAndNavigate(parsed, draftId, ocrText, photoUri);
-          }, 'plain-text', '');
-        } else {
-          // open Android modal, prefill with OCR suggestion or empty
-          setManualEntryText(amount != null ? String(amount) : '');
-          setManualModalVisible(true);
-        }
-      } },
-      { text: 'Rescan', onPress: async () => { try { await discardDraft(draftId); } catch (e) {} resetCamera(); } },
-    ];
-
-    Alert.alert('Confirm scanned total', displayAmount, buttons, { cancelable: true });
-  }
+  // Confirmation prompt is now handled by `showConfirmationPrompt` helper.
 
 }
 
@@ -465,34 +365,6 @@ export default function ScanScreen() {
     flex: 1,
     resizeMode: 'contain',
   },
-  previewButtons: {
-    flexDirection: 'row',
-    padding: spacing.xl,
-    backgroundColor: alpha.deepBlack,
-  },
-  retakeButton: {
-    flex: 1,
-    backgroundColor: alpha.subtleBlack,
-    padding: spacing.md,
-    borderRadius: radii.md,
-    marginRight: spacing.md,
-    alignItems: 'center',
-  },
-  retakeButtonText: {
-    color: palette.white,
-    ...typography.button,
-  },
-  processButton: {
-    flex: 1,
-    backgroundColor: palette.green,
-    padding: spacing.md,
-    borderRadius: radii.md,
-    alignItems: 'center',
-  },
-  processButtonText: {
-    color: palette.white,
-    ...typography.button,
-  },
   processingOverlay: {
     position: 'absolute',
     top: 0,
@@ -507,76 +379,5 @@ export default function ScanScreen() {
     color: palette.white,
     ...typography.sectionTitle,
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 560,
-    backgroundColor: palette.white,
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    ...typography.sectionTitle,
-    color: palette.black,
-    marginBottom: spacing.sm,
-  },
-  modalSubtitle: {
-    ...typography.metric,
-    color: palette.black,
-    marginBottom: spacing.md,
-  },
-  modalInput: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: palette.lightGray,
-    padding: spacing.md,
-    borderRadius: radii.sm,
-    backgroundColor: palette.white,
-    marginTop: spacing.sm,
-  },
-  modalButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: spacing.md,
-  },
-  modalPrimary: {
-    backgroundColor: palette.green,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-  },
-  modalPrimaryText: {
-    color: palette.white,
-    ...typography.button,
-  },
-  modalGhost: {
-    borderWidth: 1,
-    borderColor: palette.green,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-    backgroundColor: palette.white,
-  },
-  modalGhostText: {
-    color: palette.green,
-    ...typography.button,
-  },
-  modalCancel: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-    backgroundColor: 'transparent',
-  },
-  modalCancelText: {
-    color: palette.black,
-    ...typography.button,
-  },
+  /* Removed unused preview action and modal styles - preview uses ManualEntryModal component */
 });

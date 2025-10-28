@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
@@ -18,14 +9,11 @@ import FormInput from '../components/FormInput';
 import AuthFooter from '../components/AuthFooter';
 import { authService, SignInData } from '../services/authService';
 import * as biometric from '../hooks/useBiometricAuth';
+import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { useAuth } from '../contexts/AuthContext';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-
-const logoImage = require('../../assets/StockLens_Logo.png');
-
-const { height: screenHeight } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -47,30 +35,9 @@ export default function LoginScreen() {
         try { markSignedIn(); } catch {}
       // After successful sign in, give the user option to enable biometrics
       try {
-        const available = await biometric.isBiometricAvailable();
-        if (available) {
-          // Ask user
-          Alert.alert(
-            'Enable Biometrics?',
-            'Would you like to use Face ID / Touch ID for future logins?',
-            [
-              { text: 'No', style: 'cancel' },
-              {
-                text: 'Yes',
-                onPress: async () => {
-                  try {
-                    await biometric.saveBiometricCredentials(email, password);
-                    Alert.alert('Enabled', 'Biometric login enabled');
-                  } catch (err) {
-                    console.warn('Failed to save biometric credentials', err);
-                  }
-                },
-              },
-            ]
-          );
-        }
+        await promptEnableBiometrics(email, password);
       } catch (e) {
-        console.warn('Biometric prompt failed', e);
+        // helper already logs errors
       }
       // Navigation will be handled automatically by the auth state change
     } catch (error: any) {
@@ -93,8 +60,7 @@ export default function LoginScreen() {
   return (
     <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: spacing.xl }}>
       <View style={styles.content}>
-        {/* Logo Section - 1/3 of screen */}
-  <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
+        <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
           <Logo width={200} height={100} />
         </View>
 
@@ -151,12 +117,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   logoContainer: {
-    height: screenHeight / 3,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoContainerCompact: {
-    height: screenHeight / 4,
+    height: 150,
   },
   logo: {
     width: 200,

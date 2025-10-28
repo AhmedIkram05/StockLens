@@ -1,24 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
-import Logo from '../components/Logo';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
 import AuthFooter from '../components/AuthFooter';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+// removed unused Ionicons import
 import BackButton from '../components/BackButton';
 import { authService, SignUpData } from '../services/authService';
+import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { palette, alpha } from '../styles/palette';
-import { radii, spacing, typography, shadows } from '../styles/theme';
+import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SignUpScreen() {
@@ -58,6 +50,12 @@ export default function SignUpScreen() {
     try {
       const signUpData: SignUpData = { fullName, email, password };
       await authService.signUp(signUpData);
+      // After sign up, offer to enable biometrics for convenience
+      try {
+        await promptEnableBiometrics(email, password);
+      } catch (e) {
+        // helper logs errors
+      }
       // Navigation will be handled automatically by the auth state change
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign up';
@@ -222,7 +220,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.level2,
   },
   inputContainer: {
     marginBottom: spacing.md,

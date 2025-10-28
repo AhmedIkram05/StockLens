@@ -9,14 +9,12 @@ import PrimaryButton from '../components/PrimaryButton';
 import { radii, spacing, typography } from '../styles/theme';
 import { palette } from '../styles/palette';
 import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function OnboardingScreen() {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation();
   const { width: screenWidth, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
 
-  const handleGetStarted = () => navigation.replace('Login');
+  const handleGetStarted = () => navigation.navigate('Login' as never);
 
   // Graph sizing (kept from previous layout)
   const graphHeight = isTablet ? 420 : isSmallPhone ? 280 : 360;
@@ -48,72 +46,3 @@ export default function OnboardingScreen() {
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'space-between',
-    overflow: 'visible',
-  },
-  contentCompact: {
-    paddingVertical: spacing.lg,
-  },
-  header: {
-    marginTop: spacing.md,
-  },
-  headerCompact: {
-    marginTop: spacing.sm,
-  },
-  logoText: {
-    ...typography.display,
-    color: palette.black,
-    fontWeight: '800',
-    marginBottom: spacing.md,
-  },
-  logoAccent: {
-    color: palette.green,
-  },
-  tagline: {
-    ...typography.pageSubtitle,
-    color: palette.black,
-    opacity: 0.7,
-    marginBottom: spacing.sm,
-  },
-  graphContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'visible',
-  },
-  ctaWrapper: {
-    alignSelf: 'flex-end',
-    width: '60%',
-  },
-  ctaWrapperFull: {
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  ctaWrapperWide: {
-    width: '40%',
-    maxWidth: 320,
-  },
-  ctaButton: {
-    backgroundColor: palette.green,
-    borderRadius: radii.xl,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    shadowColor: palette.green,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 3,
-  },
-  ctaText: {
-    color: palette.white,
-    ...typography.button,
-  },
-});

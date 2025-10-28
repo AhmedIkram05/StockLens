@@ -1,10 +1,8 @@
-import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, CompositeNavigationProp, useIsFocused } from '@react-navigation/native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
 
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
@@ -13,11 +11,10 @@ import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import ReceiptCard from '../components/ReceiptCard';
 import EmptyState from '../components/EmptyState';
-import PrimaryButton from '../components/PrimaryButton';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { stockService, receiptService } from '../services/dataService';
-import { subscribe } from '../services/eventBus';
-import { RefreshControl } from 'react-native';
+import { projectUsingHistoricalCAGR } from '../services/projectionService';
+import useReceipts from '../hooks/useReceipts';
+import { formatCurrencyGBP, formatRelativeDate } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 
@@ -30,31 +27,19 @@ export default function HomeScreen() {
   const [showAllHistory, setShowAllHistory] = useState(false);
 
   const { user } = useAuth();
-  const [allScans, setAllScans] = useState<any[]>([]);
-  const [receiptsLoading, setReceiptsLoading] = useState(true);
-  const [receiptsError, setReceiptsError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const { receipts: allScans, loading: receiptsLoading, error: receiptsError } = useReceipts(user?.uid);
 
   // Check if user has any scans
   const hasScans = allScans.length > 0;
 
   const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone } = useBreakpoint();
-  const horizontalPad = useMemo(
-    () => ({ paddingHorizontal: contentHorizontalPadding }),
-    [contentHorizontalPadding]
-  );
   const scrollPadding = useMemo(
     () => ({ paddingBottom: sectionVerticalSpacing }),
     [sectionVerticalSpacing]
   );
   const stackStats = !isTablet && !isLargePhone;
 
-  const formatAmount = (amount: number) =>
-    new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 2,
-    }).format(amount);
+  const formatAmount = (amount: number) => formatCurrencyGBP(amount || 0);
 
   // live portfolio projection (MVP) — compute example projection using 3 tickers
   const [portfolioProjection, setPortfolioProjection] = useState<number | null>(null);
@@ -68,99 +53,10 @@ export default function HomeScreen() {
     return allScans.reduce((s, r) => s + (r.amount || 0), 0);
   }, [allScans]);
 
-  // Friendly relative date for receipt cards
-  const formatReceiptLabel = (isoDate?: string) => {
-    if (!isoDate) return 'Receipt';
-    try {
-      const d = new Date(isoDate);
-      const now = new Date();
-      const diffMs = now.getTime() - d.getTime();
-      const diffSec = Math.floor(diffMs / 1000);
-      const diffMin = Math.floor(diffSec / 60);
-      const diffHours = Math.floor(diffMin / 60);
-      const diffDays = Math.floor(diffHours / 24);
+  const formatReceiptLabel = (iso?: string) => formatRelativeDate(iso);
 
-      if (diffSec < 60) return `${diffSec}s ago`;
-      if (diffMin < 60) return `${diffMin}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays === 1) return 'Yesterday';
-      if (diffDays <= 7) return `${diffDays} days ago`;
+  // note: no local focus-driven behaviour needed after hook extraction
 
-      // older: show localized short date (e.g., 15 Oct 2025)
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch (e) {
-      return 'Receipt';
-    }
-  };
-
-  const isFocused = useIsFocused();
-
-  const mountedRef = useRef(true);
-
-  const fetchReceipts = useCallback(async (opts: { silent?: boolean } = {}) => {
-    if (!opts.silent) setReceiptsLoading(true);
-    setReceiptsError(null);
-    try {
-      if (!user?.uid) {
-        setAllScans([]);
-        return;
-      }
-      const receipts = await receiptService.getByUserId(user.uid);
-      if (!mountedRef.current) return;
-      // Map to UI-friendly shape (minimal)
-      const mapped = receipts.map(r => ({
-        id: String(r.id),
-        merchant: formatReceiptLabel(r.date_scanned),
-        amount: r.total_amount || 0,
-        date: r.date_scanned || '',
-        time: '',
-        image: r.image_uri || undefined,
-      }));
-      setAllScans(mapped);
-    } catch (err: any) {
-      if (mountedRef.current) setReceiptsError(err?.message || String(err));
-    } finally {
-      if (mountedRef.current && !opts.silent) setReceiptsLoading(false);
-    }
-  }, [user?.uid]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    // initial load
-    fetchReceipts().catch(() => {});
-
-    // subscribe to receipts-changed event so UI refreshes immediately
-    const unsub = subscribe('receipts-changed', async (payload) => {
-      // if payload includes userId and it doesn't match current user, ignore
-      if (payload?.userId && payload.userId !== user?.uid) return;
-      await fetchReceipts({ silent: true });
-    });
-
-    return () => {
-      mountedRef.current = false;
-      try { unsub(); } catch (e) {}
-    };
-  }, [fetchReceipts]);
-
-  // Poll while focused
-  useEffect(() => {
-    if (!isFocused) return;
-    const id = setInterval(() => {
-      fetchReceipts({ silent: true }).catch(() => {});
-    }, 30000); // 30s
-    return () => clearInterval(id);
-  }, [isFocused, fetchReceipts]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await fetchReceipts();
-    } catch (e) {
-      // noop
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -168,32 +64,16 @@ export default function HomeScreen() {
       setPortfolioLoading(true);
       setPortfolioError(null);
       try {
-        // ensure receipts are loaded and compute total spend
-        try {
-          if (user?.uid) {
-            const receipts = await receiptService.getByUserId(user.uid);
-            const sum = receipts.reduce((s, r) => s + (r.total_amount || 0), 0);
-            if (mounted) setTotalSpend(sum);
-          }
-        } catch (e) {
-          // ignore and continue with totalSpend state (defaults to 0)
-        }
-
         const effectiveTotal = totalSpend || 0;
-  const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
-        const perTicker = effectiveTotal / tickers.length || 0;
+        const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
+        const perTicker = (effectiveTotal / tickers.length) || 0;
         const results = await Promise.all(
-          tickers.map(async t => {
+          tickers.map(async (t) => {
             try {
-              const data = await stockService.getHistoricalForTicker(t, 5);
-              const first = data[0]?.adjustedClose ?? data[0]?.close;
-              const last = data[data.length - 1]?.adjustedClose ?? data[data.length - 1]?.close;
-              if (!first || !last) return perTicker; // fallback: no growth
-              const cagr = Math.pow(last / first, 1 / 5) - 1;
-              const future = perTicker * Math.pow(1 + cagr, 5);
-              return future;
+              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
+              return futureValue;
             } catch (e) {
-              return perTicker * 1.15; // fallback 15% growth
+              return perTicker * 1.15;
             }
           })
         );
@@ -210,7 +90,7 @@ export default function HomeScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [totalSpend]);
 
   return (
     <ScreenContainer contentStyle={scrollPadding}>
@@ -252,7 +132,7 @@ export default function HomeScreen() {
                     key={scan.id}
                     image={scan.image}
                     amount={formatAmount(scan.amount)}
-                    merchant={scan.merchant}
+                    merchant={scan.merchant ?? formatReceiptLabel(scan.date)}
                     time={scan.time}
                     onPress={() =>
                       navigation.navigate('ReceiptDetails', {
@@ -337,12 +217,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: palette.lightGray,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,9 +291,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.9,
   },
-  quickActions: {
-    paddingVertical: spacing.md,
-  },
   sectionTitle: {
     ...typography.sectionTitle,
     color: palette.black,
@@ -428,43 +299,6 @@ const styles = StyleSheet.create({
   },
   recentScans: {
     paddingBottom: spacing.xl,
-  },
-  scanCard: {
-    backgroundColor: palette.white,
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    ...shadows.level1,
-  },
-  scanImage: {
-    width: 60,
-    height: 40,
-    borderRadius: radii.sm,
-    marginRight: spacing.md,
-  },
-  scanInfo: {
-    flex: 1,
-  },
-  scanAmount: {
-    ...typography.bodyStrong,
-    color: palette.black,
-    marginBottom: spacing.xs,
-  },
-  scanTime: {
-    ...typography.caption,
-    color: alpha.subtleBlack,
-  },
-  scanMerchant: {
-    ...typography.captionStrong,
-    color: palette.black,
-    opacity: 0.75,
-  },
-  chevron: {
-    fontSize: 24,
-    color: alpha.mutedBlack,
-    fontWeight: '600',
   },
   viewAllButton: {
     backgroundColor: palette.green,
@@ -480,38 +314,6 @@ const styles = StyleSheet.create({
   emptyStateContainer: {
     paddingBottom: spacing.xxl,
     alignItems: 'center',
-  },
-  checkmarkContainer: {
-    marginVertical: spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.pageTitle,
-    color: palette.black,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color: alpha.subtleBlack,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  scanButton: {
-    backgroundColor: palette.green,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xxl,
-    ...shadows.level2,
-  },
-  scanButtonText: {
-    color: palette.white,
-    ...typography.button,
-    marginLeft: spacing.sm,
   },
   onboardingCards: {
     width: '100%',

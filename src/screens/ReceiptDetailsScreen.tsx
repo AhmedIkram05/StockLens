@@ -3,12 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Image,
-  FlatList,
   Alert,
+  ScrollView,
 } from 'react-native';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type { TextStyle, ViewStyle } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import BackButton from '../components/BackButton';
@@ -34,36 +32,14 @@ const STOCK_PRESETS = [
   { name: 'Nike', ticker: 'NKE', returnRate: 0.12 },
 ];
 
-import { stockService } from '../services/dataService';
-import { subscribe } from '../services/eventBus';
-import { emit } from '../services/eventBus';
-import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
+import { subscribe, emit } from '../services/eventBus';
+import { getHistoricalCAGRFromToday } from '../services/projectionService';
+import { formatCurrencyGBP } from '../utils/formatters';
 import YearSelector from '../components/YearSelector';
 import StockCard from '../components/StockCard';
 import ReceiptCard from '../components/ReceiptCard';
-import { ScrollView } from 'react-native';
 import Carousel from '../components/Carousel';
 
-// compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
-function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
-  if (!data || data.length < 2 || years <= 0) return null;
-  const firstVal = data[0].adjustedClose ?? data[0].close;
-  const lastVal = data[data.length - 1].adjustedClose ?? data[data.length - 1].close;
-  if (!firstVal || !lastVal || firstVal <= 0) return null;
-
-  // compute actual time span in years between first and last data points
-  try {
-    const firstDate = new Date(data[0].date);
-    const lastDate = new Date(data[data.length - 1].date);
-    const msPerYear = 1000 * 60 * 60 * 24 * 365.25;
-    const actualYears = (lastDate.getTime() - firstDate.getTime()) / msPerYear;
-    if (!(actualYears > 0)) return null;
-    return Math.pow(lastVal / firstVal, 1 / actualYears) - 1;
-  } catch (e) {
-    // fallback to using provided years if date parsing fails
-    return Math.pow(lastVal / firstVal, 1 / years) - 1;
-  }
-}
 
 export default function ReceiptDetailsScreen() {
   const navigation = useNavigation<any>();
@@ -80,7 +56,6 @@ export default function ReceiptDetailsScreen() {
   // Keep the amount as a string for reliable decimal input, parse to number on save
   const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
   const [amount, setAmount] = useState<number>(initialAmount ?? 0);
-  const [saving, setSaving] = useState(false);
 
   // Use editable amount (parsed from string) as the base for projections and displays
   // Keep `amount` in sync with `amountStr` for computed projections
@@ -95,20 +70,6 @@ export default function ReceiptDetailsScreen() {
   const { userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet, width } = useBreakpoint();
 
-  const reloadReceipt = async () => {
-    try {
-      if (receiptId) {
-        const num = Number(receiptId);
-        const r = await receiptService.getById(num);
-        if (r) {
-          setAmount(r.total_amount || 0);
-          setAmountStr(r.total_amount != null ? String(r.total_amount) : '');
-        }
-      }
-    } catch (e) {
-      // noop
-    }
-  };
 
   const investmentOptions = useMemo(() => {
     return STOCK_PRESETS.map(stock => {
@@ -208,17 +169,9 @@ export default function ReceiptDetailsScreen() {
   );
   const snapInterval = useMemo(() => cardWidth + cardSpacing, [cardSpacing, cardWidth]);
 
-  const formattedAmount = new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 2,
-  }).format(totalAmount);
+  const formattedAmount = formatCurrencyGBP(totalAmount || 0);
 
-  const formattedEditableAmount = new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 2,
-  }).format(amount || 0);
+  const formattedEditableAmount = formatCurrencyGBP(amount || 0);
 
   const formattedYearsLabel = `${selectedYears} ${selectedYears === 1 ? 'year' : 'years'}`;
   const formattedFutureYearsLabel = `${selectedFutureYears} ${selectedFutureYears === 1 ? 'year' : 'years'}`;
@@ -259,17 +212,9 @@ export default function ReceiptDetailsScreen() {
       computedPercentReturn = ((computedFutureValue / totalAmount) - 1) * 100;
     }
 
-    const futureDisplay = new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 2,
-    }).format(computedFutureValue);
+    const futureDisplay = formatCurrencyGBP(computedFutureValue || 0);
 
-    const gainDisplay = new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 2,
-    }).format(computedGain);
+    const gainDisplay = formatCurrencyGBP(computedGain || 0);
 
   const percentDisplay = `${computedPercentReturn.toFixed(1)}%`;
 

@@ -6,11 +6,12 @@ import { palette } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
-import { stockService, receiptService } from '../services/dataService';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
 import { ScrollView } from 'react-native';
 import { ensureHistoricalPrefetch, PREFETCH_TICKERS } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
+import useReceipts from '../hooks/useReceipts';
+import { formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import StatCard from '../components/StatCard';
@@ -27,29 +28,29 @@ export default function SummaryScreen() {
   const [mostActiveMonth, setMostActiveMonth] = useState<string | null>(null);
   const [bestByPeriod, setBestByPeriod] = useState<Record<number, { symbol: string; rate: number }>>({});
 
+  const { receipts } = useReceipts(user?.uid);
+
   // Top-3 stocks removed; replaced by compound calculator card.
 
   useEffect(() => {
     let mounted = true;
     async function loadTotals() {
       try {
-        if (!user?.uid) return;
-        const receipts = await receiptService.getByUserId(user.uid);
-        const total = receipts.reduce((s, r) => s + (r.total_amount || 0), 0);
+        // use receipts provided by the shared hook
+        const r = receipts || [];
+        const total = r.reduce((s, it) => s + (it.amount || 0), 0);
         if (!mounted) return;
         setTotalMoneySpent(total);
-        setReceiptsScanned(receipts.length);
-        setAvgPerReceipt(receipts.length > 0 ? total / receipts.length : 0);
+        setReceiptsScanned(r.length);
+        setAvgPerReceipt(r.length > 0 ? total / r.length : 0);
 
-        // highest impact receipt (largest total_amount)
-        const highest = receipts.slice().sort((a, b) => (b.total_amount || 0) - (a.total_amount || 0))[0] ?? null;
+        const highest = r.slice().sort((a, b) => (b.amount || 0) - (a.amount || 0))[0] ?? null;
         setHighestImpactReceipt(highest ?? null);
 
-        // most active month: month with most receipts
-        if (receipts.length > 0) {
+        if (r.length > 0) {
           const counts: Record<string, number> = {};
-          receipts.forEach(r => {
-            const d = r.date_scanned ? new Date(r.date_scanned) : new Date();
+          r.forEach(rr => {
+            const d = rr.date ? new Date(rr.date) : new Date();
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             counts[key] = (counts[key] || 0) + 1;
           });
@@ -62,35 +63,27 @@ export default function SummaryScreen() {
           }
         }
 
-  const tickers = PREFETCH_TICKERS;
+        const tickers = PREFETCH_TICKERS;
         const perTicker = total / Math.max(1, tickers.length);
         const futures = await Promise.all(
           tickers.map(async t => {
             try {
-              // Use unified historical CAGR computed from today - 5 years to today
               const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
               return futureValue;
             } catch (e) {
-              // fallback: use preset projection for perTicker
-              try {
-                const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
-                return futureValue;
-              } catch {
-                return perTicker * 1.15;
-              }
+              return perTicker * 1.15;
             }
           })
         );
-  const totalFuture5 = futures.reduce((s, v) => s + v, 0);
-  if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
-        // For 10y, compute projection using historical 10-year CAGR if available per ticker, else extrapolate from 5y
+        const totalFuture5 = futures.reduce((s, v) => s + v, 0);
+        if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
+
         const futures10 = await Promise.all(
           tickers.map(async t => {
             try {
               const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 10);
               return futureValue;
             } catch {
-              // fallback: extrapolate 10y from 5y result conservatively
               return (perTicker * 1.15) * 1.5;
             }
           })
@@ -98,7 +91,6 @@ export default function SummaryScreen() {
         const totalFuture10 = futures10.reduce((s, v) => s + v, 0);
         if (mounted) setTotalMissedTenYears(Math.round(totalFuture10));
 
-        // Compute best performing ticker per period (1,3,5,10,20)
         const periods = [1, 3, 5, 10, 20];
         const bests: Record<number, { symbol: string; rate: number }> = {};
         await Promise.all(
@@ -136,18 +128,11 @@ export default function SummaryScreen() {
       // re-run totals when historical data updates
       loadTotals().catch(() => {});
     });
-    // Also refresh when receipts change (delete/create/update)
-    const unsubReceipts = subscribe('receipts-changed', (payload) => {
-      // if payload includes userId and it doesn't match current user, ignore
-      if (payload?.userId && payload.userId !== user?.uid) return;
-      loadTotals().catch(() => {});
-    });
     return () => {
       mounted = false;
       try { unsubHist(); } catch (e) {}
-      try { unsubReceipts(); } catch (e) {}
     };
-  }, [user?.uid]);
+  }, [user?.uid, receipts]);
 
   const insights = [
     {
@@ -172,13 +157,7 @@ export default function SummaryScreen() {
     },
   ];
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-GB', {
-      style: 'currency',
-      currency: 'GBP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+  const formatCurrency = (value: number) => formatCurrencyRounded(value);
 
   const { contentHorizontalPadding, cardsPerRow, width: screenWidth, isTablet } = useBreakpoint();
   const cardsGap = cardsPerRow === 3 ? spacing.xl : spacing.md;
@@ -205,11 +184,9 @@ export default function SummaryScreen() {
   const getReceiptSubtitle = (r: any) => {
     if (!r) return 'No receipts yet';
     try {
-      const d = r.date_scanned ? new Date(r.date_scanned) : null;
+      const d = r.date ? new Date(r.date) : null;
       if (d) return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch (e) {
-      // ignore and fallback
-    }
+    } catch (e) {}
     return 'Receipt';
   };
 
@@ -227,7 +204,7 @@ export default function SummaryScreen() {
 
         <View style={[styles.cardsGrid, cardsGridStyle]}>
           <StatCard
-            value={highestImpactReceipt?.total_amount ? formatCurrency(highestImpactReceipt.total_amount) : '—'}
+            value={highestImpactReceipt?.amount ? formatCurrency(highestImpactReceipt.amount) : '—'}
             label="Highest value receipt"
             subtitle={highestImpactReceipt ? getReceiptSubtitle(highestImpactReceipt) : 'No receipts yet'}
             variant="white"
