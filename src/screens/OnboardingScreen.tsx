@@ -1,78 +1,51 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import OnboardingCandles from '../components/OnboardingCandles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { palette } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { Text, View, StyleSheet } from 'react-native';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import PrimaryButton from '../components/PrimaryButton';
+import { radii, spacing, typography } from '../styles/theme';
+import { palette } from '../styles/palette';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function OnboardingScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const {
-    width: screenWidth,
-    contentHorizontalPadding,
-    sectionVerticalSpacing,
-    isSmallPhone,
-    isTablet,
-  } = useBreakpoint();
+  const { width: screenWidth, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
 
-  const handleGetStarted = () => {
-    navigation.replace('Login');
-  };
+  const handleGetStarted = () => navigation.replace('Login');
 
-  // Graph sizing is computed here. Make the onboarding graph visually larger
-  // and match the page content width so it aligns with other UI.
+  // Graph sizing (kept from previous layout)
   const graphHeight = isTablet ? 420 : isSmallPhone ? 280 : 360;
-  // Make the graph width match the page content width so it aligns with
-  // other UI elements that use `contentHorizontalPadding`.
   const graphWidth = Math.max(240, screenWidth - contentHorizontalPadding * 2);
   const insets = useSafeAreaInsets();
-  // compute right padding so chart aligns with the page content area and avoids home-indicator/notch clipping
-  // Use the content horizontal padding as the baseline so the chart lines up with other content.
   const chartRightPad = Math.max(insets.right, contentHorizontalPadding);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View
-        style={[
-          styles.content,
-          {
-            paddingHorizontal: contentHorizontalPadding,
-            paddingVertical: sectionVerticalSpacing,
-          },
-          isSmallPhone && styles.contentCompact,
-        ]}
-      >
-        <View style={[styles.header, isSmallPhone && styles.headerCompact]}>
-          <Text style={styles.logoText}>
-            Stock
-            <Text style={styles.logoAccent}>Lens</Text>
-          </Text>
-          <Text style={styles.tagline}>Scan your Spending</Text>
-          <Text style={styles.tagline}>See your missed Investing</Text>
-        </View>
+    <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
+      <PageHeader>
+        <Text style={[typography.display, { color: palette.black, fontWeight: '800', marginBottom: spacing.md }]}>Stock
+          <Text style={{ color: palette.green }}>Lens</Text>
+        </Text>
+        <>{/* two lines tagline */}
+          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7, marginBottom: spacing.sm }]}>Scan your Spending</Text>
+          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7 }]}>See your missed Investing</Text>
+        </>
+      </PageHeader>
 
-        <View style={[styles.graphContainer]}>
-          <OnboardingCandles width={graphWidth} height={graphHeight} count={18} leftPad={0} rightPad={chartRightPad} />
-        </View>
-
-        <View
-          style={[
-            styles.ctaWrapper,
-            isSmallPhone && styles.ctaWrapperFull,
-            isTablet && styles.ctaWrapperWide,
-          ]}
-        >
-          <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85} onPress={handleGetStarted}>
-            <Text style={styles.ctaText}>Let&apos;s Get Started</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={{ width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+        <OnboardingCandles width={graphWidth} height={graphHeight} count={18} leftPad={0} rightPad={chartRightPad} />
       </View>
-    </SafeAreaView>
+
+      <View style={{ alignSelf: isSmallPhone ? 'stretch' : 'flex-end', width: isTablet ? '40%' : isSmallPhone ? '100%' : '60%', maxWidth: isTablet ? 320 : undefined }}>
+        <PrimaryButton onPress={handleGetStarted} accessibilityLabel="Get started">
+          Let&apos;s Get Started
+        </PrimaryButton>
+      </View>
+    </ScreenContainer>
   );
 }
 

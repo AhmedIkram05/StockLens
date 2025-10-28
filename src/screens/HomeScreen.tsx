@@ -8,6 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import StatCard from '../components/StatCard';
+import ReceiptCard from '../components/ReceiptCard';
+import EmptyState from '../components/EmptyState';
+import PrimaryButton from '../components/PrimaryButton';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { stockService, receiptService } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
@@ -207,103 +213,82 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={scrollPadding}
-      >
+    <ScreenContainer contentStyle={scrollPadding}>
+      <ScrollView style={styles.scrollView}>
         {hasScans ? (
-          // Regular dashboard with scans
           <>
-            <View style={[styles.header, horizontalPad]}>
+            <PageHeader>
               <View style={styles.titleContainer}>
                 <Text style={styles.titlePrefix}>Your </Text>
                 <Text style={styles.titleStock}>Stock</Text>
                 <Text style={styles.titleLens}>Lens</Text>
               </View>
               <Text style={styles.subtitle}>What if you invested instead?</Text>
+            </PageHeader>
+
+            <View style={[styles.statsContainer, stackStats && styles.statsStacked]}>
+              <StatCard
+                value={formatAmount(totalMoneySpentDerived)}
+                label="Total Money Spent"
+                subtitle="Across all scanned receipts"
+                variant="green"
+                style={stackStats ? styles.statCardFullWidth : undefined}
+              />
+              <StatCard
+                value={allScans.length}
+                label="Receipts Scanned"
+                variant="blue"
+                style={stackStats ? styles.statCardFullWidth : undefined}
+              />
             </View>
 
-            <View style={[styles.statsContainer, horizontalPad, stackStats && styles.statsStacked]}>
-              <View style={[styles.statCardGreen, stackStats && styles.statCardFullWidth]}>
-                <Text style={styles.statValue}>{formatAmount(totalMoneySpentDerived)}</Text>
-                <Text style={styles.statLabel}>Total Money Spent</Text>
-                <Text style={styles.statSubtitle}>Across all scanned receipts</Text>
-              </View>
-              <View style={[styles.statCardBlue, stackStats && styles.statCardFullWidth]}>
-                <Text style={styles.statValue}>{allScans.length}</Text>
-                <Text style={styles.statLabel}>Receipts Scanned</Text>
-              </View>
-            </View>
-
-            <View style={[styles.recentScans, horizontalPad]}>
+            <View style={styles.recentScans}>
               <Text style={styles.sectionTitle}>Recent Scans</Text>
               {(() => {
                 const preview = allScans.slice(0, 3);
                 const list = showAllHistory ? allScans : preview;
                 return list.map((scan) => (
-                <TouchableOpacity
-                  key={scan.id}
-                  style={styles.scanCard}
-                  onPress={() =>
-                    navigation.navigate('ReceiptDetails', {
-                          receiptId: scan.id,
-                          totalAmount: scan.amount,
-                          date: scan.date,
-                          image: scan.image,
-                        })
-                  }
-                >
-                  <Image source={{ uri: scan.image }} style={styles.scanImage} />
-                  <View style={styles.scanInfo}>
-                    <Text style={styles.scanAmount}>{formatAmount(scan.amount)}</Text>
-                    <Text style={styles.scanMerchant}>{scan.merchant}</Text>
-                    <Text style={styles.scanTime}>{scan.time}</Text>
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
-                </TouchableOpacity>
+                  <ReceiptCard
+                    key={scan.id}
+                    image={scan.image}
+                    amount={formatAmount(scan.amount)}
+                    merchant={scan.merchant}
+                    time={scan.time}
+                    onPress={() =>
+                      navigation.navigate('ReceiptDetails', {
+                        receiptId: scan.id,
+                        totalAmount: scan.amount,
+                        date: scan.date,
+                        image: scan.image,
+                      })
+                    }
+                  />
                 ));
               })()}
 
-              <TouchableOpacity
-                style={styles.viewAllButton}
-                onPress={() => setShowAllHistory(!showAllHistory)}
-              >
-                <Text style={styles.viewAllText}>
-                  {showAllHistory ? 'Show Less' : 'View all history'}
-                </Text>
+              <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
+                <Text style={styles.viewAllText}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
               </TouchableOpacity>
             </View>
           </>
         ) : (
-          // Empty state dashboard
           <>
-            <View style={[styles.header, horizontalPad]}>
+            <PageHeader>
               <View style={styles.titleContainer}>
                 <Text style={styles.titlePrefix}>Your </Text>
                 <Text style={styles.titleStock}>Stock</Text>
                 <Text style={styles.titleLens}>Lens</Text>
               </View>
               <Text style={styles.subtitle}>Track your missed opportunities</Text>
-            </View>
+            </PageHeader>
 
-            <View style={[styles.emptyStateContainer, horizontalPad]}>
-              <View style={styles.checkmarkContainer}>
-                <Ionicons name="checkmark-circle" size={120} color={palette.green} />
-              </View>
-
-              <Text style={styles.emptyTitle}>No Receipts Yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Scan your first receipt to discover what your purchases could have been worth
-              </Text>
-
-              <TouchableOpacity
-                style={styles.scanButton}
-                onPress={() => navigation.navigate('MainTabs' as any, { screen: 'Scan' })}
-              >
-                <Ionicons name="camera-outline" size={24} color={palette.white} />
-                <Text style={styles.scanButtonText}>Scan your first receipt</Text>
-              </TouchableOpacity>
+            <View style={styles.emptyStateContainer}>
+              <EmptyState
+                title="No Receipts Yet"
+                subtitle="Scan your first receipt to discover what your purchases could have been worth"
+                primaryText="Scan your first receipt"
+                onPrimaryPress={() => navigation.navigate('MainTabs' as any, { screen: 'Scan' })}
+              />
 
               <View style={styles.onboardingCards}>
                 <View style={styles.onboardingCard}>
@@ -340,7 +325,7 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -383,7 +368,6 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
     flexWrap: 'wrap',
   },
@@ -434,7 +418,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   quickActions: {
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
   sectionTitle: {
@@ -444,7 +427,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   recentScans: {
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
   },
   scanCard: {
@@ -496,7 +478,6 @@ const styles = StyleSheet.create({
     ...typography.button,
   },
   emptyStateContainer: {
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
     alignItems: 'center',
   },

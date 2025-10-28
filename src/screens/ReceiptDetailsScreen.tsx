@@ -9,15 +9,17 @@ import {
   Alert,
 } from 'react-native';
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import BackButton from '../components/BackButton';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import DangerButton from '../components/DangerButton';
 import { receiptService } from '../services/dataService';
-import { TextInput } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
@@ -37,7 +39,10 @@ import { subscribe } from '../services/eventBus';
 import { emit } from '../services/eventBus';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
 import YearSelector from '../components/YearSelector';
+import StockCard from '../components/StockCard';
+import ReceiptCard from '../components/ReceiptCard';
 import { ScrollView } from 'react-native';
+import Carousel from '../components/Carousel';
 
 // compute historical CAGR from series for `years` (returns annualized rate, e.g. 0.15 for 15%)
 function computeCAGR(data: { date: string; adjustedClose?: number; close: number }[], years: number) {
@@ -272,82 +277,50 @@ export default function ReceiptDetailsScreen() {
   const valueColor = computedPercentReturn >= 0 ? palette.green : palette.red;
 
     return (
-      <View style={[styles.stockCard, stockCardLayout, isLastItem && styles.stockCardLast]}>
-        <View style={styles.stockCardHeader}>
-          <Text style={styles.stockName}>{investmentValue.name}</Text>
-          <Text style={styles.stockTicker}>{investmentValue.ticker}</Text>
-        </View>
-
-        <View style={styles.stockValueContainer}>
-          <Text style={styles.stockValue}>{futureDisplay}</Text>
-          <Text style={styles.stockValueCaption}>Investment of {formattedAmount}</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.stockFooter}>
-          <View style={styles.stockFooterItem}>
-            <Text style={styles.footerLabel}>Return</Text>
-            <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
-          </View>
-
-          <View style={styles.verticalDivider} />
-
-          <View style={styles.stockFooterItem}>
-            <Text style={styles.footerLabel}>Gained</Text>
-            <Text style={[styles.footerValue, { color: computedGain >= 0 ? palette.green : palette.red }]}>{gainDisplay}</Text>
-          </View>
-        </View>
-      </View>
+      <StockCard
+        name={investmentValue.name}
+        ticker={investmentValue.ticker}
+        futureDisplay={futureDisplay}
+        formattedAmount={formattedAmount}
+        percentDisplay={percentDisplay}
+        gainDisplay={gainDisplay}
+        valueColor={valueColor}
+        isLast={isLastItem}
+        onPress={() => {}}
+      />
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer contentStyle={{ paddingBottom: sectionVerticalSpacing }}>
       <ScrollView
         contentContainerStyle={[
           styles.content,
           isSmallPhone && styles.contentCompact,
-          {
-            paddingHorizontal: contentHorizontalPadding,
-            paddingBottom: sectionVerticalSpacing,
-          },
         ]}
       >
-    <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Ionicons name="chevron-back" size={20} color={palette.white} />
-          </TouchableOpacity>
+        <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
+          <BackButton onPress={() => navigation.goBack()} />
         </View>
 
-        <View style={styles.receiptCard}>
-          {image ? (
-            <Image source={{ uri: image }} style={styles.receiptImage} />
-          ) : (
-            <View style={styles.receiptPlaceholder}>
-              <Ionicons name="receipt-outline" size={28} color={palette.green} />
-            </View>
-          )}
-
-          <View style={styles.receiptInfo}>
-            <Text style={styles.receiptAmount}>{formattedEditableAmount}</Text>
-            <Text style={styles.receiptDate}>{new Date(date).toLocaleString()}</Text>
-          </View>
-        </View>
+        <ReceiptCard
+          image={image}
+          amount={formattedEditableAmount}
+          merchant={''}
+          time={new Date(date).toLocaleString()}
+          onPress={() => {}}
+        />
 
         {/* Amount is shown in the top receipt card; duplicate body display removed */}
 
         {/* ConfirmScanModal removed */}
 
-        <View style={[styles.projectionHeader, isSmallPhone && styles.projectionHeaderCompact]}>
-          <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
+        <PageHeader>
+          <View>
+            <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
+          </View>
           <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
-        </View>
+        </PageHeader>
 
         <YearSelector options={[1, 3, 5, 10, 20]} value={selectedYears} onChange={setSelectedYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
 
@@ -356,11 +329,10 @@ export default function ReceiptDetailsScreen() {
           <Text style={styles.carouselSubtitle}>Swipe to explore different stocks</Text>
         </View>
 
-        <FlatList
+        <Carousel
           data={investmentOptions}
-          horizontal
-          keyExtractor={(item) => item.ticker}
-          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item: any) => item.ticker}
+          snapInterval={snapInterval}
           contentContainerStyle={[
             styles.carousel,
             {
@@ -368,9 +340,6 @@ export default function ReceiptDetailsScreen() {
               paddingRight: contentHorizontalPadding,
             },
           ]}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          snapToInterval={snapInterval}
           renderItem={({ item, index }) =>
             renderStockCard(item, index === investmentOptions.length - 1, selectedYears, 'past')
           }
@@ -378,10 +347,12 @@ export default function ReceiptDetailsScreen() {
 
         <View style={[styles.sectionSpacing, { height: sectionVerticalSpacing }]} />
 
-        <View style={[styles.futureHeader, isSmallPhone && styles.futureHeaderCompact]}>
-          <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
+        <PageHeader>
+          <View>
+            <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
+          </View>
           <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
-        </View>
+        </PageHeader>
 
         <YearSelector options={[1, 3, 5, 10, 20]} value={selectedFutureYears} onChange={setSelectedFutureYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
 
@@ -390,11 +361,10 @@ export default function ReceiptDetailsScreen() {
           <Text style={styles.carouselSubtitle}>Compare returns if you started now</Text>
         </View>
 
-        <FlatList
+        <Carousel
           data={futureInvestmentOptions}
-          horizontal
-          keyExtractor={(item) => `future-${item.ticker}`}
-          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item: any) => `future-${item.ticker}`}
+          snapInterval={snapInterval}
           contentContainerStyle={[
             styles.carousel,
             {
@@ -402,16 +372,14 @@ export default function ReceiptDetailsScreen() {
               paddingRight: contentHorizontalPadding,
             },
           ]}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          snapToInterval={snapInterval}
           renderItem={({ item, index }) =>
             renderStockCard(item, index === futureInvestmentOptions.length - 1, selectedFutureYears, 'future')
           }
         />
 
-        <TouchableOpacity
-          style={[styles.deleteButton, isSmallPhone && styles.deleteButtonCompact]}
+        <DangerButton
+          accessibilityLabel="Delete receipt"
+          style={[isSmallPhone && styles.deleteButtonCompact]}
           onPress={() =>
             Alert.alert(
               'Delete receipt',
@@ -442,9 +410,11 @@ export default function ReceiptDetailsScreen() {
             )
           }
         >
-          <Ionicons name="trash-outline" size={20} color={palette.white} style={styles.deleteIcon} />
-          <Text style={styles.deleteText}>Delete Receipt</Text>
-        </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="trash-outline" size={18} color={palette.white} style={{ marginRight: 10 }} />
+            <Text style={{ color: palette.white, ...typography.button }}>Delete Receipt</Text>
+          </View>
+        </DangerButton>
 
     <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact]}>
           <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
@@ -452,8 +422,8 @@ export default function ReceiptDetailsScreen() {
             Projections are hypothetical. Past performance does not guarantee future results.
           </Text>
         </View>
-  </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+    </ScreenContainer>
   );
 }
 
@@ -464,13 +434,6 @@ type Styles = {
   headerRow: ViewStyle;
   headerRowCompact: ViewStyle;
   backButton: ViewStyle;
-  receiptCard: ViewStyle;
-  receiptImage: ImageStyle;
-  receiptPlaceholder: ViewStyle;
-  receiptInfo: ViewStyle;
-  receiptMerchant: TextStyle;
-  receiptAmount: TextStyle;
-  receiptDate: TextStyle;
   projectionHeader: ViewStyle;
   projectionHeaderCompact: ViewStyle;
   projectionTitle: TextStyle;
@@ -526,7 +489,7 @@ const styles = StyleSheet.create<Styles>({
     backgroundColor: palette.lightGray,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 0,
     paddingBottom: spacing.xxl,
   },
   contentCompact: {
@@ -551,46 +514,7 @@ const styles = StyleSheet.create<Styles>({
     alignItems: 'center',
     ...shadows.level2,
   },
-  receiptCard: {
-    flexDirection: 'row',
-    backgroundColor: palette.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    alignItems: 'center',
-    ...shadows.level2,
-  },
-  receiptImage: {
-    width: 64,
-    height: 64,
-    borderRadius: radii.md,
-    marginRight: spacing.md,
-  },
-  receiptPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: radii.md,
-    marginRight: spacing.md,
-    backgroundColor: palette.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  receiptInfo: {
-    flex: 1,
-  },
-  receiptMerchant: {
-    ...typography.bodyStrong,
-    color: palette.black,
-    marginBottom: spacing.xs,
-  },
-  receiptAmount: {
-    ...typography.sectionTitle,
-    color: palette.black,
-    marginBottom: spacing.xs,
-  },
-  receiptDate: {
-    ...typography.caption,
-    color: alpha.subtleBlack,
-  },
+  /* receipt card moved to `ReceiptCard` component - details removed */
   projectionHeader: {
     marginTop: spacing.xxl,
     marginBottom: spacing.lg,
