@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
 import { ScrollView } from 'react-native';
 import { emit } from '../services/eventBus';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import SettingRow from '../components/SettingRow';
 import { useAuth } from '../contexts/AuthContext';
 import * as biometric from '../hooks/useBiometricAuth';
 import { receiptService } from '../services/dataService';
@@ -62,7 +64,6 @@ export default function SettingsScreen() {
       if (!val) {
         await biometric.clearBiometricCredentials();
       } else {
-        // enabling biometric without credentials will not make it usable until user signs in and opts in
         await biometric.setBiometricEnabled(true);
       }
     } catch (err) {
@@ -81,7 +82,6 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // If user is signed in, only delete their receipts; otherwise delete all local receipts
               const uid = userProfile?.uid;
               await receiptService.deleteAll(uid);
               Alert.alert('Data Cleared', 'All scanned data has been cleared locally.');
@@ -94,165 +94,77 @@ export default function SettingsScreen() {
       ]
     );
   };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingHorizontal: contentHorizontalPadding,
-            paddingBottom: sectionVerticalSpacing,
-          },
-        ]}
-      >
-        <View style={[styles.pageHeader, isSmallPhone && styles.pageHeaderCompact]}>
-          <Text style={styles.title}>Settings</Text>
+    <ScreenContainer>
+      <ScrollView contentContainerStyle={[styles.scrollContent]}>
+        <PageHeader>
+          <View>
+            <Text style={styles.title}>Settings</Text>
+          </View>
           <Text style={styles.subtitle}>Manage your preferences and security</Text>
-        </View>
+        </PageHeader>
 
-        <View
-          style={[
-            styles.section,
-            isSmallPhone && styles.sectionCompact,
-            isTablet && styles.sectionWide,
-          ]}
-        >
+        <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
           <Text style={styles.sectionLabel}>Security</Text>
 
-          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
-            <View style={styles.rowContent}>
-              <View style={[styles.iconContainer, styles.blueIcon]}>
-                <Text style={styles.iconEmoji}>🔐</Text>
-              </View>
-              <View style={styles.textGroup}>
-                <Text style={styles.rowTitle}>Face ID / Touch ID</Text>
-                <Text style={styles.rowDescription}>Secure login with biometrics</Text>
-              </View>
-            </View>
-            <Switch
-              value={faceIdEnabled}
-              onValueChange={handleToggleFaceId}
-              trackColor={{ false: alpha.faintBlack, true: palette.green }}
-              thumbColor={palette.white}
-            />
-          </View>
+          <SettingRow
+            icon={<View style={[styles.iconContainer, styles.blueIcon]}><Text style={styles.iconEmoji}>🔐</Text></View>}
+            title="Face ID / Touch ID"
+            subtitle="Secure login with biometrics"
+            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
+          />
 
-          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
-            <View style={styles.rowContent}>
-              <View style={[styles.iconContainer, styles.grayIcon]}>
-                <Text style={styles.iconEmoji}>🛡️</Text>
-              </View>
-              <View style={styles.textGroup}>
-                <Text style={styles.rowTitle}>Local Data Storage</Text>
-                <Text style={styles.rowDescription}>All processing kept on device (No cloud Storage)</Text>
-              </View>
-            </View>
-          </View>
+          <SettingRow
+            icon={<View style={[styles.iconContainer, styles.grayIcon]}><Text style={styles.iconEmoji}>🛡️</Text></View>}
+            title="Local Data Storage"
+            subtitle="All processing kept on device (No cloud Storage)"
+          />
         </View>
 
-        <View
-          style={[
-            styles.section,
-            isSmallPhone && styles.sectionCompact,
-            isTablet && styles.sectionWide,
-          ]}
-        >
+        <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
           <Text style={styles.sectionLabel}>Preferences</Text>
 
-          <View style={[styles.row, isSmallPhone && styles.rowCompact]}>
-            <View style={styles.rowContent}>
-              <View style={[styles.iconContainer, styles.blueIcon]}>
-                <Text style={styles.iconEmoji}>🌙</Text>
-              </View>
-              <View style={styles.textGroup}>
-                <Text style={styles.rowTitle}>Dark Mode</Text>
-                <Text style={styles.rowDescription}>Reduce glare & save battery</Text>
-              </View>
-            </View>
-            <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
-              trackColor={{ false: alpha.faintBlack, true: palette.green }}
-              thumbColor={palette.white}
-            />
-          </View>
+          <SettingRow
+            icon={<View style={[styles.iconContainer, styles.blueIcon]}><Text style={styles.iconEmoji}>🌙</Text></View>}
+            title="Dark Mode"
+            subtitle="Reduce glare & save battery"
+            right={<Switch value={darkModeEnabled} onValueChange={setDarkModeEnabled} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
+          />
         </View>
 
-        <View
-          style={[
-            styles.section,
-            isSmallPhone && styles.sectionCompact,
-            isTablet && styles.sectionWide,
-          ]}
-        >
+        <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
           <Text style={styles.sectionLabel}>Account</Text>
 
-          <TouchableOpacity
-            style={[styles.row, isSmallPhone && styles.rowCompact]}
+          <SettingRow
+            icon={<View style={[styles.iconContainer, styles.redIcon]}><Text style={styles.iconEmoji}>🚪</Text></View>}
+            title="Log Out"
+            subtitle="Return to login screen"
+            destructive
             onPress={handleSignOut}
-          >
-            <View style={styles.rowContent}>
-              <View style={[styles.iconContainer, styles.redIcon]}>
-                <Text style={styles.iconEmoji}>🚪</Text>
-              </View>
-              <View style={styles.textGroup}>
-                <Text style={[styles.rowTitle, styles.redText]}>Log Out</Text>
-                <Text style={styles.rowDescription}>Return to login screen</Text>
-              </View>
-            </View>
-            <Text style={[styles.arrow, styles.redText]}>›</Text>
-          </TouchableOpacity>
+            right={<Text style={[styles.arrow, styles.redText]}>›</Text>}
+          />
         </View>
 
-        <View
-          style={[
-            styles.section,
-            isSmallPhone && styles.sectionCompact,
-            isTablet && styles.sectionWide,
-          ]}
-        >
+        <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
           <Text style={styles.sectionLabel}>Data Management</Text>
 
-          <TouchableOpacity
-            style={[styles.row, isSmallPhone && styles.rowCompact]}
+          <SettingRow
+            icon={<View style={[styles.iconContainer, styles.redIcon]}><Text style={styles.iconEmoji}>🗑️</Text></View>}
+            title="Clear All Data"
+            subtitle="Delete all scanned receipts"
+            destructive
             onPress={handleClearData}
-          >
-            <View style={styles.rowContent}>
-              <View style={[styles.iconContainer, styles.redIcon]}>
-                <Text style={styles.iconEmoji}>🗑️</Text>
-              </View>
-              <View style={styles.textGroup}>
-                <Text style={[styles.rowTitle, styles.redText]}>Clear All Data</Text>
-                <Text style={styles.rowDescription}>Delete all scanned receipts</Text>
-              </View>
-            </View>
-            <Text style={[styles.arrow, styles.redText]}>›</Text>
-          </TouchableOpacity>
+            right={<Text style={[styles.arrow, styles.redText]}>›</Text>}
+          />
         </View>
-  </ScrollView>
-    </SafeAreaView>
+      </ScrollView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
-  scrollView: {
-    flex: 1,
-  },
   scrollContent: {
     paddingBottom: spacing.xxl,
-  },
-  pageHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
-  pageHeaderCompact: {
-    paddingTop: spacing.sm,
   },
   title: {
     ...typography.pageTitle,
@@ -276,26 +188,6 @@ const styles = StyleSheet.create({
     ...typography.overline,
     color: alpha.mutedBlack,
     marginBottom: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: palette.white,
-    borderRadius: radii.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginBottom: spacing.md,
-    ...shadows.level2,
-  },
-  rowCompact: {
-    paddingVertical: spacing.sm,
-  },
-  rowContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: spacing.md,
   },
   iconContainer: {
     width: 44,

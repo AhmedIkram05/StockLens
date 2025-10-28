@@ -7,8 +7,6 @@ import {
   Alert,
   Image,
   Platform,
-  Modal,
-  TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -23,6 +21,8 @@ import { receiptService } from '../services/dataService';
 import { emit } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import ManualEntryModal from '../components/ManualEntryModal';
+import CameraControls from '../components/CameraControls';
 
 export default function ScanScreen() {
   const { userProfile } = useAuth();
@@ -174,37 +174,21 @@ export default function ScanScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
-          {/* Manual entry modal (Android) */}
-          <Modal visible={manualModalVisible} transparent animationType="fade" onRequestClose={() => setManualModalVisible(false)}>
-            <View style={styles.modalBackdrop}>
-              <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Manual entry</Text>
-                <Text style={styles.modalSubtitle}>Enter the total amount</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  keyboardType="decimal-pad"
-                  value={manualEntryText}
-                  onChangeText={setManualEntryText}
-                  placeholder="0.00"
-                />
-                <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                  <TouchableOpacity style={[styles.retakeButton, { marginRight: 8 }]} onPress={() => setManualModalVisible(false)}>
-                    <Text style={styles.retakeButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.processButton} onPress={async () => {
-                    const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-                    const parsed = Number(cleaned);
-                    if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-                    setManualModalVisible(false);
-                    const draft = draftReceiptId;
-                    await saveAndNavigate(parsed, draft, ocrRaw, photo);
-                  }}>
-                    <Text style={styles.processButtonText}>Confirm</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
+          {/* Manual entry modal (Android fallback) */}
+          <ManualEntryModal
+            visible={manualModalVisible}
+            value={manualEntryText}
+            onChange={setManualEntryText}
+            onCancel={() => setManualModalVisible(false)}
+            onConfirm={async () => {
+              const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+              const parsed = Number(cleaned);
+              if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
+              setManualModalVisible(false);
+              const draft = draftReceiptId;
+              await saveAndNavigate(parsed, draft, ocrRaw, photo);
+            }}
+          />
           {processing && (
             <View style={styles.processingOverlay} pointerEvents="none">
               <Text style={styles.processingText}>Processing...</Text>
@@ -377,31 +361,14 @@ export default function ScanScreen() {
           ref={cameraRef}
         />
 
-        {/* Camera overlay positioned absolutely */}
-        <View style={styles.cameraOverlay}>
-          <View style={[styles.scanFrame, frameDimensions]} />
-          <Text style={styles.instructionText}>
-            Position receipt within the frame
-          </Text>
-        </View>
+  {/* overlay removed — only camera preview shown */}
 
-        <View
-          style={[
-            styles.controlsAbsolute,
-            {
-              paddingHorizontal: contentHorizontalPadding,
-              bottom: insets.bottom + (isSmallPhone ? spacing.lg : spacing.xl),
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.captureButton}
-            onPress={takePicture}
-          >
-          </TouchableOpacity>
-        </View>
-        {/* Android fallback manual modal (only used when needed) */}
-  {/* manual modal removed: Android fallback modal removed per request. iOS will use native Alert.prompt where available */}
+        <CameraControls
+          onCapture={takePicture}
+          bottomOffset={insets.bottom + (isSmallPhone ? spacing.lg : spacing.xl)}
+          horizontalPadding={contentHorizontalPadding}
+        />
+    {/* manual entry removed: only Confirm / Rescan flow remains */}
       </View>
     </SafeAreaView>
   );
@@ -446,13 +413,11 @@ export default function ScanScreen() {
           setManualModalVisible(true);
         }
       } },
-  { text: 'Rescan', onPress: async () => { try { await discardDraft(draftId); } catch (e) {} resetCamera(); } },
+      { text: 'Rescan', onPress: async () => { try { await discardDraft(draftId); } catch (e) {} resetCamera(); } },
     ];
 
     Alert.alert('Confirm scanned total', displayAmount, buttons, { cancelable: true });
   }
-
-  // Manual fallback removed: manual entry supported only via iOS native prompt
 
 }
 
@@ -491,60 +456,7 @@ export default function ScanScreen() {
   camera: {
     flex: 1,
   },
-  cameraOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  scanFrame: {
-    width: 280,
-    height: 500,
-    borderWidth: 2,
-    borderColor: palette.green,
-    borderRadius: radii.md,
-    backgroundColor: 'transparent',
-  },
-  instructionText: {
-    color: palette.white,
-    ...typography.button,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xl,
-    textAlign: 'center',
-    backgroundColor: alpha.overlayBlack,
-    padding: spacing.sm + spacing.xs,
-    borderRadius: radii.md,
-  },
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-    backgroundColor: alpha.deepBlack,
-  },
-  controlsAbsolute: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    zIndex: 20,
-  },
-  captureButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: palette.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: palette.white,
-  },
+  
   previewContainer: {
     flex: 1,
     backgroundColor: palette.black,

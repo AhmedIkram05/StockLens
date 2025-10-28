@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import ScreenContainer from '../components/ScreenContainer';
+import FormInput from '../components/FormInput';
+import PrimaryButton from '../components/PrimaryButton';
+import SecondaryButton from '../components/SecondaryButton';
 import { useAuth } from '../contexts/AuthContext';
 import * as biometric from '../hooks/useBiometricAuth';
+import { useBreakpoint } from '../hooks/useBreakpoint';
+import PageHeader from '../components/PageHeader';
+import Logo from '../components/Logo';
 import { palette } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 
 export default function LockScreen() {
   const { unlockWithBiometrics, unlockWithCredentials } = useAuth();
+  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,24 +49,37 @@ export default function LockScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.inner}>
-        <Text style={styles.title}>Locked</Text>
-        <Text style={styles.subtitle}>Unlock to continue</Text>
+    <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
+      <View style={[styles.inner, { paddingHorizontal: 0 }]}> 
+        <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
+          <Logo width={160} height={72} />
+        </View>
 
-        <TouchableOpacity style={styles.bioButton} onPress={handleBiometric} disabled={loading}>
-          <Text style={styles.bioButtonText}>{loading ? 'Unlocking…' : 'Unlock with Biometrics / Passcode'}</Text>
-        </TouchableOpacity>
+        <PageHeader>
+          <Text style={styles.title}>Locked</Text>
+          <Text style={styles.subtitle}>Unlock to continue</Text>
+        </PageHeader>
+
+        <SecondaryButton
+          onPress={handleBiometric}
+          disabled={loading}
+          accessibilityLabel="Unlock with biometrics"
+          style={styles.bioButton}
+          textStyle={{ color: palette.white }}
+        >
+          {loading ? 'Unlocking…' : 'Unlock with Biometrics / Passcode'}
+        </SecondaryButton>
 
         <Text style={styles.or}>Or enter credentials</Text>
-        <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} autoCapitalize="none" />
-        <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry autoCapitalize="none" />
 
-        <TouchableOpacity style={styles.unlockButton} onPress={handleManual} disabled={loading}>
-          <Text style={styles.unlockText}>Unlock</Text>
-        </TouchableOpacity>
+        <FormInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+        <FormInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+
+        <PrimaryButton style={styles.unlockButton} onPress={handleManual} disabled={loading} accessibilityLabel="Unlock with credentials">
+          Unlock
+        </PrimaryButton>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -67,6 +88,15 @@ const styles = StyleSheet.create({
   inner: { padding: 24, flex: 1, justifyContent: 'center' },
   title: { fontSize: 28, marginBottom: 8, color: palette.black, textAlign: 'center' },
   subtitle: { fontSize: 16, marginBottom: 24, color: palette.black, textAlign: 'center' },
+  logoContainer: {
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  logoContainerCompact: {
+    height: 84,
+  },
   bioButton: { backgroundColor: palette.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
   bioButtonText: { color: palette.white, fontSize: 16 },
   or: { textAlign: 'center', marginVertical: 12, color: palette.black },

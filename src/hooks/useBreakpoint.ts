@@ -22,11 +22,11 @@ export function useBreakpoint(): BreakpointInfo {
     const isLargePhone = width >= breakpoints.largePhone && width < breakpoints.tablet;
     const isSmallPhone = width <= breakpoints.smallPhone;
 
+    // Use a modest side margin on phones so all screens have a small consistent gutter.
+    // Keep larger paddings for tablets.
     const contentHorizontalPadding = isTablet
       ? spacing.xxl
-      : isLargePhone
-      ? spacing.xl
-      : spacing.lg;
+      : spacing.md;
 
     const sectionVerticalSpacing = isTablet ? spacing.xxl : spacing.xl;
     const cardsPerRow = isTablet ? 3 : 2;

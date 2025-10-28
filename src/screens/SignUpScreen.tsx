@@ -8,9 +8,14 @@ import {
   Alert,
 } from 'react-native';
 import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../components/ScreenContainer';
+import Logo from '../components/Logo';
+import FormInput from '../components/FormInput';
+import PrimaryButton from '../components/PrimaryButton';
+import AuthFooter from '../components/AuthFooter';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import BackButton from '../components/BackButton';
 import { authService, SignUpData } from '../services/authService';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
@@ -80,7 +85,7 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -93,14 +98,7 @@ export default function SignUpScreen() {
         ]}
       >
         <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
-          <TouchableOpacity
-            onPress={handleBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Ionicons name="chevron-back" size={20} color={palette.white} />
-          </TouchableOpacity>
+          <BackButton onPress={handleBack} />
         </View>
 
         {/* Title Section */}
@@ -113,72 +111,54 @@ export default function SignUpScreen() {
 
         {/* Form Section */}
   <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-          <TouchableOpacity
-            style={[styles.createAccountButton, !isFormValid && styles.disabledButton]}
+          <PrimaryButton
             onPress={handleSignUp}
+            style={[styles.createAccountButton, !isFormValid && styles.disabledButton]}
             disabled={!isFormValid}
+            accessibilityLabel="Create account"
           >
-            <Text style={[styles.createAccountButtonText, !isFormValid && styles.disabledButtonText]}>
-              Create Account
-            </Text>
-          </TouchableOpacity>
+            Create Account
+          </PrimaryButton>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account?</Text>
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Login</Text>
-            </TouchableOpacity>
-          </View>
+          <AuthFooter prompt="Already have an account?" actionText="Login" onPress={handleLogin} style={styles.loginContainer} />
         </View>
-  </ScrollView>
-    </SafeAreaView>
+      </ScrollView>
+    </ScreenContainer>
   );
 }
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { palette, alpha } from '../styles/palette';
@@ -8,22 +7,31 @@ import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import YearSelector from '../components/YearSelector';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import FormInput from '../components/FormInput';
+import PrimaryButton from '../components/PrimaryButton';
+import BackButton from '../components/BackButton';
 
 export default function CalculatorScreen() {
   const navigation = useNavigation();
+  const { contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  // Use the shared contentHorizontalPadding so page side gutters stay consistent
+  const sidePadding = contentHorizontalPadding;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={[styles.headerRow]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Go back" accessibilityRole="button">
-          <Ionicons name="chevron-back" size={20} color={palette.white} />
-        </TouchableOpacity>
-      </View>
+    <ScreenContainer contentStyle={{ paddingBottom: sectionVerticalSpacing, paddingHorizontal: sidePadding }}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.content, { paddingHorizontal: sidePadding, paddingBottom: sectionVerticalSpacing }]}>
+        <PageHeader subtitle="Try different contributions and rates">
+          <BackButton onPress={() => navigation.goBack()} />
+          <View style={{ marginTop: spacing.md }}>
+            <Text style={styles.titleLarge}>Compound Interest Calculator</Text>
+          </View>
+        </PageHeader>
 
-  <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <CalculatorBody defaultContribution={25} defaultYears={5} />
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -42,7 +50,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { ...typography.pageTitle, fontSize: 18, color: palette.black },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
+  content: { paddingHorizontal: 0, paddingBottom: spacing.xxl, flexGrow: 1 },
   // leave room for sticky footer
   contentWithFooter: { padding: spacing.lg, paddingBottom: spacing.xxl + 96, flexGrow: 1 },
   scrollView: { flex: 1 },
@@ -285,32 +293,25 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
 
   return (
     <View style={[styles.calcContainer]}>
-      <View style={styles.titleBlock}>
-        <Text style={styles.titleLarge}>Compound Interest Calculator</Text>
-        <Text style={styles.subtitleLarge}>Try different contributions and rates</Text>
-      </View>
-
-  <View style={[styles.formRow, !isTablet && styles.formRowStack]}>
+      <View style={[styles.formRow, !isTablet && styles.formRowStack]}>
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
           <Text style={styles.label}>Principal (£)</Text>
-          <TextInput
+          <FormInput
             keyboardType="decimal-pad"
             value={principalStr}
             onChangeText={setPrincipalStr}
-            style={[styles.input, { minHeight: 48 }]}
+            inputStyle={{ minHeight: 48 }}
             placeholder="0.00"
-            placeholderTextColor={alpha.mutedBlack}
             selectionColor={palette.green}
           />
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>Contribution (£)</Text>
-          <TextInput
+          <FormInput
             keyboardType="decimal-pad"
             value={contributionStr}
             onChangeText={setContributionStr}
-            style={[styles.input, { minHeight: 48 }]}
+            inputStyle={{ minHeight: 48 }}
             placeholder="0.00"
-            placeholderTextColor={alpha.mutedBlack}
             selectionColor={palette.green}
           />
 
@@ -323,29 +324,28 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
               <Text style={[styles.smallButtonText, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
             </TouchableOpacity>
           </View>
-  </View>
+        </View>
 
-  <View style={[styles.formCol, !isTablet && styles.formColStack]}>
+        <View style={[styles.formCol, !isTablet && styles.formColStack]}>
           <Text style={styles.label}>Years</Text>
           <YearSelector options={yearsOptions} value={years} onChange={setYears} style={styles.yearSelector} />
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>Rate (%)</Text>
           <View style={styles.rateInputWrapper}>
-            <TextInput
+            <FormInput
               keyboardType="decimal-pad"
               value={manualRateStr}
               onChangeText={setManualRateStr}
-              style={[styles.input, { minHeight: 48 }]}
+              inputStyle={{ minHeight: 48 }}
               placeholder="12"
-              placeholderTextColor={alpha.mutedBlack}
               selectionColor={palette.green}
             />
             <Text style={styles.rateHint}>Enter annual % (e.g. 12 for 12%)</Text>
           </View>
         </View>
-  </View>
+      </View>
 
-  {!isTablet && <View style={{ height: spacing.lg }} />}
+      {!isTablet && <View style={{ height: spacing.lg }} />}
 
       <View style={[styles.resultsRow, !isTablet && styles.resultsRowStack]}>
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
@@ -353,17 +353,17 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
           <Text style={styles.resultValue}>{formatCurrency(fvTotal)}</Text>
         </View>
 
-  <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
+        <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
           <Text style={styles.resultLabel}>Total contributed</Text>
           <Text style={[styles.resultValue, { fontSize: 16 }]}>{formatCurrency(totalContrib)}</Text>
         </View>
 
-  <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
+        <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
           <Text style={styles.resultLabel}>Interest earned</Text>
           <Text style={[styles.resultValue, { color: interestEarned >= 0 ? palette.green : palette.red }]}>{formatCurrency(interestEarned)}</Text>
         </View>
 
-  <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
+        <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
           <Text style={styles.resultLabel}>Cumulative return</Text>
           <Text style={[styles.resultValue, { color: cumulativePct >= 0 ? palette.green : palette.red }]}>{cumulativePct.toFixed(1)}%</Text>
         </View>

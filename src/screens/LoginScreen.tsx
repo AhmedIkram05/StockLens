@@ -9,8 +9,13 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
+import PrimaryButton from '../components/PrimaryButton';
+import Logo from '../components/Logo';
+import FormInput from '../components/FormInput';
+import AuthFooter from '../components/AuthFooter';
 import { authService, SignInData } from '../services/authService';
 import * as biometric from '../hooks/useBiometricAuth';
 import { useAuth } from '../contexts/AuthContext';
@@ -86,64 +91,48 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-  <View style={[styles.content, { paddingHorizontal: contentHorizontalPadding }] }>
+    <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: spacing.xl }}>
+      <View style={styles.content}>
         {/* Logo Section - 1/3 of screen */}
   <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
-          <Image
-            source={logoImage}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <Logo width={200} height={100} />
         </View>
 
-        {/* Title Section */}
-  <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
-          <Text style={styles.title}>Welcome to StockLens</Text>
-          <Text style={styles.subtitle}>
-            Scan your spending{'\n'}See your missed investing
-          </Text>
-        </View>
+        <PageHeader>
+          <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
+            <Text style={styles.title}>Welcome to StockLens</Text>
+          </View>
+          <Text style={styles.subtitle}>Scan your spending{'\n'}See your missed investing</Text>
+        </PageHeader>
 
         {/* Form Section */}
   <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
+          <FormInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableOpacity>
+          <PrimaryButton onPress={handleLogin} style={styles.loginButton} textStyle={styles.loginButtonText} accessibilityLabel="Login">
+            Login
+          </PrimaryButton>
 
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account?</Text>
-            <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-              <Text style={styles.signUpButtonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
+          <AuthFooter prompt={"Don't have an account?"} actionText="Sign Up" onPress={handleSignUp} style={styles.signUpContainer} />
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 

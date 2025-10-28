@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../components/ScreenContainer';
+import PageHeader from '../components/PageHeader';
 import { palette } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -12,6 +13,8 @@ import { ensureHistoricalPrefetch, PREFETCH_TICKERS } from '../services/dataServ
 import { subscribe } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import StatCard from '../components/StatCard';
+import PrimaryButton from '../components/PrimaryButton';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
@@ -146,20 +149,6 @@ export default function SummaryScreen() {
     };
   }, [user?.uid]);
 
-  const reloadTotals = async () => {
-    // re-run same loadTotals behavior by emitting a historical-updated or calling ensureHistoricalPrefetch
-    try {
-      await ensureHistoricalPrefetch();
-    } catch {}
-  };
-
-  // Top-3 stocks removed — no longer computing nor fetching here.
-
-  const quickStats = [
-    { label: 'Average per receipt', value: '£12.35' },
-    { label: 'Most active month', value: 'Oct 2025' },
-  ];
-
   const insights = [
     {
       emoji: '📈',
@@ -225,63 +214,51 @@ export default function SummaryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={[styles.contentContainer, { paddingHorizontal: contentHorizontalPadding }]}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Summary</Text>
+    <ScreenContainer contentStyle={{ paddingBottom: spacing.xxl }}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <PageHeader>
+          <View>
+            <Text style={styles.title}>Summary</Text>
+          </View>
           <Text style={styles.subtitle}>Your investment insights at a glance</Text>
-        </View>
+        </PageHeader>
 
         {/* (Compound calculator will be shown below in place of Top‑3) */}
 
         <View style={[styles.cardsGrid, cardsGridStyle]}>
-          {/* Highest impact receipt */}
-          <View style={[styles.card, cardLayoutStyle, styles.cardWhite]}>
-            <Text style={[styles.cardTitleDark]}>Highest impact receipt</Text>
-            {highestImpactReceipt ? (
-              <>
-                <Text style={[styles.cardValue, styles.cardValueDark]}>
-                  {highestImpactReceipt.total_amount ? formatCurrency(highestImpactReceipt.total_amount) : '—'}
-                </Text>
-                <Text style={styles.cardSubtitleDark} numberOfLines={2}>
-                  {getReceiptSubtitle(highestImpactReceipt)}
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.cardSubtitleDark}>No receipts yet</Text>
-            )}
-          </View>
+          <StatCard
+            value={highestImpactReceipt?.total_amount ? formatCurrency(highestImpactReceipt.total_amount) : '—'}
+            label="Highest value receipt"
+            subtitle={highestImpactReceipt ? getReceiptSubtitle(highestImpactReceipt) : 'No receipts yet'}
+            variant="white"
+            style={cardLayoutStyle}
+          />
 
-          {/* Average per receipt */}
-          <View style={[styles.card, cardLayoutStyle, styles.cardBlue]}>
-            <Text style={styles.cardTitle}>Average per receipt</Text>
-            <Text style={styles.cardValue}>{formatCurrency(Math.round(avgPerReceipt || 0))}</Text>
-            <Text style={styles.cardSubtitle}>Calculated across scanned receipts</Text>
-          </View>
+          <StatCard
+            value={formatCurrency(Math.round(avgPerReceipt || 0))}
+            label="Average per receipt"
+            subtitle="Calculated across scanned receipts"
+            variant="blue"
+            style={cardLayoutStyle}
+          />
 
-          {/* Most active month */}
-          <View style={[styles.card, cardLayoutStyle, styles.cardGreen]}>
-            <Text style={styles.cardTitle}>Most active month</Text>
-            <Text style={styles.cardValue}>{mostActiveMonth ?? '—'}</Text>
-            <Text style={styles.cardSubtitle}>Month with most receipts</Text>
-          </View>
+          <StatCard
+            value={mostActiveMonth ?? '—'}
+            label="Most active month"
+            subtitle="Month with most receipts"
+            variant="green"
+            style={cardLayoutStyle}
+          />
         </View>
 
         {/* Compound interest calculator CTA (navigates to full page) */}
         <View style={{ width: '100%', marginTop: spacing.md }}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Open compound interest calculator page"
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('Calculator' as never)}
-          >
-            <View style={[styles.card, { padding: spacing.lg, backgroundColor: palette.white }]}> 
-              <Text style={styles.cardTitleDark}>Compound interest calculator</Text>
-              <Text style={styles.cardSubtitleDark}>Open calculator page</Text>
+          <PrimaryButton onPress={() => navigation.navigate('Calculator' as never)} accessibilityLabel="Open compound interest calculator page">
+            <View style={{ width: '100%' }}>
+              <Text style={styles.cardTitle}>Compound interest calculator</Text>
+              <Text style={styles.cardSubtitle}>Open calculator page</Text>
             </View>
-          </TouchableOpacity>
+          </PrimaryButton>
         </View>
 
         {/* Quick stats removed per request */}
@@ -301,8 +278,8 @@ export default function SummaryScreen() {
             </View>
           ))}
         </View>
-  </ScrollView>
-    </SafeAreaView>
+      </ScrollView>
+    </ScreenContainer>
   );
 }
 
@@ -312,7 +289,6 @@ const styles = StyleSheet.create({
     backgroundColor: palette.lightGray,
   },
   contentContainer: {
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
   },
