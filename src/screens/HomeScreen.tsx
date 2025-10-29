@@ -7,6 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { palette, alpha } from '../styles/palette';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import ScreenContainer from '../components/ScreenContainer';
+import ResponsiveContainer from '../components/ResponsiveContainer';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import ReceiptCard from '../components/ReceiptCard';
@@ -32,12 +33,10 @@ export default function HomeScreen() {
   // Check if user has any scans
   const hasScans = allScans.length > 0;
 
-  const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone } = useBreakpoint();
-  const scrollPadding = useMemo(
-    () => ({ paddingBottom: sectionVerticalSpacing }),
-    [sectionVerticalSpacing]
-  );
-  const stackStats = !isTablet && !isLargePhone;
+  const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone, width } = useBreakpoint();
+  const scrollPadding = useMemo(() => ({ paddingBottom: sectionVerticalSpacing }), [sectionVerticalSpacing]);
+  // contentWidth used for computing grid item sizes
+  const contentWidth = Math.min(width - contentHorizontalPadding * 2, isTablet ? 960 : width - contentHorizontalPadding * 2);
 
   const formatAmount = (amount: number) => formatCurrencyGBP(amount || 0);
 
@@ -46,7 +45,6 @@ export default function HomeScreen() {
   const [portfolioLoading, setPortfolioLoading] = useState(true);
   const [portfolioError, setPortfolioError] = useState<string | null>(null);
 
-  // totalSpend derived from receipts (replaces placeholder)
   const [totalSpend, setTotalSpend] = useState<number>(0);
 
   const totalMoneySpentDerived = useMemo(() => {
@@ -93,32 +91,31 @@ export default function HomeScreen() {
   }, [totalSpend]);
 
   return (
-    <ScreenContainer contentStyle={scrollPadding}>
-      <ScrollView style={styles.scrollView}>
+    <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {hasScans ? (
           <>
-            <PageHeader>
-              <View style={styles.titleContainer}>
-                <Text style={styles.titlePrefix}>Your </Text>
-                <Text style={styles.titleStock}>Stock</Text>
-                <Text style={styles.titleLens}>Lens</Text>
-              </View>
-              <Text style={styles.subtitle}>What if you invested instead?</Text>
-            </PageHeader>
+            <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+              <PageHeader>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.titlePrefix}>Your </Text>
+                  <Text style={styles.titleStock}>Stock</Text>
+                  <Text style={styles.titleLens}>Lens</Text>
+                </View>
+                <Text style={styles.subtitle}>What if you invested instead?</Text>
+              </PageHeader>
 
-            <View style={[styles.statsContainer, stackStats && styles.statsStacked]}>
+            <View style={styles.statsContainer}>
               <StatCard
                 value={formatAmount(totalMoneySpentDerived)}
                 label="Total Money Spent"
                 subtitle="Across all scanned receipts"
                 variant="green"
-                style={stackStats ? styles.statCardFullWidth : undefined}
               />
               <StatCard
                 value={allScans.length}
                 label="Receipts Scanned"
                 variant="blue"
-                style={stackStats ? styles.statCardFullWidth : undefined}
               />
             </View>
 
@@ -127,29 +124,47 @@ export default function HomeScreen() {
               {(() => {
                 const preview = allScans.slice(0, 3);
                 const list = showAllHistory ? allScans : preview;
-                return list.map((scan) => (
-                  <ReceiptCard
-                    key={scan.id}
-                    image={scan.image}
-                    amount={formatAmount(scan.amount)}
-                    merchant={scan.merchant ?? formatReceiptLabel(scan.date)}
-                    time={scan.time}
-                    onPress={() =>
-                      navigation.navigate('ReceiptDetails', {
-                        receiptId: scan.id,
-                        totalAmount: scan.amount,
-                        date: scan.date,
-                        image: scan.image,
-                      })
-                    }
-                  />
-                ));
+                const cols = isTablet ? 2 : 1;
+                // Use percentage widths so items wrap cleanly without negative margins
+                const itemWidthPercent = `${100 / cols}%`;
+
+                return (
+                  // grid wrapper — keep simple row/wrap layout; padding is handled
+                  // by ScreenContainer / ResponsiveContainer so we don't double-pad
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                    {list.map((scan) => (
+                      <View
+                        key={scan.id}
+                        // flexBasis percentage ensures consistent wrapping; cast to any to satisfy RN typing for percentage strings
+                        style={{ flexBasis: `${100 / cols}%`, paddingHorizontal: spacing.xs } as any}
+                      >
+                        <View style={{ width: '100%' }}>
+                          <ReceiptCard
+                            image={scan.image}
+                            amount={formatAmount(scan.amount)}
+                            merchant={scan.merchant ?? formatReceiptLabel(scan.date)}
+                            time={scan.time}
+                            onPress={() =>
+                              navigation.navigate('ReceiptDetails', {
+                                receiptId: scan.id,
+                                totalAmount: scan.amount,
+                                date: scan.date,
+                                image: scan.image,
+                              })
+                            }
+                          />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                );
               })()}
 
               <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
                 <Text style={styles.viewAllText}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
               </TouchableOpacity>
             </View>
+            </ResponsiveContainer>
           </>
         ) : (
           <>
@@ -162,7 +177,8 @@ export default function HomeScreen() {
               <Text style={styles.subtitle}>Track your missed opportunities</Text>
             </PageHeader>
 
-            <View style={styles.emptyStateContainer}>
+            <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+              <View style={styles.emptyStateContainer}>
               <EmptyState
                 title="No Receipts Yet"
                 subtitle="Scan your first receipt to discover what your purchases could have been worth"
@@ -202,6 +218,7 @@ export default function HomeScreen() {
                 </View>
               </View>
             </View>
+            </ResponsiveContainer>
           </>
         )}
       </ScrollView>
@@ -243,18 +260,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: spacing.md,
-    flexWrap: 'wrap',
-  },
-  statsStacked: {
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
+    // keep side-by-side on all devices
   },
   statCardGreen: {
     backgroundColor: palette.green,
     borderRadius: radii.md,
     padding: spacing.lg,
-    flex: 1,
-    marginHorizontal: spacing.xs,
+    width: '48%',
     alignItems: 'center',
     ...shadows.level2,
     marginBottom: spacing.md,
@@ -263,8 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.blue,
     borderRadius: radii.md,
     padding: spacing.lg,
-    flex: 1,
-    marginHorizontal: spacing.xs,
+    width: '48%',
     alignItems: 'center',
     ...shadows.level2,
     marginBottom: spacing.md,
@@ -275,10 +286,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginTop: spacing.xs,
     textAlign: 'center',
-  },
-  statCardFullWidth: {
-    width: '100%',
-    marginHorizontal: 0,
   },
   statValue: {
     ...typography.metric,
@@ -318,6 +325,16 @@ const styles = StyleSheet.create({
   onboardingCards: {
     width: '100%',
   },
+  onboardingCardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  onboardingCardTablet: {
+    flex: 1,
+    marginHorizontal: spacing.sm,
+    // avoid hardcoded minWidth; derive from theme tokens
+    minWidth: Math.round(spacing.xxl * 5),
+  },
   onboardingCard: {
     backgroundColor: palette.white,
     borderRadius: radii.md,
@@ -328,17 +345,26 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   numberCircle: {
-    width: 40,
-    height: 40,
+    width: Math.round(spacing.xxl * 1.5),
+    height: Math.round(spacing.xxl * 1.5),
     borderRadius: radii.pill,
     backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
+  numberCircleTablet: {
+    width: Math.round(spacing.xxl * 2),
+    height: Math.round(spacing.xxl * 2),
+    marginRight: spacing.lg,
+  },
   numberText: {
     color: palette.white,
     ...typography.metricSm,
+  },
+  numberTextTablet: {
+    // use theme typography sizes instead of hardcoded values
+    fontSize: (typography.metric && (typography.metric.fontSize as number)) || 20,
   },
   cardContent: {
     flex: 1,
@@ -351,6 +377,7 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     ...typography.caption,
     color: alpha.subtleBlack,
-    lineHeight: 20,
+    // derive lineHeight from the caption font size so it scales on tablets
+    lineHeight: Math.round(((typography.caption.fontSize as number) || 14) * 1.4),
   },
 });

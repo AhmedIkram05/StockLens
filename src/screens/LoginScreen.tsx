@@ -17,7 +17,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const { contentHorizontalPadding, isSmallPhone } = useBreakpoint();
+  const { contentHorizontalPadding, isSmallPhone, sectionVerticalSpacing } = useBreakpoint();
   const { markSignedIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,10 +58,10 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: spacing.xl }}>
+  <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <View style={styles.content}>
         <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
-          <Logo width={200} height={100} />
+          <Logo />
         </View>
 
         <PageHeader>
@@ -117,17 +117,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   logoContainer: {
-    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoContainerCompact: {
-    height: 150,
+    // keep same layout but allow logo to size itself
   },
-  logo: {
-    width: 200,
-    height: 100,
-  },
+  logo: {},
   titleContainer: {
     alignItems: 'center',
     marginBottom: spacing.xxl,

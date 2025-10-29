@@ -10,7 +10,7 @@ import BackButton from '../components/BackButton';
 import { authService, SignUpData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { palette, alpha } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SignUpScreen() {
@@ -83,16 +83,14 @@ export default function SignUpScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <ScrollView
         style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
           isSmallPhone && styles.contentCompact,
-          {
-            paddingHorizontal: contentHorizontalPadding,
-            paddingBottom: sectionVerticalSpacing,
-          },
+          { paddingBottom: sectionVerticalSpacing },
         ]}
       >
         <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
@@ -170,13 +168,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl + spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  contentCompact: {
-    paddingTop: spacing.xxl,
-  },
+  contentCompact: {},
   titleContainer: {
     alignItems: 'center',
     marginBottom: spacing.xxl,
@@ -214,8 +208,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButton: {
-    width: 44,
-    height: 44,
+    width: sizes.controlMd,
+    height: sizes.controlMd,
     borderRadius: radii.pill,
     backgroundColor: palette.green,
     justifyContent: 'center',

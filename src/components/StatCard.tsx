@@ -36,11 +36,11 @@ const styles = StyleSheet.create({
     ...shadows.level2,
   },
   value: {
-    ...typography.metric,
+    ...typography.metricSm,
     marginBottom: spacing.sm,
   },
   label: {
-    ...typography.bodyStrong,
+    ...typography.body,
   },
   subtitle: {
     ...typography.caption,

@@ -1,10 +1,13 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { radii, spacing, typography, shadows } from '../styles/theme';
+import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 import { palette, alpha } from '../styles/palette';
 
 type Props = {
-  icon?: React.ReactNode;
+  /** Emoji or image string to display as icon (centralized) */
+  iconEmoji?: string;
+  /** Background color for icon container */
+  iconBgColor?: string;
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
@@ -13,14 +16,18 @@ type Props = {
   style?: ViewStyle;
 };
 
-export default function SettingRow({ icon, title, subtitle, right, onPress, destructive, style }: Props) {
+export default function SettingRow({ iconEmoji, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
   const Title = (
     <Text style={[styles.title, destructive && styles.destructiveTitle]}>{title}</Text>
   );
 
   return (
     <TouchableOpacity activeOpacity={onPress ? 0.85 : 1} onPress={onPress} style={[styles.row, style]}>
-      <View style={styles.left}>{icon}</View>
+      {iconEmoji ? (
+        <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}> 
+          <Text style={styles.iconEmoji}>{iconEmoji}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.content}>
         {Title}
@@ -44,8 +51,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     ...shadows.level2,
   },
-  left: {
+  iconContainer: {
+    width: sizes.controlSm,
+    height: sizes.controlSm,
+    borderRadius: radii.md,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
+  },
+  iconEmoji: {
+    fontSize: 28, // smaller than sizes.avatarSm for a more compact look
   },
   content: {
     flex: 1,

@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../styles/palette';
-import { radii, shadows, spacing } from '../styles/theme';
+import { radii, shadows, spacing, sizes } from '../styles/theme';
 
 type Props = {
   name: React.ComponentProps<typeof Ionicons>['name'];
@@ -29,8 +29,8 @@ export default function IconButton({ name, size = 20, color = palette.white, onP
 
 const styles = StyleSheet.create({
   button: {
-    width: 44,
-    height: 44,
+    width: sizes.controlMd,
+    height: sizes.controlMd,
     borderRadius: radii.pill,
     backgroundColor: palette.green,
     justifyContent: 'center',

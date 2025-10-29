@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import { palette } from '../styles/palette';
-import { radii, shadows, spacing, typography } from '../styles/theme';
+import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import StatCard from '../components/StatCard';
 import PrimaryButton from '../components/PrimaryButton';
+import ResponsiveContainer from '../components/ResponsiveContainer';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
@@ -159,7 +160,7 @@ export default function SummaryScreen() {
 
   const formatCurrency = (value: number) => formatCurrencyRounded(value);
 
-  const { contentHorizontalPadding, cardsPerRow, width: screenWidth, isTablet } = useBreakpoint();
+  const { contentHorizontalPadding, cardsPerRow, width: screenWidth, isTablet, sectionVerticalSpacing } = useBreakpoint();
   const cardsGap = cardsPerRow === 3 ? spacing.xl : spacing.md;
   const cardsGridStyle = React.useMemo(
     () => ({ marginHorizontal: -(cardsGap / 2) }),
@@ -191,14 +192,17 @@ export default function SummaryScreen() {
   };
 
   return (
-    <ScreenContainer contentStyle={{ paddingBottom: spacing.xxl }}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+    <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
+      <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <PageHeader>
           <View>
             <Text style={styles.title}>Summary</Text>
           </View>
           <Text style={styles.subtitle}>Your investment insights at a glance</Text>
         </PageHeader>
+
+        {/* Center and cap content width so tablet layout matches the rest of the app */}
+        <ResponsiveContainer maxWidth={isTablet ? 960 : screenWidth - contentHorizontalPadding * 2}>
 
         {/* (Compound calculator will be shown below in place of Top‑3) */}
 
@@ -255,6 +259,8 @@ export default function SummaryScreen() {
             </View>
           ))}
         </View>
+
+        </ResponsiveContainer>
       </ScrollView>
     </ScreenContainer>
   );
@@ -266,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.lightGray,
   },
   contentContainer: {
-    paddingTop: spacing.lg,
+    paddingTop: 0,
     paddingBottom: spacing.xxl,
   },
   header: {
@@ -431,7 +437,7 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   insightEmoji: {
-    fontSize: 24,
+    fontSize: sizes.avatarSm,
     marginRight: spacing.md,
   },
   insightContent: {

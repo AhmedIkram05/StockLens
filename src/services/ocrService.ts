@@ -11,16 +11,38 @@ export type OcrResult = {
 };
 
 async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult> {
+  // Use an AbortController to avoid hanging forever if the provider is slow/unresponsive.
+  const TIMEOUT_MS = 30000; // 30s
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
+    // Ensure the API key is present in the multipart form body as some
+    // platforms/proxies may strip custom headers. Having it in the form is
+    // accepted by OCR.Space API as an alternative to the `apikey` header.
+    try {
+      // only append if not already present
+      // FormData in RN doesn't provide a stable iterator, but append is safe
+      formData.append('apikey', apiKey as any);
+    } catch (e) {
+      // ignore if append not supported for this FormData implementation
+    }
+
     console.debug('[ocrService] sending request to OCR.Space');
     const resp = await fetch('https://api.ocr.space/parse/image', {
       method: 'POST',
-      headers: { apikey: apiKey } as any,
+      // keep header as a best-effort too
+      headers: { apikey: apiKey, Accept: 'application/json' } as any,
       body: formData as any,
+      signal: (controller as any).signal,
     });
+    clearTimeout(timeout);
+
+    console.debug('[ocrService] OCR.Space responded', { status: resp.status });
     if (!resp.ok) {
       const txt = await resp.text();
-      throw new Error(`OCR.Space request failed: ${resp.status} ${txt}`);
+      console.warn('[ocrService] OCR.Space non-OK response', resp.status, txt);
+      return { text: '', raw: txt, success: false, errorMessage: `OCR.Space request failed: ${resp.status}` };
     }
     const json = await resp.json();
     const isErrored = json?.IsErroredOnProcessing;
@@ -37,8 +59,12 @@ async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult>
     }
     return { text, raw: json, success: true };
   } catch (e: any) {
-    console.error('[ocrService] doOcrForm failed', e?.message || e);
-    throw e;
+    clearTimeout(timeout);
+    // Abort errors have a message that varies by platform. Normalize to a clearer message.
+    const isAbort = e?.name === 'AbortError' || String(e).toLowerCase().includes('abort');
+    const message = isAbort ? `OCR request timed out after ${TIMEOUT_MS / 1000}s` : (e?.message || String(e));
+    console.error('[ocrService] doOcrForm failed', message, e);
+    return { text: '', raw: e, success: false, errorMessage: message };
   }
 }
 
@@ -47,7 +73,10 @@ export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: strin
   const uri = imageUri;
   const filename = uri.split('/').pop() || 'photo.jpg';
   const match = filename.match(/\.(\w+)$/);
-  const type = match ? `image/${match[1]}` : 'image/jpeg';
+  // normalize common extensions to proper mime types
+  let ext = match ? match[1].toLowerCase() : 'jpg';
+  if (ext === 'jpg') ext = 'jpeg';
+  const type = `image/${ext}`;
   const formData = new FormData();
   // @ts-ignore
   formData.append('file', { uri, name: filename, type });
@@ -56,6 +85,8 @@ export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: strin
   formData.append('OCREngine', '2');
   formData.append('language', 'eng');
   formData.append('isOverlayRequired', 'false');
+  // append apikey here too so doOcrForm can rely on form presence
+  try { formData.append('apikey', apiKey as any); } catch (e) {}
   return doOcrForm(formData, apiKey);
 }
 
@@ -65,6 +96,8 @@ export async function recognizeBase64WithOCRSpace(base64Data: string, apiKey: st
   if (!payload.startsWith('data:')) payload = `data:image/jpeg;base64,${payload}`;
   const formData = new FormData();
   formData.append('base64Image', payload as any);
+  // ensure apikey is present in form body for reliability on mobile
+  try { formData.append('apikey', apiKey as any); } catch (e) {}
   try {
     const len = (payload.split(',')[1] || '').length;
     console.debug('[ocrService] recognizeBase64WithOCRSpace - base64 length', len);

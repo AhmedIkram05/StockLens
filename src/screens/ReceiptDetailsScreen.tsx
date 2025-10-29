@@ -14,9 +14,10 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { palette, alpha } from '../styles/palette';
-import { radii, shadows, spacing, typography } from '../styles/theme';
+import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import DangerButton from '../components/DangerButton';
+import ResponsiveContainer from '../components/ResponsiveContainer';
 import { receiptService } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -232,95 +233,99 @@ export default function ReceiptDetailsScreen() {
         valueColor={valueColor}
         isLast={isLastItem}
         onPress={() => {}}
+        cardWidth={cardWidth}
       />
     );
   };
 
   return (
-    <ScreenContainer contentStyle={{ paddingBottom: sectionVerticalSpacing }}>
+    <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <ScrollView
         contentContainerStyle={[
           styles.content,
           isSmallPhone && styles.contentCompact,
         ]}
+        showsVerticalScrollIndicator={false}
       >
         <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
           <BackButton onPress={() => navigation.goBack()} />
         </View>
 
-        <ReceiptCard
-          image={image}
-          amount={formattedEditableAmount}
-          merchant={''}
-          time={new Date(date).toLocaleString()}
-          onPress={() => {}}
-        />
+        <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+          <>
+            <View style={{ width: '100%' }}>
+              <ReceiptCard
+                image={image}
+                amount={formattedEditableAmount}
+                merchant={''}
+                time={new Date(date).toLocaleString()}
+                onPress={() => {}}
+              />
+            </View>
 
-        {/* Amount is shown in the top receipt card; duplicate body display removed */}
+            <PageHeader>
+              <View>
+                <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
+              </View>
+              <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
+            </PageHeader>
 
-        {/* ConfirmScanModal removed */}
+            <YearSelector
+              options={[1, 3, 5, 10, 20]}
+              value={selectedYears}
+              onChange={setSelectedYears}
+              compact={isSmallPhone}
+              style={{ marginBottom: isSmallPhone ? spacing.xl : spacing.xl + spacing.sm }}
+            />
 
-        <PageHeader>
-          <View>
-            <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
-          </View>
-          <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
-        </PageHeader>
+            <View style={styles.carouselHeader}>
+              <Text style={styles.carouselTitle}>Investment Outlook</Text>
+              <Text style={styles.carouselSubtitle}>Swipe to explore different stocks</Text>
+            </View>
 
-        <YearSelector options={[1, 3, 5, 10, 20]} value={selectedYears} onChange={setSelectedYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
+            <Carousel
+              data={investmentOptions}
+              keyExtractor={(item: any) => item.ticker}
+              snapInterval={snapInterval}
+              contentContainerStyle={styles.carousel}
+              renderItem={({ item, index }) =>
+                renderStockCard(item, index === investmentOptions.length - 1, selectedYears, 'past')
+              }
+            />
 
-        <View style={styles.carouselHeader}>
-          <Text style={styles.carouselTitle}>Investment Outlook</Text>
-          <Text style={styles.carouselSubtitle}>Swipe to explore different stocks</Text>
-        </View>
+            <View style={[styles.sectionSpacing, { height: sectionVerticalSpacing }]} />
 
-        <Carousel
-          data={investmentOptions}
-          keyExtractor={(item: any) => item.ticker}
-          snapInterval={snapInterval}
-          contentContainerStyle={[
-            styles.carousel,
-            {
-              paddingLeft: contentHorizontalPadding,
-              paddingRight: contentHorizontalPadding,
-            },
-          ]}
-          renderItem={({ item, index }) =>
-            renderStockCard(item, index === investmentOptions.length - 1, selectedYears, 'past')
-          }
-        />
+            <PageHeader>
+              <View>
+                <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
+              </View>
+              <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
+            </PageHeader>
 
-        <View style={[styles.sectionSpacing, { height: sectionVerticalSpacing }]} />
+            <YearSelector
+              options={[1, 3, 5, 10, 20]}
+              value={selectedFutureYears}
+              onChange={setSelectedFutureYears}
+              compact={isSmallPhone}
+              style={{ marginBottom: isSmallPhone ? spacing.xl : spacing.xl + spacing.sm }}
+            />
 
-        <PageHeader>
-          <View>
-            <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
-          </View>
-          <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
-        </PageHeader>
+            <View style={styles.carouselHeader}>
+              <Text style={styles.carouselTitle}>Potential Growth</Text>
+              <Text style={styles.carouselSubtitle}>Compare returns if you started now</Text>
+            </View>
 
-        <YearSelector options={[1, 3, 5, 10, 20]} value={selectedFutureYears} onChange={setSelectedFutureYears} compact={isSmallPhone} style={[styles.yearSelector, isSmallPhone && styles.yearSelectorCompact]} />
-
-        <View style={styles.carouselHeader}>
-          <Text style={styles.carouselTitle}>Potential Growth</Text>
-          <Text style={styles.carouselSubtitle}>Compare returns if you started now</Text>
-        </View>
-
-        <Carousel
-          data={futureInvestmentOptions}
-          keyExtractor={(item: any) => `future-${item.ticker}`}
-          snapInterval={snapInterval}
-          contentContainerStyle={[
-            styles.carousel,
-            {
-              paddingLeft: contentHorizontalPadding,
-              paddingRight: contentHorizontalPadding,
-            },
-          ]}
-          renderItem={({ item, index }) =>
-            renderStockCard(item, index === futureInvestmentOptions.length - 1, selectedFutureYears, 'future')
-          }
-        />
+            <Carousel
+              data={futureInvestmentOptions}
+              keyExtractor={(item: any) => `future-${item.ticker}`}
+              snapInterval={snapInterval}
+              contentContainerStyle={styles.carousel}
+              renderItem={({ item, index }) =>
+                renderStockCard(item, index === futureInvestmentOptions.length - 1, selectedFutureYears, 'future')
+              }
+            />
+          </>
+        </ResponsiveContainer>
 
         <DangerButton
           accessibilityLabel="Delete receipt"
@@ -383,14 +388,6 @@ type Styles = {
   projectionHeaderCompact: ViewStyle;
   projectionTitle: TextStyle;
   projectionSubtitle: TextStyle;
-  yearSelector: ViewStyle;
-  yearSelectorCompact: ViewStyle;
-  yearSegment: ViewStyle;
-  yearSegmentActive: ViewStyle;
-  yearSegmentInactive: ViewStyle;
-  yearText: TextStyle;
-  yearTextActive: TextStyle;
-  yearTextInactive: TextStyle;
   carouselHeader: ViewStyle;
   carouselTitle: TextStyle;
   carouselSubtitle: TextStyle;
@@ -451,8 +448,8 @@ const styles = StyleSheet.create<Styles>({
     marginBottom: spacing.md,
   },
   backButton: {
-    width: 44,
-    height: 44,
+    width: sizes.controlMd,
+    height: sizes.controlMd,
     borderRadius: radii.pill,
     backgroundColor: palette.green,
     justifyContent: 'center',
@@ -478,45 +475,7 @@ const styles = StyleSheet.create<Styles>({
     color: palette.black,
     opacity: 0.7,
   },
-  yearSelector: {
-    flexDirection: 'row',
-    marginBottom: spacing.xl + spacing.sm,
-    borderRadius: radii.pill,
-    backgroundColor: alpha.faintBlack,
-    padding: spacing.xs,
-  },
-  yearSelectorCompact: {
-    marginBottom: spacing.xl,
-  },
-  yearSegment: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    marginHorizontal: spacing.xs / 2,
-    borderRadius: radii.pill,
-  },
-  yearSegmentActive: {
-    backgroundColor: palette.green,
-    shadowColor: palette.green,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  yearSegmentInactive: {
-    backgroundColor: 'transparent',
-  },
-  yearText: {
-    ...typography.captionStrong,
-  },
-  yearTextActive: {
-    color: palette.white,
-  },
-  yearTextInactive: {
-    color: palette.black,
-    opacity: 0.6,
-  },
+  /* Year selector visuals are implemented inside `YearSelector` component now. */
   carouselHeader: {
     marginBottom: spacing.md,
   },
@@ -580,7 +539,6 @@ const styles = StyleSheet.create<Styles>({
   },
   stockValue: {
     ...typography.sectionTitle,
-    fontSize: 28,
     color: palette.black,
   },
   stockValueCaption: {

@@ -44,7 +44,7 @@ export default function ManualEntryModal({ visible, value, onChange, onCancel, o
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: alpha.overlayBlack, justifyContent: 'center', alignItems: 'center' },
   card: { width: '86%', backgroundColor: palette.white, borderRadius: radii.md, padding: spacing.lg, ...shadows.level2 },
-  title: { ...typography.bodyStrong, fontSize: 18, marginBottom: spacing.xs },
+  title: { ...typography.bodyStrong, marginBottom: spacing.xs },
   subtitle: { ...typography.caption, color: alpha.subtleBlack, marginBottom: spacing.md },
   input: { backgroundColor: palette.lightGray, borderRadius: radii.md, padding: spacing.md, marginBottom: spacing.md },
   row: { flexDirection: 'row', justifyContent: 'flex-end' },

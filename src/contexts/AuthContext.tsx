@@ -55,6 +55,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const appState = useRef<AppStateStatus | null>(null);
   const [locked, setLocked] = useState(false);
+  // Toggle to disable lock screen for testing (iOS & Android).
+  // Set to `true` to skip lock behavior during development/testing.
+  // Remember to set this back to `false` before production/testing real auth flows.
+  const DISABLE_LOCK = true;
   // recentlySignedIn prevents immediate lock when user signs in during the same session
   const recentlySignedIn = useRef(false);
 
@@ -90,7 +94,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // biometric / passcode is required to proceed. If the user has just signed
             // in during this session, don't lock immediately.
             if (usr && !recentlySignedIn.current) {
-              setLocked(true);
+              if (!DISABLE_LOCK) {
+                setLocked(true);
+              } else {
+                // ensure unlocked when lock is disabled
+                setLocked(false);
+              }
             }
             } catch (err) {
               console.error('Error loading local user profile:', err);
@@ -120,8 +129,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     appState.current = AppState.currentState;
     const handle = (nextAppState: AppStateStatus) => {
       if (appState.current && appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        // move to background -> lock UI
-        setLocked(true);
+        // move to background -> lock UI (unless lock is disabled for testing)
+        if (!DISABLE_LOCK) {
+          setLocked(true);
+        } else {
+          setLocked(false);
+        }
         // after locking, clear recentlySignedIn so the next start requires unlock
         recentlySignedIn.current = false;
       }
@@ -135,6 +148,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Unlock UI using biometric authentication (does not alter Firebase session)
   const unlockWithBiometrics = async (): Promise<boolean> => {
     try {
+      // Short-circuit biometric flow when lock is disabled for testing
+      if (DISABLE_LOCK) {
+        setLocked(false);
+        return true;
+      }
       const biometric = await import('../hooks/useBiometricAuth');
       const available = await biometric.isBiometricAvailable();
       const enabled = await biometric.isBiometricEnabled();
@@ -155,6 +173,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Unlock UI by verifying credentials against the backend
   const unlockWithCredentials = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Short-circuit manual unlock when lock is disabled for testing
+      if (DISABLE_LOCK) {
+        setLocked(false);
+        return true;
+      }
       const authService = await import('../services/authService');
       await authService.authService.signIn({ email, password });
       setLocked(false);

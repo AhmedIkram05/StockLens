@@ -46,7 +46,7 @@ export default function LockScreen() {
     <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <View style={[styles.inner, { paddingHorizontal: 0 }]}> 
         <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
-          <Logo width={160} height={72} />
+          <Logo />
         </View>
 
         <PageHeader>
@@ -79,22 +79,21 @@ export default function LockScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.lightGray },
-  inner: { padding: 24, flex: 1, justifyContent: 'center' },
-  title: { fontSize: 28, marginBottom: 8, color: palette.black, textAlign: 'center' },
-  subtitle: { fontSize: 16, marginBottom: 24, color: palette.black, textAlign: 'center' },
+  inner: { padding: spacing.lg, flex: 1, justifyContent: 'center' },
+  title: { ...typography.pageTitle, marginBottom: spacing.sm, color: palette.black, textAlign: 'center' },
+  subtitle: { ...typography.body, marginBottom: spacing.lg, color: palette.black, textAlign: 'center' },
   logoContainer: {
-    height: 120,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
   logoContainerCompact: {
-    height: 84,
+    // allow logo to size itself on small phones
   },
-  bioButton: { backgroundColor: palette.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 16 },
-  bioButtonText: { color: palette.white, fontSize: 16 },
-  or: { textAlign: 'center', marginVertical: 12, color: palette.black },
+  bioButton: { backgroundColor: palette.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
+  bioButtonText: { color: palette.white, ...typography.button },
+  or: { textAlign: 'center', marginVertical: spacing.md, color: palette.black },
   input: { backgroundColor: palette.white, padding: 12, borderRadius: 8, marginBottom: 12 },
-  unlockButton: { backgroundColor: palette.blue, padding: 14, borderRadius: 8, alignItems: 'center' },
-  unlockText: { color: palette.white, fontSize: 16 },
+  unlockButton: { backgroundColor: palette.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
+  unlockText: { color: palette.white, ...typography.button },
 });

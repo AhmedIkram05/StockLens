@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native';
 import { palette, alpha } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import YearSelector from '../components/YearSelector';
@@ -14,13 +14,13 @@ import BackButton from '../components/BackButton';
 
 export default function CalculatorScreen() {
   const navigation = useNavigation();
-  const { contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   // Use the shared contentHorizontalPadding so page side gutters stay consistent
   const sidePadding = contentHorizontalPadding;
 
   return (
-    <ScreenContainer contentStyle={{ paddingBottom: sectionVerticalSpacing, paddingHorizontal: sidePadding }}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={[styles.content, { paddingHorizontal: sidePadding, paddingBottom: sectionVerticalSpacing }]}>
+    <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing, paddingHorizontal: sidePadding }}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingHorizontal: sidePadding, paddingTop: 0, paddingBottom: sectionVerticalSpacing }]}>
         <PageHeader subtitle="Try different contributions and rates">
           <BackButton onPress={() => navigation.goBack()} />
           <View style={{ marginTop: spacing.md }}>
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: palette.lightGray,
   },
-  headerTitle: { ...typography.pageTitle, fontSize: 18, color: palette.black },
+  headerTitle: { ...typography.pageTitle, color: palette.black },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   content: { paddingHorizontal: 0, paddingBottom: spacing.xxl, flexGrow: 1 },
   // leave room for sticky footer
@@ -120,14 +120,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'stretch',
   },
-  yearSelector: {
-    flexDirection: 'row',
-    marginBottom: spacing.md,
-    borderRadius: radii.pill,
-    backgroundColor: alpha.faintBlack,
-    padding: spacing.xs,
-    alignItems: 'center',
-  },
   label: {
     ...typography.overline,
     color: palette.black,
@@ -137,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.white,
     padding: spacing.md,
     borderRadius: radii.md,
-    fontSize: 18,
+    ...typography.body,
     color: palette.black,
     borderWidth: 1,
     borderColor: alpha.faintBlack,
@@ -192,8 +184,8 @@ const styles = StyleSheet.create({
     // kept for backwards compatibility with combinations; empty on purpose
   },
   backButton: {
-    width: 44,
-    height: 44,
+    width: sizes.controlMd,
+    height: sizes.controlMd,
     borderRadius: radii.pill,
     backgroundColor: palette.green,
     justifyContent: 'center',
@@ -216,7 +208,7 @@ const styles = StyleSheet.create({
 });
 
 function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaultContribution?: number; defaultYears?: number }) {
-  const { isTablet } = useBreakpoint();
+  const { isTablet, isSmallPhone } = useBreakpoint();
   const yearsOptions = [1, 3, 5, 10, 20];
   const [principalStr, setPrincipalStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
@@ -306,7 +298,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
 
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
           <Text style={styles.label}>Years</Text>
-          <YearSelector options={yearsOptions} value={years} onChange={setYears} style={styles.yearSelector} />
+          <YearSelector options={yearsOptions} value={years} onChange={setYears} compact={isSmallPhone} />
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>Rate (%)</Text>
           <View style={styles.rateInputWrapper}>
@@ -333,7 +325,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
 
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
           <Text style={styles.resultLabel}>Total contributed</Text>
-          <Text style={[styles.resultValue, { fontSize: 16 }]}>{formatCurrency(totalContrib)}</Text>
+          <Text style={styles.resultValue}>{formatCurrency(totalContrib)}</Text>
         </View>
 
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>

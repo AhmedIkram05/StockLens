@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import * as biometric from '../hooks/useBiometricAuth';
 import { receiptService } from '../services/dataService';
 import { palette, alpha } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
+import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SettingsScreen() {
@@ -89,7 +89,7 @@ export default function SettingsScreen() {
   };
   return (
     <ScreenContainer>
-      <ScrollView contentContainerStyle={[styles.scrollContent]}>
+      <ScrollView contentContainerStyle={[styles.scrollContent]} showsVerticalScrollIndicator={false}>
         <PageHeader>
           <View>
             <Text style={styles.title}>Settings</Text>
@@ -101,14 +101,16 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Security</Text>
 
           <SettingRow
-            icon={<View style={[styles.iconContainer, styles.blueIcon]}><Text style={styles.iconEmoji}>🔐</Text></View>}
+            iconEmoji="🔐"
+            iconBgColor={palette.blue}
             title="Face ID / Touch ID"
             subtitle="Secure login with biometrics"
             right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
           />
 
           <SettingRow
-            icon={<View style={[styles.iconContainer, styles.grayIcon]}><Text style={styles.iconEmoji}>🛡️</Text></View>}
+            iconEmoji="🛡️"
+            iconBgColor={alpha.faintBlack}
             title="Local Data Storage"
             subtitle="All processing kept on device (No cloud Storage)"
           />
@@ -118,7 +120,8 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Preferences</Text>
 
           <SettingRow
-            icon={<View style={[styles.iconContainer, styles.blueIcon]}><Text style={styles.iconEmoji}>🌙</Text></View>}
+            iconEmoji="🌙"
+            iconBgColor={palette.blue}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"
             right={<Switch value={darkModeEnabled} onValueChange={setDarkModeEnabled} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
@@ -129,7 +132,8 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Account</Text>
 
           <SettingRow
-            icon={<View style={[styles.iconContainer, styles.redIcon]}><Text style={styles.iconEmoji}>🚪</Text></View>}
+            iconEmoji="🚪"
+            iconBgColor={palette.red}
             title="Log Out"
             subtitle="Return to login screen"
             destructive
@@ -142,7 +146,8 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Data Management</Text>
 
           <SettingRow
-            icon={<View style={[styles.iconContainer, styles.redIcon]}><Text style={styles.iconEmoji}>🗑️</Text></View>}
+            iconEmoji="🗑️"
+            iconBgColor={palette.red}
             title="Clear All Data"
             subtitle="Delete all scanned receipts"
             destructive
@@ -182,28 +187,9 @@ const styles = StyleSheet.create({
     color: alpha.mutedBlack,
     marginBottom: spacing.md,
   },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  blueIcon: {
-    backgroundColor: palette.blue,
-  },
-  grayIcon: {
-    backgroundColor: alpha.faintBlack,
-  },
-  redIcon: {
-    backgroundColor: palette.red,
-  },
-  iconEmoji: {
-    fontSize: 22,
-  },
+  // iconContainer/iconEmoji/blueIcon/grayIcon/redIcon styles removed; now handled in SettingRow
   arrow: {
-    fontSize: 24,
+    ...typography.bodyStrong,
     color: alpha.mutedBlack,
   },
   redText: {
