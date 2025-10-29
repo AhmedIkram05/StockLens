@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { palette } from '../styles/palette';
+import { spacing } from '../styles/theme';
 
 type Props = {
   children: React.ReactNode;
@@ -13,17 +14,21 @@ type Props = {
 };
 
 export default function ScreenContainer({ children, style, contentStyle, noPadding }: Props) {
-  const { contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  const { contentHorizontalPadding, sectionVerticalSpacing, isTablet } = useBreakpoint();
 
   const baseInnerStyle: ViewStyle = {
     flex: 1,
     justifyContent: 'space-between',
   };
 
-  // Conditionally include padding only when not disabled
-  const paddedStyle: ViewStyle = noPadding
-    ? baseInnerStyle
-    : { ...baseInnerStyle, paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing };
+  // Conditionally include padding only when not disabled. Prefer the breakpoint
+  // provided `contentHorizontalPadding` so all components using `useBreakpoint`
+  // and `ResponsiveContainer` compute widths consistently. This avoids
+  // mismatches where different parts of the layout subtract different gutters
+  // and content becomes misaligned or clipped on tablets.
+  const horizontalPadding = noPadding ? 0 : contentHorizontalPadding;
+
+  const paddedStyle: ViewStyle = { ...baseInnerStyle, paddingHorizontal: horizontalPadding, paddingVertical: sectionVerticalSpacing };
 
   return (
     <SafeAreaView style={[styles.container, style]}>

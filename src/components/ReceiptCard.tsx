@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { palette } from '../styles/palette';
-import { radii, spacing, typography, shadows } from '../styles/theme';
+import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 
 type Props = {
   id?: string | number;
@@ -35,16 +35,18 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     ...shadows.level1,
+    alignSelf: 'stretch',
+    minWidth: 0,
   },
   image: {
-    width: 56,
-    height: 56,
+    width: sizes.avatarMd,
+    height: sizes.avatarMd,
     borderRadius: 8,
     marginRight: spacing.md,
   },
   placeholder: {
-    width: 56,
-    height: 56,
+    width: sizes.avatarMd,
+    height: sizes.avatarMd,
     borderRadius: 8,
     marginRight: spacing.md,
     backgroundColor: '#f0f0f0',
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   chevron: {
-    fontSize: 20,
+    ...typography.metricSm,
     color: palette.black,
     marginLeft: spacing.sm,
   },

@@ -1,8 +1,7 @@
-import React, { useRef, useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { View, TouchableOpacity, Text, Animated, ViewStyle, StyleProp } from 'react-native';
-import { spacing } from '../styles/theme';
+import { spacing, typography, radii, shadows } from '../styles/theme';
 import { palette, alpha } from '../styles/palette';
-import { radii, shadows } from '../styles/theme';
 
 type Props<T extends number> = {
   options: T[];
@@ -17,9 +16,10 @@ export default function YearSelector<T extends number = number>({ options, value
   const containerWidthRef = useRef<number>(0);
   const containerHeightRef = useRef<number>(0);
   const animatedX = useRef(new Animated.Value(0)).current;
+  const [measured, setMeasured] = useState(false);
 
   useEffect(() => {
-    if (containerWidthRef.current <= 0) return;
+  if (!measured) return;
     const width = containerWidthRef.current;
     const pad = spacing.xs;
     const totalMargins = spacing.xs * options.length;
@@ -30,50 +30,50 @@ export default function YearSelector<T extends number = number>({ options, value
     Animated.timing(animatedX, { toValue: target, duration: 220, useNativeDriver: true }).start();
   }, [value]);
 
+  const pad = spacing.xs;
+  const segPadVert = compact ? spacing.xs : spacing.sm;
+  const width = containerWidthRef.current;
+  const totalMargins = spacing.xs * options.length;
+  const segmentWidth = width > 0 ? (width - pad * 2 - totalMargins) / options.length : 0;
+  const height = Math.max(compact ? 28 : 32, containerHeightRef.current - pad * 2);
+
   return (
     <View
-      style={[{ flexDirection: 'row', borderRadius: radii.pill, backgroundColor: alpha.faintBlack, padding: spacing.xs, alignItems: 'center' }, style]}
+      style={[{ flexDirection: 'row', borderRadius: radii.pill, backgroundColor: alpha.faintBlack, padding: pad, alignItems: 'center' }, style]}
       onLayout={e => {
-        const { width, height } = e.nativeEvent.layout;
-        containerWidthRef.current = width;
-        containerHeightRef.current = height;
+        const { width: w, height: h } = e.nativeEvent.layout;
+        containerWidthRef.current = w;
+        containerHeightRef.current = h;
         const idx = options.indexOf(value);
-        if (width > 0 && idx >= 0) {
-          const pad = spacing.xs;
-          const totalMargins = spacing.xs * options.length;
-          const segmentWidth = (width - pad * 2 - totalMargins) / options.length;
-          const target = idx * (segmentWidth + spacing.xs) + pad;
+        if (w > 0 && idx >= 0) {
+          const padInner = spacing.xs;
+          const totalMarginsInner = spacing.xs * options.length;
+          const segmentWidthInner = (w - padInner * 2 - totalMarginsInner) / options.length;
+          const target = idx * (segmentWidthInner + spacing.xs) + padInner;
           animatedX.setValue(target);
+          setMeasured(true);
         }
       }}
     >
-      {containerWidthRef.current > 0 && (() => {
-        const width = containerWidthRef.current;
-        const pad = spacing.xs;
-        const totalMargins = spacing.xs * options.length;
-        const segmentWidth = (width - pad * 2 - totalMargins) / options.length;
-        const height = Math.max(32, containerHeightRef.current - pad * 2);
-        return (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: pad,
-              width: segmentWidth,
-              height,
-              borderRadius: radii.pill,
-              backgroundColor: palette.green,
-              shadowColor: palette.green,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 6,
-              elevation: 2,
-              transform: [{ translateX: animatedX }],
-            }}
-          />
-        );
-      })()}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: pad,
+          width: segmentWidth,
+          height,
+          borderRadius: radii.pill,
+          backgroundColor: palette.green,
+          shadowColor: palette.green,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 6,
+          elevation: 2,
+          transform: [{ translateX: animatedX }],
+          opacity: measured ? 1 : 0,
+        }}
+      />
 
       {options.map(o => (
         <TouchableOpacity
@@ -84,9 +84,9 @@ export default function YearSelector<T extends number = number>({ options, value
             // @ts-ignore - call signature can be a dispatcher or callback
             onChange(o);
           }}
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.sm, marginHorizontal: spacing.xs / 2 }}
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: segPadVert, marginHorizontal: spacing.xs / 2 }}
         >
-          <Text style={{ color: o === value ? '#fff' : '#000', fontWeight: '600' }}>{o}Y</Text>
+          <Text style={[typography.captionStrong, { color: o === value ? palette.white : palette.black, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
         </TouchableOpacity>
       ))}
     </View>

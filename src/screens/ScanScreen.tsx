@@ -8,13 +8,13 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenContainer from '../components/ScreenContainer';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Constants from 'expo-constants';
-import * as MediaLibrary from 'expo-media-library';
 import { performOcrWithFallback } from '../services/ocrService';
 import { parseAmountFromOcrText } from '../services/receiptParser';
 import { receiptService } from '../services/dataService';
@@ -53,7 +53,7 @@ export default function ScanScreen() {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <View
           style={[
             styles.permissionContainer,
@@ -73,7 +73,7 @@ export default function ScanScreen() {
             <Text style={styles.permissionButtonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
@@ -87,15 +87,8 @@ export default function ScanScreen() {
         setPhoto(photo.uri);
         // photo.base64 is available when base64: true
         if ((photo as any).base64) setPhotoBase64((photo as any).base64 as string);
-        // Optionally save to media library so Expo Go can access the file reliably on some platforms
-        try {
-          const { status } = await MediaLibrary.requestPermissionsAsync();
-          if (status === 'granted') {
-            await MediaLibrary.createAssetAsync(photo.uri);
-          }
-        } catch (e) {
-          // ignore
-        }
+        // Intentionally do NOT save captured photos to the user's photo library.
+        // We avoid requesting photo-library permissions and keep captured images private to the app.
         // Create a lightweight draft receipt immediately so it appears on the
         // dashboard while OCR runs (quicker UX). We save image_uri and scanned
         // timestamp; OCR results will update this draft later.
@@ -159,7 +152,7 @@ export default function ScanScreen() {
 
   if (photo) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer noPadding>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
           {/* Manual entry modal (Android fallback) */}
@@ -184,7 +177,7 @@ export default function ScanScreen() {
           )}
   {/* Android uses the ManualEntryModal above; iOS uses a native prompt where available */}
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
@@ -278,7 +271,7 @@ export default function ScanScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenContainer noPadding>
       <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
@@ -293,7 +286,7 @@ export default function ScanScreen() {
           horizontalPadding={contentHorizontalPadding}
         />
       </View>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 
   // Helper: save receipt (create/update) and navigate to ReceiptDetails

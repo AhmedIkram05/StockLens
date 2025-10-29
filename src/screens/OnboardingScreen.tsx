@@ -29,7 +29,7 @@ export default function OnboardingScreen() {
           <Text style={{ color: palette.green }}>Lens</Text>
         </Text>
         <>{/* two lines tagline */}
-          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7, marginBottom: spacing.sm }]}>Scan your Spending</Text>
+          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7 }]}>Scan your Spending</Text>
           <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7 }]}>See your missed Investing</Text>
         </>
       </PageHeader>
