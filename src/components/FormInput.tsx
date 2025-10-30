@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, StyleSheet, TextInputProps, TextStyle, ViewStyle } from 'react-native';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = TextInputProps & {
   containerStyle?: ViewStyle;
@@ -9,12 +10,14 @@ type Props = TextInputProps & {
 };
 
 export default function FormInput({ containerStyle, inputStyle, style, ...rest }: Props) {
+  const { theme } = useTheme();
+  
   return (
     <View style={[styles.container, containerStyle]}>
       <TextInput
         {...rest}
-        style={[styles.input, inputStyle, style]}
-        placeholderTextColor={alpha.mutedBlack}
+        style={[styles.input, inputStyle, style, { backgroundColor: theme.surface, color: theme.text, borderColor: theme.textSecondary }]}
+        placeholderTextColor={theme.textSecondary}
       />
     </View>
   );
@@ -25,13 +28,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   input: {
-    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: alpha.faintBlack,
     borderRadius: radii.md,
     padding: spacing.md,
     ...typography.body,
-    color: palette.black,
     ...shadows.level1,
   },
 });

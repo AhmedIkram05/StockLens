@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { Animated, Easing } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { palette } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 
 type OHLC = { open: number; high: number; low: number; close: number };
 
@@ -38,6 +39,7 @@ const makeOHLCSeries = (count: number, start = 100) => {
 
 export default function OnboardingCandles({ width, height, count = 14, leftPad = 0, rightPad = 0 }: Props) {
   const data = useMemo(() => makeOHLCSeries(count, 90), [count]);
+  const { theme, isDark } = useTheme();
 
   const progresses = useRef<Animated.Value[]>(Array.from({ length: count }, () => new Animated.Value(0))).current;
 
@@ -115,7 +117,7 @@ export default function OnboardingCandles({ width, height, count = 14, leftPad =
 
         const isUp = d.close >= d.open;
         const fill = isUp ? palette.green : palette.red;
-        const stroke = 'rgba(0,0,0,0.08)';
+        const stroke = isDark ? '#ffffff6e' : '#00000014';
 
         const bodyY = Math.min(yOpen, yClose);
         const bodyH = Math.max(1, Math.abs(yClose - yOpen));

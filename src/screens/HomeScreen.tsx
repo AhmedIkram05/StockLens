@@ -4,7 +4,7 @@ import { useNavigation, CompositeNavigationProp } from '@react-navigation/native
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-import { palette, alpha } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography } from '../styles/theme';
 import ScreenContainer from '../components/ScreenContainer';
 import ResponsiveContainer from '../components/ResponsiveContainer';
@@ -26,6 +26,7 @@ type HomeNavigationProp = CompositeNavigationProp<
 export default function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const { theme } = useTheme();
 
   const { user } = useAuth();
   const { receipts: allScans, loading: receiptsLoading, error: receiptsError } = useReceipts(user?.uid);
@@ -98,11 +99,11 @@ export default function HomeScreen() {
             <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
               <PageHeader>
                 <View style={styles.titleContainer}>
-                  <Text style={styles.titlePrefix}>Your </Text>
-                  <Text style={styles.titleStock}>Stock</Text>
-                  <Text style={styles.titleLens}>Lens</Text>
+                  <Text style={[styles.titlePrefix, { color: theme.text }]}>Your </Text>
+                  <Text style={[styles.titleStock, { color: theme.text }]}>Stock</Text>
+                  <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
                 </View>
-                <Text style={styles.subtitle}>What if you invested instead?</Text>
+                <Text style={[styles.subtitle, { color: theme.textSecondary }]}>What if you invested instead?</Text>
               </PageHeader>
 
             <View style={styles.statsContainer}>
@@ -120,7 +121,7 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.recentScans}>
-              <Text style={styles.sectionTitle}>Recent Scans</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Scans</Text>
               {(() => {
                 const preview = allScans.slice(0, 3);
                 const list = showAllHistory ? allScans : preview;
@@ -161,7 +162,7 @@ export default function HomeScreen() {
               })()}
 
               <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
-                <Text style={styles.viewAllText}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
+                <Text style={[styles.viewAllText, { color: theme.text }]}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
               </TouchableOpacity>
             </View>
             </ResponsiveContainer>
@@ -187,33 +188,33 @@ export default function HomeScreen() {
               />
 
               <View style={styles.onboardingCards}>
-                <View style={styles.onboardingCard}>
+                                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
                   <View style={styles.numberCircle}>
                     <Text style={styles.numberText}>1</Text>
                   </View>
                   <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>Scan Your Receipt</Text>
-                    <Text style={styles.cardSubtitle}>Take a photo of any receipt to get started</Text>
+                    <Text style={[styles.cardTitle, { color: theme.text }]}>Scan Your Receipts</Text>
+                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Take photos of your spending to track expenses</Text>
                   </View>
                 </View>
 
-                <View style={styles.onboardingCard}>
+                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
                   <View style={styles.numberCircle}>
                     <Text style={styles.numberText}>2</Text>
                   </View>
                   <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>See Investment Potential</Text>
-                    <Text style={styles.cardSubtitle}>Discover what your spending could be worth if invested</Text>
+                    <Text style={[styles.cardTitle, { color: theme.text }]}>See Investment Potential</Text>
+                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Discover what your spending could be worth if invested</Text>
                   </View>
                 </View>
 
-                <View style={styles.onboardingCard}>
+                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
                   <View style={styles.numberCircle}>
                     <Text style={styles.numberText}>3</Text>
                   </View>
                   <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>Track Your Progress</Text>
-                    <Text style={styles.cardSubtitle}>Monitor your spending patterns and investment opportunities</Text>
+                    <Text style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</Text>
+                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Monitor your spending patterns and investment opportunities</Text>
                   </View>
                 </View>
               </View>
@@ -229,7 +230,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.lightGray,
   },
   scrollView: {
     flex: 1,
@@ -241,20 +241,15 @@ const styles = StyleSheet.create({
   },
   titlePrefix: {
     ...typography.pageTitle,
-    color: palette.black,
   },
   titleStock: {
     ...typography.pageTitle,
-    color: palette.black,
   },
   titleLens: {
     ...typography.pageTitle,
-    color: palette.green,
   },
   subtitle: {
     ...typography.pageSubtitle,
-    color: palette.black,
-    opacity: 0.7,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -263,7 +258,6 @@ const styles = StyleSheet.create({
     // keep side-by-side on all devices
   },
   statCardGreen: {
-    backgroundColor: palette.green,
     borderRadius: radii.md,
     padding: spacing.lg,
     width: '48%',
@@ -272,7 +266,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   statCardBlue: {
-    backgroundColor: palette.blue,
     borderRadius: radii.md,
     padding: spacing.lg,
     width: '48%',
@@ -282,25 +275,21 @@ const styles = StyleSheet.create({
   },
   statSubtitle: {
     ...typography.caption,
-    color: palette.white,
     opacity: 0.9,
     marginTop: spacing.xs,
     textAlign: 'center',
   },
   statValue: {
     ...typography.metric,
-    color: palette.white,
     marginBottom: spacing.sm,
   },
   statLabel: {
     ...typography.caption,
-    color: palette.white,
     textAlign: 'center',
     opacity: 0.9,
   },
   sectionTitle: {
     ...typography.sectionTitle,
-    color: palette.black,
     opacity: 0.85,
     marginBottom: spacing.md,
   },
@@ -308,14 +297,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   viewAllButton: {
-    backgroundColor: palette.green,
     borderRadius: radii.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
     marginTop: spacing.md,
   },
   viewAllText: {
-    color: palette.white,
     ...typography.button,
   },
   emptyStateContainer: {
@@ -336,7 +323,6 @@ const styles = StyleSheet.create({
     minWidth: Math.round(spacing.xxl * 5),
   },
   onboardingCard: {
-    backgroundColor: palette.white,
     borderRadius: radii.md,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -348,7 +334,6 @@ const styles = StyleSheet.create({
     width: Math.round(spacing.xxl * 1.5),
     height: Math.round(spacing.xxl * 1.5),
     borderRadius: radii.pill,
-    backgroundColor: palette.green,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -359,7 +344,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.lg,
   },
   numberText: {
-    color: palette.white,
     ...typography.metricSm,
   },
   numberTextTablet: {
@@ -371,12 +355,10 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     ...typography.bodyStrong,
-    color: palette.black,
     marginBottom: spacing.xs,
   },
   cardSubtitle: {
     ...typography.caption,
-    color: alpha.subtleBlack,
     // derive lineHeight from the caption font size so it scales on tablets
     lineHeight: Math.round(((typography.caption.fontSize as number) || 14) * 1.4),
   },

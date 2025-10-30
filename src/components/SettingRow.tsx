@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
-import { palette, alpha } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   /** Emoji or image string to display as icon (centralized) */
@@ -17,12 +17,14 @@ type Props = {
 };
 
 export default function SettingRow({ iconEmoji, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
+  const { theme } = useTheme();
+
   const Title = (
-    <Text style={[styles.title, destructive && styles.destructiveTitle]}>{title}</Text>
+    <Text style={[styles.title, { color: theme.text }, destructive && { color: theme.error }]}>{title}</Text>
   );
 
   return (
-    <TouchableOpacity activeOpacity={onPress ? 0.85 : 1} onPress={onPress} style={[styles.row, style]}>
+    <TouchableOpacity activeOpacity={onPress ? 0.85 : 1} onPress={onPress} style={[styles.row, { backgroundColor: theme.surface }, style]}>
       {iconEmoji ? (
         <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}> 
           <Text style={styles.iconEmoji}>{iconEmoji}</Text>
@@ -31,7 +33,7 @@ export default function SettingRow({ iconEmoji, iconBgColor, title, subtitle, ri
 
       <View style={styles.content}>
         {Title}
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</Text> : null}
       </View>
 
       <View style={styles.right}>{right}</View>
@@ -43,7 +45,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.white,
     borderRadius: radii.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -70,14 +71,9 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.bodyStrong,
-    color: palette.black,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.caption,
-    color: alpha.subtleBlack,
-  },
-  destructiveTitle: {
-    color: palette.red,
   },
 });

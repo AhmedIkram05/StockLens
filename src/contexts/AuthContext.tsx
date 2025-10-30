@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
+import { useTheme } from './ThemeContext';
 import type { User } from 'firebase/auth';
 
 interface UserProfile {
@@ -61,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const DISABLE_LOCK = true;
   // recentlySignedIn prevents immediate lock when user signs in during the same session
   const recentlySignedIn = useRef(false);
+  const { setMode } = useTheme();
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -197,6 +199,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signOut(auth);
       // Clear local profile from state (keep local DB record)
       setUserProfile(null);
+      // When no user is signed in, revert UI to the default light theme.
+      try {
+        setMode('light');
+      } catch (err) {
+        // ignore any theme errors
+      }
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

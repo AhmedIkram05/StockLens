@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/StockLens_Logo.png",
+      "image": "./assets/StockLens_Logo_T.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

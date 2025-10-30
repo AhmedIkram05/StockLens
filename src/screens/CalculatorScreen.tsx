@@ -11,10 +11,12 @@ import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
 import { formatCurrencyRounded } from '../utils/formatters';
 import BackButton from '../components/BackButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CalculatorScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
+  const { theme } = useTheme();
   // Use the shared contentHorizontalPadding so page side gutters stay consistent
   const sidePadding = contentHorizontalPadding;
 
@@ -24,7 +26,7 @@ export default function CalculatorScreen() {
         <PageHeader subtitle="Try different contributions and rates">
           <BackButton onPress={() => navigation.goBack()} />
           <View style={{ marginTop: spacing.md }}>
-            <Text style={styles.titleLarge}>Compound Interest Calculator</Text>
+            <Text style={[styles.titleLarge, { color: theme.text }]}>Compound Interest Calculator</Text>
           </View>
         </PageHeader>
 
@@ -46,7 +48,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: palette.lightGray,
   },
-  headerTitle: { ...typography.pageTitle, color: palette.black },
+  headerTitle: { ...typography.pageTitle },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   content: { paddingHorizontal: 0, paddingBottom: spacing.xxl, flexGrow: 1 },
   // leave room for sticky footer
@@ -83,21 +85,17 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.bodyStrong,
-    color: palette.black,
   },
   subtitle: {
     ...typography.caption,
-    color: palette.black,
     opacity: 0.6,
   },
   titleLarge: {
     ...typography.pageTitle,
-    color: palette.black,
   },
   subtitleLarge: {
     marginTop: spacing.sm,
     ...typography.pageSubtitle,
-    color: palette.black,
     opacity: 0.7,
   },
   formRow: {
@@ -122,26 +120,16 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.overline,
-    color: palette.black,
     marginBottom: spacing.xs,
-  },
-  input: {
-    backgroundColor: palette.white,
-    padding: spacing.md,
-    borderRadius: radii.md,
-    ...typography.body,
-    color: palette.black,
-    borderWidth: 1,
-    borderColor: alpha.faintBlack,
   },
   rowButtons: { flexDirection: 'row', marginTop: spacing.md },
   smallButton: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.md, backgroundColor: 'transparent', marginRight: spacing.sm },
   smallButtonActive: { backgroundColor: palette.green },
-  smallButtonText: { color: palette.black },
+  smallButtonText: { },
   smallButtonTextActive: { color: palette.white },
   yearButton: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radii.pill, backgroundColor: 'transparent', marginRight: spacing.xs, marginBottom: spacing.xs },
   yearButtonActive: { backgroundColor: palette.green },
-  yearText: { ...typography.bodyStrong, color: palette.black },
+  yearText: { ...typography.bodyStrong },
   yearTextActive: { color: palette.white },
   yearSegment: {
     flex: 1,
@@ -163,22 +151,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   yearTextInactive: {
-    color: palette.black,
     opacity: 0.6,
   },
   rowButtonsWrap: { flexDirection: 'row', flexWrap: 'wrap' },
   presetButton: { padding: spacing.xs, marginRight: spacing.xs, borderRadius: radii.md, backgroundColor: alpha.faintBlack },
   presetButtonActive: { backgroundColor: palette.blue },
-  presetText: { color: palette.black },
+  presetText: { },
   presetTextActive: { color: palette.white },
-  rateHint: { ...typography.caption, color: palette.black, opacity: 0.6, marginTop: spacing.xs },
+  rateHint: { ...typography.caption, marginTop: spacing.xs },
   rateInputWrapper: { marginTop: spacing.sm },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md, alignItems: 'center' },
   resultsRowStack: { flexDirection: 'column', alignItems: 'flex-start' },
   resultsCol: { flex: 1, alignItems: 'center', minWidth: 80 },
   resultsColStack: { alignItems: 'flex-start', marginBottom: spacing.md },
-  resultLabel: { ...typography.caption, color: palette.black, opacity: 0.7 },
-  resultValue: { ...typography.sectionTitle, color: palette.black, marginTop: spacing.xs },
+  resultLabel: { ...typography.caption },
+  resultValue: { ...typography.sectionTitle, marginTop: spacing.xs },
   // disclaimer removed (calculator uses no bottom warning by design)
   card: {
     // kept for backwards compatibility with combinations; empty on purpose
@@ -209,6 +196,7 @@ const styles = StyleSheet.create({
 
 function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaultContribution?: number; defaultYears?: number }) {
   const { isTablet, isSmallPhone } = useBreakpoint();
+  const { theme } = useTheme();
   const yearsOptions = [1, 3, 5, 10, 20];
   const [principalStr, setPrincipalStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
@@ -265,7 +253,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
     <View style={[styles.calcContainer]}>
       <View style={[styles.formRow, !isTablet && styles.formRowStack]}>
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
-          <Text style={styles.label}>Principal (£)</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Principal (£)</Text>
           <FormInput
             keyboardType="decimal-pad"
             value={principalStr}
@@ -275,7 +263,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
             selectionColor={palette.green}
           />
 
-          <Text style={[styles.label, { marginTop: spacing.md }]}>Contribution (£)</Text>
+          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Contribution (£)</Text>
           <FormInput
             keyboardType="decimal-pad"
             value={contributionStr}
@@ -285,22 +273,22 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
             selectionColor={palette.green}
           />
 
-          <Text style={[styles.label, { marginTop: spacing.md }]}>Frequency</Text>
+          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Frequency</Text>
           <View style={styles.rowButtons}>
             <TouchableOpacity onPress={() => setFrequency('monthly')} style={[styles.smallButton, frequency === 'monthly' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, frequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
+              <Text style={[styles.smallButtonText, { color: frequency === 'monthly' ? palette.white : theme.text }, frequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setFrequency('annually')} style={[styles.smallButton, frequency === 'annually' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
+              <Text style={[styles.smallButtonText, { color: frequency === 'annually' ? palette.white : theme.text }, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
-          <Text style={styles.label}>Years</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Years</Text>
           <YearSelector options={yearsOptions} value={years} onChange={setYears} compact={isSmallPhone} />
 
-          <Text style={[styles.label, { marginTop: spacing.md }]}>Rate (%)</Text>
+          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Rate (%)</Text>
           <View style={styles.rateInputWrapper}>
             <FormInput
               keyboardType="decimal-pad"
@@ -310,7 +298,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
               placeholder="12"
               selectionColor={palette.green}
             />
-            <Text style={styles.rateHint}>Enter annual % (e.g. 12 for 12%)</Text>
+            <Text style={[styles.rateHint, { color: theme.textSecondary }]}>Enter annual % (e.g. 12 for 12%)</Text>
           </View>
         </View>
       </View>
@@ -319,22 +307,22 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
 
       <View style={[styles.resultsRow, !isTablet && styles.resultsRowStack]}>
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
-          <Text style={styles.resultLabel}>Future value</Text>
-          <Text style={styles.resultValue}>{formatCurrency(fvTotal)}</Text>
+          <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Future value</Text>
+          <Text style={[styles.resultValue, { color: theme.text }]}>{formatCurrency(fvTotal)}</Text>
         </View>
 
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
-          <Text style={styles.resultLabel}>Total contributed</Text>
-          <Text style={styles.resultValue}>{formatCurrency(totalContrib)}</Text>
+          <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Total contributed</Text>
+          <Text style={[styles.resultValue, { color: theme.text }]}>{formatCurrency(totalContrib)}</Text>
         </View>
 
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
-          <Text style={styles.resultLabel}>Interest earned</Text>
+          <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Interest earned</Text>
           <Text style={[styles.resultValue, { color: interestEarned >= 0 ? palette.green : palette.red }]}>{formatCurrency(interestEarned)}</Text>
         </View>
 
         <View style={[styles.resultsCol, !isTablet && styles.resultsColStack]}>
-          <Text style={styles.resultLabel}>Cumulative return</Text>
+          <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Cumulative return</Text>
           <Text style={[styles.resultValue, { color: cumulativePct >= 0 ? palette.green : palette.red }]}>{cumulativePct.toFixed(1)}%</Text>
         </View>
       </View>

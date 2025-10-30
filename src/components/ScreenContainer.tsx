@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { palette } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 import { spacing } from '../styles/theme';
 
 type Props = {
@@ -15,6 +15,7 @@ type Props = {
 
 export default function ScreenContainer({ children, style, contentStyle, noPadding }: Props) {
   const { contentHorizontalPadding, sectionVerticalSpacing, isTablet } = useBreakpoint();
+  const { theme } = useTheme();
 
   const baseInnerStyle: ViewStyle = {
     flex: 1,
@@ -30,16 +31,14 @@ export default function ScreenContainer({ children, style, contentStyle, noPaddi
 
   const paddedStyle: ViewStyle = { ...baseInnerStyle, paddingHorizontal: horizontalPadding, paddingVertical: sectionVerticalSpacing };
 
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: theme.background,
+  };
+
   return (
-    <SafeAreaView style={[styles.container, style]}>
+    <SafeAreaView style={[containerStyle, style]}>
       <View style={[paddedStyle, contentStyle]}>{children}</View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
-});

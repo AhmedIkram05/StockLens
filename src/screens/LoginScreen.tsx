@@ -11,14 +11,16 @@ import { authService, SignInData } from '../services/authService';
 import * as biometric from '../hooks/useBiometricAuth';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const { contentHorizontalPadding, isSmallPhone, sectionVerticalSpacing } = useBreakpoint();
+  const { contentHorizontalPadding, isSmallPhone, sectionVerticalSpacing, isTablet, orientation } = useBreakpoint();
   const { markSignedIn } = useAuth();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -66,13 +68,25 @@ export default function LoginScreen() {
 
         <PageHeader>
           <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
-            <Text style={styles.title}>Welcome to StockLens</Text>
+            {(() => {
+              const titleMarginTop = isSmallPhone
+                ? spacing.lg
+                : isTablet
+                ? orientation === 'landscape'
+                  ? spacing.md
+                  : spacing.lg
+                : spacing.xl;
+              const titleMarginBottom = isSmallPhone ? spacing.xs : isTablet ? spacing.sm : spacing.md;
+              return (
+                <Text style={[styles.title, { color: theme.text, marginTop: titleMarginTop, marginBottom: titleMarginBottom }]}>Welcome to StockLens</Text>
+              );
+            })()}
           </View>
-          <Text style={styles.subtitle}>Scan your spending{'\n'}See your missed investing</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scan your spending{'\n'}See your missed investing</Text>
         </PageHeader>
 
         {/* Form Section */}
-  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
+  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact, isTablet && orientation === 'landscape' && styles.formContainerLandscapeTablet]}>
           <FormInput
             placeholder="Email"
             value={email}
@@ -126,27 +140,27 @@ const styles = StyleSheet.create({
   logo: {},
   titleContainer: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
   },
   titleContainerCompact: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.sm,
   },
   title: {
     ...typography.pageTitle,
-    color: palette.black,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    // spacing for top/bottom is applied responsively inline so it adapts
+    // to phones/tablets. Keep only typography here.
   },
   subtitle: {
     ...typography.pageSubtitle,
-    color: palette.black,
-    opacity: 0.7,
     textAlign: 'center',
-    lineHeight: 24,
   },
   formContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  formContainerLandscapeTablet: {
+    // add extra space between subtitle and form on horizontal/tablet layouts
+    marginTop: spacing.xl,
   },
   inputContainer: {
     marginBottom: spacing.md,
@@ -169,7 +183,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   loginButtonText: {
-    color: palette.white,
     ...typography.button,
   },
   signUpContainer: {
@@ -177,7 +190,6 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     ...typography.caption,
-    color: alpha.subtleBlack,
     marginBottom: spacing.sm,
   },
   signUpButton: {

@@ -2,10 +2,13 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { initDatabase, databaseService } from './src/services/database';
 import { ensureHistoricalPrefetch } from './src/services/dataService';
 
-export default function App() {
+function AppContent() {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     // Initialize the database when the app starts
     (async () => {
@@ -22,9 +25,19 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <>
       <AppNavigator />
-      <StatusBar style="auto" />
-    </AuthProvider>
+      <StatusBar style={isDark ? "light" : "dark"} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

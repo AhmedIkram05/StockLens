@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   onPress?: () => void;
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export default function PrimaryButton({ onPress, children, style, textStyle, disabled, accessibilityLabel }: Props) {
+  const { theme, isDark } = useTheme();
+  
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -22,7 +25,7 @@ export default function PrimaryButton({ onPress, children, style, textStyle, dis
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={[styles.text, textStyle]}>{children}</Text>
+      <Text style={[styles.text, { color: isDark ? palette.black : palette.white }, textStyle]}>{children}</Text>
     </TouchableOpacity>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { palette } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 
 type Props = {
@@ -13,15 +13,17 @@ type Props = {
 };
 
 export default function ReceiptCard({ image, amount, merchant, time, onPress }: Props) {
+  const { theme } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface }]} onPress={onPress} activeOpacity={0.85}>
       {image ? <Image source={{ uri: image }} style={styles.image} /> : <View style={styles.placeholder} />}
       <View style={styles.info}>
-        <Text style={styles.amount}>{amount}</Text>
-        <Text style={styles.merchant}>{merchant}</Text>
-        <Text style={styles.time}>{time}</Text>
+        <Text style={[styles.amount, { color: theme.text }]}>{amount}</Text>
+        <Text style={[styles.merchant, { color: theme.textSecondary }]}>{merchant}</Text>
+        <Text style={[styles.time, { color: theme.textSecondary }]}>{time}</Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <Text style={[styles.chevron, { color: theme.textSecondary }]}>›</Text>
     </TouchableOpacity>
   );
 }
@@ -30,7 +32,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.white,
     borderRadius: radii.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -56,21 +57,15 @@ const styles = StyleSheet.create({
   },
   amount: {
     ...typography.bodyStrong,
-    color: palette.black,
   },
   merchant: {
     ...typography.caption,
-    color: palette.black,
-    opacity: 0.8,
   },
   time: {
     ...typography.caption,
-    color: palette.black,
-    opacity: 0.6,
   },
   chevron: {
     ...typography.metricSm,
-    color: palette.black,
     marginLeft: spacing.sm,
   },
 });

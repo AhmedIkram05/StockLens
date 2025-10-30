@@ -9,10 +9,12 @@ import PrimaryButton from '../components/PrimaryButton';
 import { radii, spacing, typography } from '../styles/theme';
 import { palette } from '../styles/palette';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function OnboardingScreen() {
   const navigation = useNavigation();
   const { width: screenWidth, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  const { theme } = useTheme();
 
   const handleGetStarted = () => navigation.navigate('Login' as never);
 
@@ -25,12 +27,12 @@ export default function OnboardingScreen() {
   return (
     <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <PageHeader>
-        <Text style={[typography.display, { color: palette.black, fontWeight: '800', marginBottom: spacing.md }]}>Stock
+        <Text style={[typography.display, { color: theme.text, fontWeight: '800', marginBottom: spacing.md }]}>Stock
           <Text style={{ color: palette.green }}>Lens</Text>
         </Text>
         <>{/* two lines tagline */}
-          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7 }]}>Scan your Spending</Text>
-          <Text style={[typography.pageSubtitle, { color: palette.black, opacity: 0.7 }]}>See your missed Investing</Text>
+          <Text style={[typography.pageSubtitle, { color: theme.textSecondary }]}>Scan your Spending</Text>
+          <Text style={[typography.pageSubtitle, { color: theme.textSecondary }]}>See your missed Investing</Text>
         </>
       </PageHeader>
 
