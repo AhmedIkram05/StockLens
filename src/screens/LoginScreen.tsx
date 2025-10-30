@@ -78,7 +78,10 @@ export default function LoginScreen() {
                 : spacing.xl;
               const titleMarginBottom = isSmallPhone ? spacing.xs : isTablet ? spacing.sm : spacing.md;
               return (
-                <Text style={[styles.title, { color: theme.text, marginTop: titleMarginTop, marginBottom: titleMarginBottom }]}>Welcome to StockLens</Text>
+                <Text style={[styles.title, { color: theme.text, marginTop: titleMarginTop, marginBottom: titleMarginBottom }]}>
+                  Welcome to Stock
+                  <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
+                </Text>
               );
             })()}
           </View>
@@ -149,6 +152,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     // spacing for top/bottom is applied responsively inline so it adapts
     // to phones/tablets. Keep only typography here.
+  },
+  titleLens: {
+    ...typography.pageTitle,
+    textAlign: 'center',
   },
   subtitle: {
     ...typography.pageSubtitle,
