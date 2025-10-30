@@ -35,7 +35,7 @@ export const darkTheme: ThemeColors = {
   secondary: '#007AFF', // keep blue
   accent: '#007AFF', // keep blue
   error: '#FF3B30', // keep red
-  background: '#000000ec', // light black
+  background: '#000000ec', // black
   surface: '#1a1a1a', // dark gray
   text: '#ffffff', // white
   textSecondary: 'rgba(255, 255, 255, 0.6)', // muted white
