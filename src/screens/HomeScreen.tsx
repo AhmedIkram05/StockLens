@@ -18,6 +18,7 @@ import useReceipts from '../hooks/useReceipts';
 import { formatCurrencyGBP, formatRelativeDate } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
+import ReceiptsSorter, { SortBy, SortDirection } from '../components/ReceiptsSorter';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
@@ -26,6 +27,8 @@ type HomeNavigationProp = CompositeNavigationProp<
 export default function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const [showAllHistory, setShowAllHistory] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { theme } = useTheme();
 
   const { user } = useAuth();
@@ -51,6 +54,22 @@ export default function HomeScreen() {
   const totalMoneySpentDerived = useMemo(() => {
     return allScans.reduce((s, r) => s + (r.amount || 0), 0);
   }, [allScans]);
+
+  const sortedReceipts = useMemo(() => {
+    const sorted = [...allScans].sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case 'amount':
+          comparison = a.amount - b.amount;
+          break;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [allScans, sortBy, sortDirection]);
 
   const formatReceiptLabel = (iso?: string) => formatRelativeDate(iso);
 
@@ -122,9 +141,17 @@ export default function HomeScreen() {
 
             <View style={styles.recentScans}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Scans</Text>
+              <ReceiptsSorter
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+                onSortChange={(by, dir) => {
+                  setSortBy(by);
+                  setSortDirection(dir);
+                }}
+              />
               {(() => {
-                const preview = allScans.slice(0, 3);
-                const list = showAllHistory ? allScans : preview;
+                const preview = sortedReceipts.slice(0, 3);
+                const list = showAllHistory ? sortedReceipts : preview;
                 const cols = isTablet ? 2 : 1;
                 // Use percentage widths so items wrap cleanly without negative margins
                 const itemWidthPercent = `${100 / cols}%`;
