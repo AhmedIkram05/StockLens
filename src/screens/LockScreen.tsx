@@ -10,10 +10,12 @@ import PageHeader from '../components/PageHeader';
 import Logo from '../components/Logo';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function LockScreen() {
   const { unlockWithBiometrics, unlockWithCredentials } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,8 +52,8 @@ export default function LockScreen() {
         </View>
 
         <PageHeader>
-          <Text style={styles.title}>Locked</Text>
-          <Text style={styles.subtitle}>Unlock to continue</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Locked</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Unlock to continue</Text>
         </PageHeader>
 
         <SecondaryButton
@@ -64,7 +66,7 @@ export default function LockScreen() {
           {loading ? 'Unlocking…' : 'Unlock with Biometrics / Passcode'}
         </SecondaryButton>
 
-        <Text style={styles.or}>Or enter credentials</Text>
+        <Text style={[styles.or, { color: theme.textSecondary }]}>Or enter credentials</Text>
 
         <FormInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
         <FormInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
@@ -78,10 +80,9 @@ export default function LockScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.lightGray },
   inner: { padding: spacing.lg, flex: 1, justifyContent: 'center' },
-  title: { ...typography.pageTitle, marginBottom: spacing.sm, color: palette.black, textAlign: 'center' },
-  subtitle: { ...typography.body, marginBottom: spacing.lg, color: palette.black, textAlign: 'center' },
+  title: { ...typography.pageTitle, marginBottom: spacing.sm, textAlign: 'center' },
+  subtitle: { ...typography.body, marginBottom: spacing.lg, textAlign: 'center' },
   logoContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -91,9 +92,6 @@ const styles = StyleSheet.create({
     // allow logo to size itself on small phones
   },
   bioButton: { backgroundColor: palette.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
-  bioButtonText: { color: palette.white, ...typography.button },
-  or: { textAlign: 'center', marginVertical: spacing.md, color: palette.black },
-  input: { backgroundColor: palette.white, padding: 12, borderRadius: 8, marginBottom: 12 },
+  or: { textAlign: 'center', marginVertical: spacing.md },
   unlockButton: { backgroundColor: palette.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
-  unlockText: { color: palette.white, ...typography.button },
 });

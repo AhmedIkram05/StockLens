@@ -3,11 +3,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import { palette, alpha } from '../styles/palette';
 import React from 'react';
 import { View, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
+
+import { useTheme } from '../contexts/ThemeContext';
 
 import HomeScreen from '../screens/HomeScreen';
 import ScanScreen from '../screens/ScanScreen';
@@ -47,11 +48,13 @@ const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 function MainTabNavigator() {
+  const { theme, isDark } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
-  tabBarActiveTintColor: palette.green,
-  tabBarInactiveTintColor: palette.black,
+  tabBarActiveTintColor: theme.primary,
+  tabBarInactiveTintColor: theme.text,
         tabBarShowLabel: false,                     // Show tab labels with icons
         // make the tab bar itself transparent and positioned absolute so
         // screens can render behind it and the native safe area is respected
@@ -70,9 +73,9 @@ function MainTabNavigator() {
         // provide a background behind the transparent tab bar that matches app background
         tabBarBackground: () => (
           Platform.OS === 'ios' ? (
-            <BlurView intensity={60} tint="light" style={{ flex: 1 }} />
+            <BlurView intensity={60} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
           ) : (
-            <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: palette.lightGray }} />
+            <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: theme.background }} />
           )
         ),
       }}
@@ -147,6 +150,7 @@ function MainTabNavigator() {
 
 export default function AppNavigator() {
   const { user, loading, locked, unlockWithBiometrics } = useAuth();
+  const { theme } = useTheme();
 
   // If a signed-in user exists and the UI is locked, try to auto-unlock using biometrics once
   React.useEffect(() => {
@@ -167,7 +171,7 @@ export default function AppNavigator() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  <ActivityIndicator size="large" color={palette.green} />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }

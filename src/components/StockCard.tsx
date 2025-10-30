@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   name: string;
@@ -19,6 +20,7 @@ type Props = {
 
 export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth }: Props) {
   const { isTablet, width } = useBreakpoint();
+  const { theme } = useTheme();
 
   // Compute a responsive pixel width for cards:
   // - On phones we want a compact card that leaves room for peeking neighbors (approx 82% of viewport)
@@ -30,29 +32,29 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
   const pixelWidth = cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: pixelWidth }, isLast && styles.cardLast]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: pixelWidth, backgroundColor: theme.surface }, isLast && styles.cardLast]}>
       <View style={styles.header}>
-        <Text style={styles.name}>{name}</Text>
-        {ticker ? <Text style={styles.ticker}>{ticker}</Text> : null}
+        <Text style={[styles.name, { color: theme.text }]}>{name}</Text>
+        {ticker ? <Text style={[styles.ticker, { color: palette.blue }]}>{ticker}</Text> : null}
       </View>
 
           <View style={styles.valueContainer}>
-            <Text style={[styles.value, { color: valueColor }]}>{futureDisplay}</Text>
+            <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
             {/* Investment caption removed per design: keep only the primary value */}
           </View>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
       <View style={styles.footer}>
         <View style={styles.footerItem}>
-          <Text style={styles.footerLabel}>Return</Text>
+          <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Return</Text>
           <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
         </View>
 
-        <View style={styles.verticalDivider} />
+        <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
 
         <View style={styles.footerItem}>
-          <Text style={styles.footerLabel}>Gained</Text>
+          <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Gained</Text>
           <Text style={[styles.footerValue, { color: valueColor }]}>{gainDisplay}</Text>
         </View>
       </View>
@@ -62,7 +64,6 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: palette.white,
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginRight: spacing.md,
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
   },
   name: {
     ...typography.bodyStrong,
-    color: palette.black,
   },
   ticker: {
     ...typography.captionStrong,
@@ -93,7 +93,6 @@ const styles = StyleSheet.create({
   },
   value: {
     ...typography.sectionTitle,
-    color: palette.black,
   },
   caption: {
     ...typography.caption,
@@ -102,7 +101,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#eee',
     marginBottom: spacing.md,
   },
   footer: {
@@ -115,7 +113,6 @@ const styles = StyleSheet.create({
   },
   footerLabel: {
     ...typography.overline,
-    color: '#999',
     marginBottom: spacing.sm,
   },
   footerValue: {
@@ -124,7 +121,6 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: '#eee',
     marginHorizontal: spacing.md,
   },
 });

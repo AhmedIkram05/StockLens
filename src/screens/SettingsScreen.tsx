@@ -4,16 +4,16 @@ import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import SettingRow from '../components/SettingRow';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import * as biometric from '../hooks/useBiometricAuth';
 import { receiptService } from '../services/dataService';
-import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export default function SettingsScreen() {
   const { signOutUser, userProfile } = useAuth();
+  const { mode, setMode, isDark, theme } = useTheme();
   const [faceIdEnabled, setFaceIdEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const { isSmallPhone, isTablet } = useBreakpoint();
 
   const handleSignOut = async () => {
@@ -64,6 +64,10 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleToggleDarkMode = (value: boolean) => {
+    setMode(value ? 'dark' : 'light');
+  };
+
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
@@ -92,67 +96,67 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent]} showsVerticalScrollIndicator={false}>
         <PageHeader>
           <View>
-            <Text style={styles.title}>Settings</Text>
+            <Text style={[styles.title, { color: theme.text }]}>Settings</Text>
           </View>
-          <Text style={styles.subtitle}>Manage your preferences and security</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Manage your preferences and security</Text>
         </PageHeader>
 
         <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
-          <Text style={styles.sectionLabel}>Security</Text>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Security</Text>
 
           <SettingRow
             iconEmoji="🔐"
-            iconBgColor={palette.blue}
+            iconBgColor={theme.secondary}
             title="Face ID / Touch ID"
             subtitle="Secure login with biometrics"
-            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
+            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: theme.border, true: theme.primary }} thumbColor={theme.surface} />}
           />
 
           <SettingRow
             iconEmoji="🛡️"
-            iconBgColor={alpha.faintBlack}
+            iconBgColor={theme.border}
             title="Local Data Storage"
             subtitle="All processing kept on device (No cloud Storage)"
           />
         </View>
 
         <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
-          <Text style={styles.sectionLabel}>Preferences</Text>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</Text>
 
           <SettingRow
             iconEmoji="🌙"
-            iconBgColor={palette.blue}
+            iconBgColor={theme.secondary}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"
-            right={<Switch value={darkModeEnabled} onValueChange={setDarkModeEnabled} trackColor={{ false: alpha.faintBlack, true: palette.green }} thumbColor={palette.white} />}
+            right={<Switch value={isDark} onValueChange={handleToggleDarkMode} trackColor={{ false: theme.border, true: theme.primary }} thumbColor={theme.surface} />}
           />
         </View>
 
         <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
-          <Text style={styles.sectionLabel}>Account</Text>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Account</Text>
 
           <SettingRow
             iconEmoji="🚪"
-            iconBgColor={palette.red}
+            iconBgColor={theme.error}
             title="Log Out"
             subtitle="Return to login screen"
             destructive
             onPress={handleSignOut}
-            right={<Text style={[styles.arrow, styles.redText]}>›</Text>}
+            right={<Text style={[styles.arrow, { color: theme.textSecondary }]}>›</Text>}
           />
         </View>
 
         <View style={[styles.section, isSmallPhone && styles.sectionCompact, isTablet && styles.sectionWide]}>
-          <Text style={styles.sectionLabel}>Data Management</Text>
+          <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Data Management</Text>
 
           <SettingRow
             iconEmoji="🗑️"
-            iconBgColor={palette.red}
+            iconBgColor={theme.error}
             title="Clear All Data"
             subtitle="Delete all scanned receipts"
             destructive
             onPress={handleClearData}
-            right={<Text style={[styles.arrow, styles.redText]}>›</Text>}
+            right={<Text style={[styles.arrow, { color: theme.textSecondary }]}>›</Text>}
           />
         </View>
       </ScrollView>
@@ -166,12 +170,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.pageTitle,
-    color: palette.black,
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.pageSubtitle,
-    color: alpha.subtleBlack,
   },
   section: {
     paddingVertical: spacing.md,
@@ -184,15 +186,14 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...typography.overline,
-    color: alpha.mutedBlack,
     marginBottom: spacing.md,
   },
   // iconContainer/iconEmoji/blueIcon/grayIcon/redIcon styles removed; now handled in SettingRow
   arrow: {
     ...typography.bodyStrong,
-    color: alpha.mutedBlack,
   },
   redText: {
-    color: palette.red,
+    color: '#FF3B30', // Keep red for destructive actions
   },
+  
 });

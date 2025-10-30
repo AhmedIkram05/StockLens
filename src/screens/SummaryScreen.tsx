@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
-import { palette } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
+import { palette } from '../styles/palette';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
 import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
@@ -20,6 +21,7 @@ import ResponsiveContainer from '../components/ResponsiveContainer';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
+  const { theme, isDark } = useTheme();
   const [totalMoneySpent, setTotalMoneySpent] = useState<number>(0);
   const [totalMissedFiveYears, setTotalMissedFiveYears] = useState<number>(0);
   const [receiptsScanned, setReceiptsScanned] = useState<number>(0);
@@ -196,9 +198,9 @@ export default function SummaryScreen() {
       <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <PageHeader>
           <View>
-            <Text style={styles.title}>Summary</Text>
+            <Text style={[styles.title, { color: theme.text }]}>Summary</Text>
           </View>
-          <Text style={styles.subtitle}>Your investment insights at a glance</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Your investment insights at a glance</Text>
         </PageHeader>
 
         {/* Center and cap content width so tablet layout matches the rest of the app */}
@@ -236,8 +238,8 @@ export default function SummaryScreen() {
         <View style={{ width: '100%', marginTop: spacing.md }}>
           <PrimaryButton onPress={() => navigation.navigate('Calculator' as never)} accessibilityLabel="Open compound interest calculator page">
             <View style={{ width: '100%' }}>
-              <Text style={styles.cardTitle}>Compound interest calculator</Text>
-              <Text style={styles.cardSubtitle}>Open calculator page</Text>
+              <Text style={[styles.cardTitle, { color: isDark ? palette.black : palette.white }]}>Compound interest calculator</Text>
+              <Text style={[styles.cardSubtitle, { color: isDark ? palette.black : palette.white, opacity: 0.9 }]}>Open calculator page</Text>
             </View>
           </PrimaryButton>
         </View>
@@ -245,16 +247,16 @@ export default function SummaryScreen() {
         {/* Quick stats removed per request */}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Investment Insights</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Investment Insights</Text>
         </View>
 
         <View style={styles.insightsList}>
           {insights.map(item => (
-            <View key={item.title} style={styles.insightCard}>
+            <View key={item.title} style={[styles.insightCard, { backgroundColor: theme.surface }]}>
               <Text style={styles.insightEmoji}>{item.emoji}</Text>
               <View style={styles.insightContent}>
-                <Text style={styles.insightTitle}>{item.title}</Text>
-                <Text style={styles.insightDescription}>{item.description}</Text>
+                <Text style={[styles.insightTitle, { color: theme.text }]}>{item.title}</Text>
+                <Text style={[styles.insightDescription, { color: theme.textSecondary }]}>{item.description}</Text>
               </View>
             </View>
           ))}
@@ -269,7 +271,6 @@ export default function SummaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.lightGray,
   },
   contentContainer: {
     paddingTop: 0,
@@ -280,13 +281,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.pageTitle,
-    color: palette.black,
   },
   subtitle: {
     marginTop: spacing.sm,
     ...typography.pageSubtitle,
-    color: palette.black,
-    opacity: 0.7,
   },
   cardsGrid: {
     flexDirection: 'row',
@@ -302,43 +300,38 @@ const styles = StyleSheet.create({
     ...shadows.level2,
   },
   cardBlue: {
-    backgroundColor: palette.blue,
+    backgroundColor: '#007AFF',
   },
   cardGreen: {
-    backgroundColor: palette.green,
+    backgroundColor: '#10b981',
   },
   cardWhite: {
-    backgroundColor: palette.white,
+    // backgroundColor handled by StatCard component
   },
   cardValue: {
     ...typography.metric,
-    color: palette.white,
     marginBottom: spacing.sm,
   },
   cardValueDark: {
-    color: palette.black,
+    color: '#000000',
   },
   cardTitle: {
     ...typography.bodyStrong,
-    color: palette.white,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   cardSubtitle: {
     ...typography.caption,
-    color: palette.white,
     opacity: 0.9,
     textAlign: 'center',
   },
   cardTitleDark: {
     ...typography.bodyStrong,
-    color: palette.black,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   cardSubtitleDark: {
     ...typography.caption,
-    color: palette.black,
     opacity: 0.7,
     textAlign: 'center',
   },
@@ -348,10 +341,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.sectionTitle,
-    color: palette.black,
   },
   stockList: {
-    backgroundColor: palette.white,
     borderRadius: radii.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -365,7 +356,7 @@ const styles = StyleSheet.create({
   },
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.lightGray,
+    borderBottomColor: '#f5f5f5',
   },
   stockInfo: {
     flexShrink: 1,
@@ -373,12 +364,10 @@ const styles = StyleSheet.create({
   },
   stockCompany: {
     ...typography.bodyStrong,
-    color: palette.black,
     marginBottom: spacing.xs,
   },
   stockMeta: {
     ...typography.caption,
-    color: palette.black,
     opacity: 0.6,
   },
   stockGrowthContainer: {
@@ -386,11 +375,9 @@ const styles = StyleSheet.create({
   },
   stockGrowth: {
     ...typography.metricSm,
-    color: palette.green,
   },
   stockPeriod: {
     ...typography.overline,
-    color: palette.black,
     opacity: 0.6,
     marginTop: spacing.xs,
   },
@@ -402,7 +389,6 @@ const styles = StyleSheet.create({
   },
   quickStatCard: {
     flex: 1,
-    backgroundColor: palette.white,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
@@ -415,13 +401,10 @@ const styles = StyleSheet.create({
   },
   quickStatValue: {
     ...typography.metricSm,
-    color: palette.black,
     marginBottom: spacing.sm,
   },
   quickStatLabel: {
     ...typography.caption,
-    color: palette.black,
-    opacity: 0.6,
     textAlign: 'center',
   },
   insightsList: {
@@ -430,7 +413,6 @@ const styles = StyleSheet.create({
   insightCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: palette.white,
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -445,13 +427,10 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     ...typography.bodyStrong,
-    color: palette.black,
     marginBottom: spacing.xs,
   },
   insightDescription: {
     ...typography.caption,
-    color: palette.black,
-    opacity: 0.6,
   },
   
 });

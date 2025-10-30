@@ -12,10 +12,12 @@ import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
+  const { theme } = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -99,8 +101,8 @@ export default function SignUpScreen() {
 
         {/* Title Section */}
         <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
-          <Text style={styles.title}>Create your account</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.text }]}>Create your account</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             Start discovering your missed investment opportunities
           </Text>
         </View>
@@ -159,10 +161,6 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
   scrollView: {
     flex: 1,
   },
@@ -180,16 +178,14 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.pageTitle,
-    color: palette.black,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.pageSubtitle,
-    color: palette.black,
-    opacity: 0.7,
     textAlign: 'center',
-    lineHeight: 22,
+    // use the global pageSubtitle.lineHeight token to avoid platform clipping
+    lineHeight: (typography.pageSubtitle.lineHeight as number) || Math.round((typography.pageSubtitle.fontSize as number) * 1.35),
   },
   formContainer: {
     flex: 1,
@@ -207,26 +203,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: sizes.controlMd,
-    height: sizes.controlMd,
-    borderRadius: radii.pill,
-    backgroundColor: palette.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputContainer: {
-    marginBottom: spacing.md,
-  },
-  input: {
-    backgroundColor: palette.white,
-    borderWidth: 1,
-    borderColor: alpha.faintBlack,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: palette.black,
-  },
   createAccountButton: {
     backgroundColor: palette.green,
     borderRadius: radii.md,
@@ -238,32 +214,7 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: alpha.faintBlack,
   },
-  createAccountButtonText: {
-    color: palette.white,
-    ...typography.button,
-  },
-  disabledButtonText: {
-    color: alpha.mutedBlack,
-  },
   loginContainer: {
     alignItems: 'center',
-  },
-  loginText: {
-    ...typography.caption,
-    color: alpha.subtleBlack,
-    marginBottom: spacing.sm,
-  },
-  loginButton: {
-    borderWidth: 2,
-    borderColor: palette.green,
-    backgroundColor: palette.white,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  loginButtonText: {
-    color: palette.green,
-    ...typography.button,
   },
 });

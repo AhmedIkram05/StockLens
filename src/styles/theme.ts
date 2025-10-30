@@ -49,6 +49,11 @@ export const typography = {
   pageSubtitle: {
     fontSize: moderateScale(20),
     fontStyle: 'italic',
+    // Provide an explicit lineHeight to avoid glyph clipping on some platforms
+    // (italic fonts can have tall ascenders that render slightly outside the
+    // font's em-box). A slightly larger lineHeight prevents the top of the
+    // subtitle from appearing cut off on iOS and Android.
+    lineHeight: Math.round(moderateScale(26)),
   },
   sectionTitle: {
     fontSize: moderateScale(22),

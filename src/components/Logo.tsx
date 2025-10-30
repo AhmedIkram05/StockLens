@@ -9,7 +9,7 @@ type Props = {
   testID?: string;
 };
 
-const logoImage = require('../../assets/StockLens_Logo.png');
+const logoImage = require('../../assets/StockLens_Logo_T.png');
 
 export default function Logo({ width, height, style, testID }: Props) {
   // Use breakpoint info to pick a sensible default size when not provided

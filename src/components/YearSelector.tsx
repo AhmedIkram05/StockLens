@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 're
 import { View, TouchableOpacity, Text, Animated, ViewStyle, StyleProp } from 'react-native';
 import { spacing, typography, radii, shadows } from '../styles/theme';
 import { palette, alpha } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props<T extends number> = {
   options: T[];
@@ -13,6 +14,7 @@ type Props<T extends number> = {
 };
 
 export default function YearSelector<T extends number = number>({ options, value, onChange, compact = false, style }: Props<T>) {
+  const { theme } = useTheme();
   const containerWidthRef = useRef<number>(0);
   const containerHeightRef = useRef<number>(0);
   const animatedX = useRef(new Animated.Value(0)).current;
@@ -39,7 +41,7 @@ export default function YearSelector<T extends number = number>({ options, value
 
   return (
     <View
-      style={[{ flexDirection: 'row', borderRadius: radii.pill, backgroundColor: alpha.faintBlack, padding: pad, alignItems: 'center' }, style]}
+      style={[{ flexDirection: 'row', borderRadius: radii.pill, backgroundColor: theme.surface, padding: pad, alignItems: 'center' }, style]}
       onLayout={e => {
         const { width: w, height: h } = e.nativeEvent.layout;
         containerWidthRef.current = w;
@@ -86,7 +88,7 @@ export default function YearSelector<T extends number = number>({ options, value
           }}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: segPadVert, marginHorizontal: spacing.xs / 2 }}
         >
-          <Text style={[typography.captionStrong, { color: o === value ? palette.white : palette.black, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
+          <Text style={[typography.captionStrong, { color: o === value ? palette.white : theme.text, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
         </TouchableOpacity>
       ))}
     </View>

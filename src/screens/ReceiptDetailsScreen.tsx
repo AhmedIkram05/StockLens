@@ -20,6 +20,7 @@ import DangerButton from '../components/DangerButton';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import { receiptService } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 
@@ -70,6 +71,7 @@ export default function ReceiptDetailsScreen() {
   const totalAmount = amount;
   const { userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone, isTablet, width } = useBreakpoint();
+  const { theme } = useTheme();
 
 
   const investmentOptions = useMemo(() => {
@@ -265,9 +267,9 @@ export default function ReceiptDetailsScreen() {
 
             <PageHeader>
               <View>
-                <Text style={styles.projectionTitle}>Your {formattedAmount} could have been...</Text>
+                <Text style={[styles.projectionTitle, { color: theme.text }]}>Your {formattedAmount} could have been...</Text>
               </View>
-              <Text style={styles.projectionSubtitle}>If invested {formattedYearsLabel} ago</Text>
+              <Text style={[styles.projectionSubtitle, { color: theme.textSecondary }]}>If invested {formattedYearsLabel} ago</Text>
             </PageHeader>
 
             <YearSelector
@@ -279,8 +281,8 @@ export default function ReceiptDetailsScreen() {
             />
 
             <View style={styles.carouselHeader}>
-              <Text style={styles.carouselTitle}>Investment Outlook</Text>
-              <Text style={styles.carouselSubtitle}>Swipe to explore different stocks</Text>
+              <Text style={[styles.carouselTitle, { color: theme.text }]}>Investment Outlook</Text>
+              <Text style={[styles.carouselSubtitle, { color: theme.textSecondary }]}>Swipe to explore different stocks</Text>
             </View>
 
             <Carousel
@@ -297,9 +299,9 @@ export default function ReceiptDetailsScreen() {
 
             <PageHeader>
               <View>
-                <Text style={styles.futureTitle}>Your {formattedAmount} could become...</Text>
+                <Text style={[styles.futureTitle, { color: theme.text }]}>Your {formattedAmount} could become...</Text>
               </View>
-              <Text style={styles.futureSubtitle}>If invested today for {formattedFutureYearsLabel}</Text>
+              <Text style={[styles.futureSubtitle, { color: theme.textSecondary }]}>If invested today for {formattedFutureYearsLabel}</Text>
             </PageHeader>
 
             <YearSelector
@@ -311,8 +313,8 @@ export default function ReceiptDetailsScreen() {
             />
 
             <View style={styles.carouselHeader}>
-              <Text style={styles.carouselTitle}>Potential Growth</Text>
-              <Text style={styles.carouselSubtitle}>Compare returns if you started now</Text>
+              <Text style={[styles.carouselTitle, { color: theme.text }]}>Potential Growth</Text>
+              <Text style={[styles.carouselSubtitle, { color: theme.textSecondary }]}>Compare returns if you started now</Text>
             </View>
 
             <Carousel
@@ -366,9 +368,9 @@ export default function ReceiptDetailsScreen() {
           </View>
         </DangerButton>
 
-    <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact]}>
+    <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact, { backgroundColor: theme.background, borderColor: theme.textSecondary }]}>
           <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
-          <Text style={styles.warningText}>
+          <Text style={[styles.warningText, { color: theme.textSecondary }]}>
             Projections are hypothetical. Past performance does not guarantee future results.
           </Text>
         </View>
@@ -467,12 +469,10 @@ const styles = StyleSheet.create<Styles>({
   },
   projectionTitle: {
     ...typography.sectionTitle,
-    color: palette.black,
     marginBottom: spacing.sm,
   },
   projectionSubtitle: {
     ...typography.body,
-    color: palette.black,
     opacity: 0.7,
   },
   /* Year selector visuals are implemented inside `YearSelector` component now. */
@@ -481,11 +481,9 @@ const styles = StyleSheet.create<Styles>({
   },
   carouselTitle: {
     ...typography.bodyStrong,
-    color: palette.black,
   },
   carouselSubtitle: {
     ...typography.caption,
-    color: alpha.subtleBlack,
     marginTop: spacing.xs,
   },
   carousel: {
@@ -502,12 +500,10 @@ const styles = StyleSheet.create<Styles>({
   },
   futureTitle: {
     ...typography.sectionTitle,
-    color: palette.black,
     marginBottom: spacing.sm,
   },
   futureSubtitle: {
     ...typography.body,
-    color: palette.black,
     opacity: 0.7,
   },
   stockCard: {
@@ -527,7 +523,6 @@ const styles = StyleSheet.create<Styles>({
   },
   stockName: {
     ...typography.bodyStrong,
-    color: palette.black,
   },
   stockTicker: {
     ...typography.captionStrong,
@@ -539,11 +534,9 @@ const styles = StyleSheet.create<Styles>({
   },
   stockValue: {
     ...typography.sectionTitle,
-    color: palette.black,
   },
   stockValueCaption: {
     ...typography.caption,
-    color: alpha.subtleBlack,
     marginTop: spacing.xs,
   },
   divider: {
@@ -561,7 +554,6 @@ const styles = StyleSheet.create<Styles>({
   },
   footerLabel: {
     ...typography.overline,
-    color: alpha.mutedBlack,
     marginBottom: spacing.sm,
   },
   footerValue: {
@@ -597,11 +589,9 @@ const styles = StyleSheet.create<Styles>({
     marginTop: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.lightGray,
     borderRadius: radii.md,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: alpha.faintBlack,
   },
   warningBoxCompact: {
     padding: spacing.md,
@@ -611,8 +601,6 @@ const styles = StyleSheet.create<Styles>({
   },
   warningText: {
     ...typography.caption,
-    color: palette.black,
-    opacity: 0.8,
     lineHeight: 18,
     flex: 1,
     textAlign: 'left',

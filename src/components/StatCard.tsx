@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { palette } from '../styles/palette';
+import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -13,8 +13,10 @@ type Props = {
 };
 
 export default function StatCard({ value, label, subtitle, variant = 'white', style }: Props) {
-  const bg = variant === 'green' ? palette.green : variant === 'blue' ? palette.blue : palette.white;
-  const textColor = variant === 'white' ? palette.black : palette.white;
+  const { theme } = useTheme();
+  
+  const bg = variant === 'green' ? theme.primary : variant === 'blue' ? theme.secondary : theme.surface;
+  const textColor = variant === 'white' ? theme.text : theme.surface;
   const align = (style as any)?.alignItems ?? 'center';
 
   return (
