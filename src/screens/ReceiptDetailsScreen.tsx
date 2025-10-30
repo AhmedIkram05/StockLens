@@ -41,6 +41,7 @@ import YearSelector from '../components/YearSelector';
 import StockCard from '../components/StockCard';
 import ReceiptCard from '../components/ReceiptCard';
 import Carousel from '../components/Carousel';
+import ProjectionDisclaimer from '../components/ProjectionDisclaimer';
 
 
 export default function ReceiptDetailsScreen() {
@@ -368,12 +369,7 @@ export default function ReceiptDetailsScreen() {
           </View>
         </DangerButton>
 
-    <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact, { backgroundColor: theme.background, borderColor: theme.textSecondary }]}>
-          <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
-          <Text style={[styles.warningText, { color: theme.textSecondary }]}>
-            Projections are hypothetical. Past performance does not guarantee future results.
-          </Text>
-        </View>
+        <ProjectionDisclaimer />
         </ScrollView>
     </ScreenContainer>
   );
@@ -417,10 +413,6 @@ type Styles = {
   deleteButtonCompact: ViewStyle;
   deleteIcon: TextStyle;
   deleteText: TextStyle;
-  warningBox: ViewStyle;
-  warningBoxCompact: ViewStyle;
-  warningIcon: TextStyle;
-  warningText: TextStyle;
   saveButton: ViewStyle;
   saveButtonText: TextStyle;
   cancelButton: ViewStyle;
@@ -584,26 +576,6 @@ const styles = StyleSheet.create<Styles>({
   deleteText: {
     color: palette.white,
     ...typography.button,
-  },
-  warningBox: {
-    marginTop: spacing.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    borderWidth: 1,
-  },
-  warningBoxCompact: {
-    padding: spacing.md,
-  },
-  warningIcon: {
-    marginRight: spacing.md,
-  },
-  warningText: {
-    ...typography.caption,
-    lineHeight: 18,
-    flex: 1,
-    textAlign: 'left',
   },
   saveButton: {
     backgroundColor: palette.green,
