@@ -1,13 +1,5 @@
 import { stockService } from './dataService';
-
-// Preset fallback annual rates for when historical data is unavailable
-const PRESET_RATES: Record<string, number> = {
-  NVDA: 0.24,
-  AAPL: 0.18,
-  MSFT: 0.15,
-  TSLA: 0.28,
-  NKE: 0.12,
-};
+import { PRESET_RATES } from './stockPresets';
 
 /**
  * Returns the annualized CAGR computed from the price at (today - years) up to the most recent price.
@@ -18,7 +10,26 @@ export async function getHistoricalCAGRFromToday(symbol: string, years: number):
     const yearsInt = Math.max(1, Math.floor(Number(years) || 1));
 
     // Request enough history for the requested years. stockService will select daily for <=1y and monthly otherwise.
-    const data = await stockService.getHistoricalForTicker(symbol, yearsInt);
+    let data = null as any;
+    try {
+      data = await stockService.getHistoricalForTicker(symbol, yearsInt);
+    } catch (e) {
+      data = null;
+    }
+
+    // If daily data for 1-year is missing or insufficient (API key missing, rate limited,
+    // or cached data absent) attempt a monthly fallback so we can still estimate a 1-year CAGR.
+    if ((!data || data.length < 2) && yearsInt <= 1) {
+      try {
+        // asking for 2 years will force stockService to return monthly series which gives
+        // enough points to compute a 1-year CAGR even when daily is unavailable.
+        const monthly = await stockService.getHistoricalForTicker(symbol, 2);
+        if (monthly && monthly.length >= 2) data = monthly;
+      } catch (e) {
+        // ignore and fall through to returning null
+      }
+    }
+
     if (!data || data.length < 2) return null;
 
     const now = new Date();
@@ -67,9 +78,7 @@ export function computeCAGRFromSeries(series: Array<{ date: string; adjustedClos
  */
 export async function projectUsingHistoricalCAGR(amount: number, symbol: string, years: number): Promise<{ rate: number; futureValue: number }> {
   const cagr = await getHistoricalCAGRFromToday(symbol, years);
-  const rate = cagr ?? PRESET_RATES[symbol.toUpperCase()] ?? 0.15;
+  const rate = cagr ?? PRESET_RATES[symbol.toUpperCase()];
   const futureValue = amount * Math.pow(1 + rate, years);
   return { rate, futureValue };
 }
-
-export { PRESET_RATES };

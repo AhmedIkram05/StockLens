@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -16,9 +17,11 @@ type Props = {
   onPress?: () => void;
   isLast?: boolean;
   cardWidth?: number;
+  badgeText?: string;
+  badgeColor?: string;
 };
 
-export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth }: Props) {
+export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
   const { isTablet, width } = useBreakpoint();
   const { theme } = useTheme();
 
@@ -33,6 +36,46 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: pixelWidth, backgroundColor: theme.surface }, isLast && styles.cardLast]}>
+      {badgeText ? (
+        // Diagonal ribbon badge that appears wrapped into the top-left corner.
+        // We size/position it dynamically based on the computed pixelWidth so it
+        // scales across device sizes.
+        <LinearGradient
+          colors={[badgeColor ?? theme.primary, '#000000ff']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.ribbon,
+            {
+              // narrow the ribbon so the visible diagonal band matches the
+              // expected visual area and centering is intuitive
+              width: Math.round(pixelWidth * 0.5),
+              height: 28,
+              left: Math.round(-pixelWidth * 0.16),
+              top: Math.round(-pixelWidth * 0.03),
+            },
+          ]}
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={`Badge: ${badgeText}`}
+        >
+          {/* subtle highlight to the top edge of the ribbon */}
+          <View style={styles.ribbonHighlight} pointerEvents="none" />
+          <Text
+            style={[
+              styles.ribbonText,
+              {
+                transform: [
+                  { translateX: Math.round(-pixelWidth * 0.04) },
+                  { translateY: Math.round(pixelWidth * 0.015) },
+                ],
+              },
+            ]}
+          >
+            {badgeText}
+          </Text>
+        </LinearGradient>
+      ) : null}
       <View style={styles.header}>
         <Text style={[styles.name, { color: theme.text }]}>{name}</Text>
         {ticker ? <Text style={[styles.ticker, { color: palette.blue }]}>{ticker}</Text> : null}
@@ -40,7 +83,6 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
 
           <View style={styles.valueContainer}>
             <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
-            {/* Investment caption removed per design: keep only the primary value */}
           </View>
 
       <View style={[styles.divider, { backgroundColor: theme.border }]} />
@@ -62,14 +104,13 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<any>({
   card: {
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginRight: spacing.md,
-    // width is intentionally not a hardcoded pixel value here — callers
-    // should provide a responsive width override (percentage or computed)
     ...shadows.level2,
+    overflow: 'hidden',
   },
   cardLast: {
     marginRight: 0,
@@ -96,7 +137,6 @@ const styles = StyleSheet.create({
   },
   caption: {
     ...typography.caption,
-    color: '#666',
     marginTop: spacing.xs,
   },
   divider: {
@@ -122,5 +162,36 @@ const styles = StyleSheet.create({
   verticalDivider: {
     width: 1,
     marginHorizontal: spacing.md,
+  },
+
+  // Ribbon banner styles
+  ribbon: {
+    position: 'absolute',
+    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    transform: [{ rotate: '-45deg' }],
+    // subtle shadow to lift the ribbon above the card
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  ribbonHighlight: {
+    position: 'absolute',
+    left: 6,
+    top: 2,
+    width: 36,
+    height: 8,
+    borderRadius: 2,
+    transform: [{ rotate: '20deg' }],
+  },
+  ribbonText: {
+    ...typography.captionStrong,
+    color: palette.white,
+    includeFontPadding: false,
+    fontSize: 14,
+    lineHeight: 28,
+    textAlign: 'center',
   },
 });

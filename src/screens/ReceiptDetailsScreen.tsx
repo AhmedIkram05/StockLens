@@ -22,17 +22,13 @@ import { receiptService } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
+// Route prop for receipt details screen
 type ReceiptDetailsRouteProp = RouteProp<RootStackParamList, 'ReceiptDetails'>;
 
+// Preset options for years to project
 const YEAR_OPTIONS = [1, 3, 5, 10, 20] as const;
 
-const STOCK_PRESETS = [
-  { name: 'NVIDIA', ticker: 'NVDA', returnRate: 0.24 },
-  { name: 'Apple', ticker: 'AAPL', returnRate: 0.18 },
-  { name: 'Microsoft', ticker: 'MSFT', returnRate: 0.15 },
-  { name: 'Tesla', ticker: 'TSLA', returnRate: 0.28 },
-  { name: 'Nike', ticker: 'NKE', returnRate: 0.12 },
-];
+import { STOCK_PRESETS } from '../services/stockPresets';
 
 import { subscribe, emit } from '../services/eventBus';
 import { getHistoricalCAGRFromToday } from '../services/projectionService';
@@ -225,6 +221,18 @@ export default function ReceiptDetailsScreen() {
   // color: green for positive or zero, red for negative
   const valueColor = computedPercentReturn >= 0 ? palette.green : palette.red;
 
+    // determine badge: show Best/Worst for the current mode (past/future)
+    let badgeTextToShow: string | undefined = undefined;
+    if (mode === 'past') {
+      if (investmentValue.ticker === bestPastTicker) badgeTextToShow = 'Best';
+      else if (investmentValue.ticker === worstPastTicker) badgeTextToShow = 'Worst';
+    } else {
+      if (investmentValue.ticker === bestFutureTicker) badgeTextToShow = 'Best';
+      else if (investmentValue.ticker === worstFutureTicker) badgeTextToShow = 'Worst';
+    }
+
+    const badgeColorToShow = badgeTextToShow === 'Best' ? palette.green : badgeTextToShow === 'Worst' ? palette.red : undefined;
+
     return (
       <StockCard
         name={investmentValue.name}
@@ -237,10 +245,53 @@ export default function ReceiptDetailsScreen() {
         isLast={isLastItem}
         onPress={() => {}}
         cardWidth={cardWidth}
+        badgeText={badgeTextToShow}
+        badgeColor={badgeColorToShow}
       />
     );
   };
 
+  // Compute best/worst performers for past based on the currently selected years
+  const { bestPastTicker, worstPastTicker } = React.useMemo(() => {
+    try {
+      const list = investmentOptions.map(it => {
+        const cagr = historicalRates[it.ticker]?.[selectedYears];
+        const percent = cagr !== undefined && cagr !== null
+          ? (Math.pow(1 + cagr, selectedYears) - 1) * 100
+          : it.percentReturn;
+        return { ticker: it.ticker, percent };
+      });
+      if (list.length === 0) return { bestPastTicker: undefined, worstPastTicker: undefined };
+      let best = list[0];
+      let worst = list[0];
+      for (const p of list) {
+        if (p.percent > best.percent) best = p;
+        if (p.percent < worst.percent) worst = p;
+      }
+      return { bestPastTicker: best.ticker, worstPastTicker: worst.ticker };
+    } catch (e) {
+      return { bestPastTicker: undefined, worstPastTicker: undefined };
+    }
+  }, [investmentOptions, historicalRates, selectedYears]);
+
+  // Compute best/worst performers for future based on the currently selected future years
+  const { bestFutureTicker, worstFutureTicker } = React.useMemo(() => {
+    try {
+      const list = futureInvestmentOptions.map(it => ({ ticker: it.ticker, percent: it.percentReturn }));
+      if (list.length === 0) return { bestFutureTicker: undefined, worstFutureTicker: undefined };
+      let best = list[0];
+      let worst = list[0];
+      for (const p of list) {
+        if (p.percent > best.percent) best = p;
+        if (p.percent < worst.percent) worst = p;
+      }
+      return { bestFutureTicker: best.ticker, worstFutureTicker: worst.ticker };
+    } catch (e) {
+      return { bestFutureTicker: undefined, worstFutureTicker: undefined };
+    }
+  }, [futureInvestmentOptions]);
+
+  // Main render
   return (
     <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <ScrollView
@@ -375,6 +426,7 @@ export default function ReceiptDetailsScreen() {
   );
 }
 
+// Styles
 type Styles = {
   container: ViewStyle;
   content: ViewStyle;
@@ -419,6 +471,7 @@ type Styles = {
   cancelButtonText: TextStyle;
 };
 
+// Stylesheet
 const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
