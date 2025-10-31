@@ -59,6 +59,33 @@ export default function LoginScreen() {
     navigation.navigate('SignUp' as never);
   };
 
+  // Forgot password handler
+  const [forgotDisabled, setForgotDisabled] = useState(false);
+  const handleForgot = async () => {
+    if (forgotDisabled) return;
+    const target = email.trim();
+    if (!target) {
+      Alert.alert('Email required', 'Please enter your email above to reset your password');
+      return;
+    }
+    setForgotDisabled(true);
+    try {
+      // Use dynamic import to avoid any stale module bindings during HMR/runtime
+      const mod = await import('../services/authService');
+      if (!mod || !mod.authService || typeof mod.authService.sendPasswordReset !== 'function') {
+        throw new Error('authService.sendPasswordReset is not available');
+      }
+  await mod.authService.sendPasswordReset(target);
+  Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
+    } catch (err: any) {
+      console.warn('Password reset failed', err);
+      Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
+    } finally {
+      // 30s cooldown
+      setTimeout(() => setForgotDisabled(false), 30000);
+    }
+  };
+
   return (
   <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <View style={styles.content}>
@@ -111,6 +138,10 @@ export default function LoginScreen() {
           <PrimaryButton onPress={handleLogin} style={styles.loginButton} textStyle={styles.loginButtonText} accessibilityLabel="Login">
             Login
           </PrimaryButton>
+
+          <TouchableOpacity onPress={handleForgot} disabled={forgotDisabled} style={styles.forgotContainer} accessibilityLabel="Forgot password">
+            <Text style={[styles.forgotText, forgotDisabled && { opacity: 0.5 }]}>Forgot password?</Text>
+          </TouchableOpacity>
 
           <AuthFooter prompt={"Don't have an account?"} actionText="Sign Up" onPress={handleSignUp} style={styles.signUpContainer} />
         </View>
@@ -211,5 +242,14 @@ const styles = StyleSheet.create({
   signUpButtonText: {
     color: palette.green,
     ...typography.button,
+  },
+  forgotContainer: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  forgotText: {
+    ...typography.body,
+    color: palette.blue,
   },
 });

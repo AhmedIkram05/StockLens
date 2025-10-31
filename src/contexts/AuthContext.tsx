@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Toggle to disable lock screen for testing (iOS & Android).
   // Set to `true` to skip lock behavior during development/testing.
   // Remember to set this back to `false` before production/testing real auth flows.
-  const DISABLE_LOCK = true;
+  const DISABLE_LOCK = false;
   // recentlySignedIn prevents immediate lock when user signs in during the same session
   const recentlySignedIn = useRef(false);
   const { setMode } = useTheme();

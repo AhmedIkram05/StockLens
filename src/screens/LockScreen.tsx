@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
@@ -13,12 +13,39 @@ import { radii, spacing, typography } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function LockScreen() {
-  const { unlockWithBiometrics, unlockWithCredentials } = useAuth();
+  const { unlockWithBiometrics, unlockWithCredentials, user, userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   const { theme } = useTheme();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const accountEmail = (user && user.email) || userProfile?.email || '';
+  const [forgotDisabled, setForgotDisabled] = useState(false);
+  const handleForgotFromLock = async () => {
+    if (forgotDisabled) return;
+    if (!accountEmail) {
+      Alert.alert('No account', 'No account email available. Please sign in again from the Sign In screen.');
+      return;
+    }
+    Alert.alert('Send reset link?', `Send a password reset link to ${accountEmail}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Send', onPress: async () => {
+        setForgotDisabled(true);
+        try {
+          const mod = await import('../services/authService');
+          if (!mod || !mod.authService || typeof mod.authService.sendPasswordReset !== 'function') {
+            throw new Error('authService.sendPasswordReset is not available');
+          }
+          await mod.authService.sendPasswordReset(accountEmail);
+          Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
+        } catch (err: any) {
+          console.warn('Password reset failed', err);
+          Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
+        } finally {
+          setTimeout(() => setForgotDisabled(false), 30000);
+        }
+      } }
+    ]);
+  };
 
   const handleBiometric = async () => {
     setLoading(true);
@@ -34,13 +61,18 @@ export default function LockScreen() {
   };
 
   const handleManual = async () => {
-    if (!email || !password) {
-      Alert.alert('Missing fields', 'Please enter your email and password');
+    const emailAddr = user?.email || userProfile?.email;
+    if (!emailAddr) {
+      Alert.alert('No account', 'No account email available. Please sign in again from the Sign In screen.');
+      return;
+    }
+    if (!password) {
+      Alert.alert('Missing password', 'Please enter your account password');
       return;
     }
     setLoading(true);
-    const ok = await unlockWithCredentials(email, password);
-    if (!ok) Alert.alert('Unlock failed', 'Invalid credentials');
+    const ok = await unlockWithCredentials(emailAddr, password);
+    if (!ok) Alert.alert('Unlock failed', 'Invalid password');
     setLoading(false);
   };
 
@@ -54,6 +86,11 @@ export default function LockScreen() {
         <PageHeader>
           <Text style={[styles.title, { color: theme.text }]}>Locked</Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Unlock to continue</Text>
+          {accountEmail ? (
+            <Text style={[styles.accountEmail, { color: theme.textSecondary }]} numberOfLines={1} ellipsizeMode="middle">
+              {accountEmail}
+            </Text>
+          ) : null}
         </PageHeader>
 
         <SecondaryButton
@@ -66,14 +103,16 @@ export default function LockScreen() {
           {loading ? 'Unlocking…' : 'Unlock with Biometrics / Passcode'}
         </SecondaryButton>
 
-        <Text style={[styles.or, { color: theme.textSecondary }]}>Or enter credentials</Text>
+        <Text style={[styles.or, { color: theme.textSecondary }]}>Or enter your account password</Text>
 
-        <FormInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
         <FormInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
 
-        <PrimaryButton style={styles.unlockButton} onPress={handleManual} disabled={loading} accessibilityLabel="Unlock with credentials">
+        <PrimaryButton style={styles.unlockButton} onPress={handleManual} disabled={loading} accessibilityLabel="Unlock with password">
           Unlock
         </PrimaryButton>
+        <TouchableOpacity onPress={handleForgotFromLock} disabled={forgotDisabled} style={styles.forgotContainer} accessibilityLabel="Forgot password">
+          <Text style={[styles.forgotText, forgotDisabled && { opacity: 0.5 }]}>Forgot password?</Text>
+        </TouchableOpacity>
       </View>
     </ScreenContainer>
   );
@@ -94,4 +133,7 @@ const styles = StyleSheet.create({
   bioButton: { backgroundColor: palette.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
   or: { textAlign: 'center', marginVertical: spacing.md },
   unlockButton: { backgroundColor: palette.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
+  forgotContainer: { alignItems: 'center', marginTop: spacing.sm, marginBottom: spacing.md },
+  forgotText: { ...typography.body, color: palette.blue },
+  accountEmail: { ...typography.body, marginTop: spacing.xs, textAlign: 'center' },
 });
