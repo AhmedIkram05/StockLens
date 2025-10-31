@@ -105,15 +105,12 @@ function parseDailyAdjusted(json: any): OHLCV[] {
 
 export const alphaVantageService = {
   getMonthlyAdjusted: async (symbol: string): Promise<OHLCV[]> => {
-    const key = getApiKey();
-    if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_KEY in expo extra or environment.');
-    const cacheKey = `av:monthly:${symbol}`;
-    // Try in-memory cache first
-    const now = Date.now();
-    const ttlMs = 30 * 24 * 60 * 60 * 1000; // 30 days for monthly
-    const mem = serviceMemCache.get(cacheKey);
-    if (mem && mem.expiresAt > now) return mem.value;
-
+  const cacheKey = `av:monthly:${symbol}`;
+  // Try in-memory cache first
+  const now = Date.now();
+  const ttlMs = 30 * 24 * 60 * 60 * 1000; // 30 days for monthly
+  const mem = serviceMemCache.get(cacheKey);
+  if (mem && mem.expiresAt > now) return mem.value;
     // Try reading from persistent alpha_cache table
     try {
       const rows = await databaseService.executeQuery(
@@ -127,6 +124,7 @@ export const alphaVantageService = {
           const json = JSON.parse(row.raw_json);
           const parsed = parseMonthlyAdjusted(json);
           serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
+          try { emit('alpha_cache_hit', { symbol, interval: 'monthly' }); } catch (e) {}
           return parsed;
         }
         if (fetchedAt) {
@@ -136,6 +134,7 @@ export const alphaVantageService = {
             // stale: return parsed and trigger background refresh
             backgroundRefreshMonthly(symbol, cacheKey).catch(err => console.warn('background monthly refresh', err));
             serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
+            try { emit('alpha_cache_hit', { symbol, interval: 'monthly', stale: true }); } catch (e) {}
             return parsed;
           } catch (e) {
             // fallthrough to fetch
@@ -145,8 +144,9 @@ export const alphaVantageService = {
     } catch (e) {
       // DB read failed — proceed to fetch from network
     }
-
     // no cache: fetch and store
+    const key = getApiKey();
+    if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_API_KEY in expo extra or environment.');
     const url = `${API_BASE}?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(key)}`;
     const json = await fetchJson(url);
     const parsed = parseMonthlyAdjusted(json);
@@ -161,6 +161,25 @@ export const alphaVantageService = {
     }
     serviceMemCache.set(cacheKey, { value: parsed, expiresAt: Date.now() + ttlMs });
     return parsed;
+  },
+
+  // Read cached daily adjusted raw JSON from the durable alpha_cache table without network.
+  // Returns parsed OHLCV[] when present and parsable, otherwise null.
+  getCachedDailyAdjusted: async (symbol: string): Promise<OHLCV[] | null> => {
+    try {
+      const rows = await databaseService.executeQuery(
+        'SELECT raw_json, fetched_at FROM alpha_cache WHERE symbol = ? AND interval = ? AND params = ? LIMIT 1',
+        [symbol, 'daily', '']
+      );
+      if (!rows || rows.length === 0) return null;
+      const row = rows[0];
+      const json = JSON.parse(row.raw_json);
+      const parsed = parseDailyAdjusted(json);
+      try { emit('alpha_cache_hit', { symbol, interval: 'daily' }); } catch (e) {}
+      return parsed;
+    } catch (e) {
+      return null;
+    }
   },
 
   // Read cached monthly adjusted raw JSON from the durable alpha_cache table without network.
@@ -182,8 +201,6 @@ export const alphaVantageService = {
   },
 
   getDailyAdjusted: async (symbol: string): Promise<OHLCV[]> => {
-    const key = getApiKey();
-    if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_KEY in expo extra or environment.');
     const cacheKey = `av:daily:${symbol}`;
 
     const now = Date.now();
@@ -203,6 +220,7 @@ export const alphaVantageService = {
           const json = JSON.parse(row.raw_json);
           const parsed = parseDailyAdjusted(json);
           serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
+          try { emit('alpha_cache_hit', { symbol, interval: 'daily' }); } catch (e) {}
           return parsed;
         }
         if (fetchedAt) {
@@ -211,6 +229,7 @@ export const alphaVantageService = {
             const parsed = parseDailyAdjusted(json);
             backgroundRefreshDaily(symbol, cacheKey).catch(err => console.warn('background daily refresh', err));
             serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
+            try { emit('alpha_cache_hit', { symbol, interval: 'daily', stale: true }); } catch (e) {}
             return parsed;
           } catch (e) {
             // fallthrough
@@ -221,6 +240,8 @@ export const alphaVantageService = {
       // fallback to network
     }
 
+    const key = getApiKey();
+    if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_API_KEY in expo extra or environment.');
     const url = `${API_BASE}?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&outputsize=full&apikey=${encodeURIComponent(key)}`;
     const json = await fetchJson(url);
     const parsed = parseDailyAdjusted(json);

@@ -203,7 +203,7 @@ export const stockService = {
 
 // --- One-time historical prefetch helpers ---
 const PREFETCH_MARKER_SYMBOL = '__stocklens_prefetch_done__';
-export const PREFETCH_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
+export const PREFETCH_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE', 'AMZN', 'GOOGL', 'META', 'JPM', 'UNH'];
 
 async function ensureHistoricalPrefetch() {
   try {
@@ -214,13 +214,14 @@ async function ensureHistoricalPrefetch() {
     );
     if (rows && rows.length > 0) return; // already done
 
-    // Fetch monthly for each ticker (durable write is handled inside alphaVantageService)
+    // Fetch monthly for each ticker (durable write is handled inside alphaVantageService).
+    // We intentionally do NOT fetch full daily series here to reduce API usage. Daily full
+    // history is only requested on-demand (when the user requests a 1-year outlook) so
+    // we avoid wasting rate-limit quota during the one-time prefetch.
     for (const t of PREFETCH_TICKERS) {
       try {
         // monthly fetch will persist raw JSON to alpha_cache in alphaVantageService
         await alphaVantageService.getMonthlyAdjusted(t);
-        // fetch daily as well to populate 1-year window
-        await alphaVantageService.getDailyAdjusted(t);
       } catch (e) {
         // ignore per-ticker errors
       }
@@ -241,3 +242,17 @@ async function ensureHistoricalPrefetch() {
 }
 
 export { ensureHistoricalPrefetch };
+
+// Dev helper: force re-run of the historical prefetch by removing the marker and invoking the prefetch.
+export async function forceHistoricalPrefetch(): Promise<void> {
+  try {
+    await databaseService.executeNonQuery('DELETE FROM alpha_cache WHERE symbol = ?', [PREFETCH_MARKER_SYMBOL]);
+  } catch (e) {
+    // ignore
+  }
+  try {
+    await ensureHistoricalPrefetch();
+  } catch (e) {
+    // ignore
+  }
+}
