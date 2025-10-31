@@ -55,29 +55,15 @@ function MainTabNavigator() {
       screenOptions={{
   tabBarActiveTintColor: theme.primary,
   tabBarInactiveTintColor: theme.text,
-        tabBarShowLabel: false,                     // Show tab labels with icons
-        // make the tab bar itself transparent and positioned absolute so
-        // screens can render behind it and the native safe area is respected
+        tabBarShowLabel: true,
         tabBarStyle: {
-          backgroundColor: 'transparent',
           position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
           borderTopWidth: 0,
           elevation: 0,
-          shadowColor: 'transparent',
-          height: Platform.OS === 'ios' ? 72 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 18 : 12,
         },
-        // provide a background behind the transparent tab bar that matches app background
         tabBarBackground: () => (
-          Platform.OS === 'ios' ? (
-            <BlurView intensity={60} tint={isDark ? "dark" : "light"} style={{ flex: 1 }} />
-          ) : (
             <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: theme.background }} />
           )
-        ),
       }}
     >
       <Tab.Screen

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../components/ScreenContainer';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
@@ -152,7 +153,7 @@ export default function ScanScreen() {
 
   if (photo) {
     return (
-      <ScreenContainer noPadding>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
           {/* Manual entry modal (Android fallback) */}
@@ -177,8 +178,8 @@ export default function ScanScreen() {
           )}
   {/* Android uses the ManualEntryModal above; iOS uses a native prompt where available */}
         </View>
-      </ScreenContainer>
-    );
+      </SafeAreaView>
+      );
   }
 
   async function processReceiptHandler(
@@ -271,7 +272,7 @@ export default function ScanScreen() {
   }
 
   return (
-    <ScreenContainer noPadding>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
       <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
@@ -286,7 +287,7 @@ export default function ScanScreen() {
           horizontalPadding={contentHorizontalPadding}
         />
       </View>
-    </ScreenContainer>
+    </SafeAreaView>
   );
 
   // Helper: save receipt (create/update) and navigate to ReceiptDetails
@@ -309,8 +310,6 @@ export default function ScanScreen() {
       Alert.alert('Save error', e?.message || 'Failed to save receipt');
     }
   }
-
-  // Confirmation prompt is now handled by `showConfirmationPrompt` helper.
 
 }
 
@@ -366,11 +365,10 @@ export default function ScanScreen() {
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: '#00000080',
   },
   processingText: {
     color: palette.white,
     ...typography.sectionTitle,
   },
-  /* Removed unused preview action and modal styles - preview uses ManualEntryModal component */
 });

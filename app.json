@@ -9,8 +9,7 @@
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/StockLens_Logo_T.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,8 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/StockLens_Logo_T.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/StockLens_Logo_T.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
