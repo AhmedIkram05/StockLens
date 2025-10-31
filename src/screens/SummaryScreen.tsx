@@ -15,6 +15,7 @@ import useReceipts from '../hooks/useReceipts';
 import { formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import StatCard from '../components/StatCard';
 import PrimaryButton from '../components/PrimaryButton';
 import ResponsiveContainer from '../components/ResponsiveContainer';
@@ -139,22 +140,22 @@ export default function SummaryScreen() {
 
   const insights = [
     {
-      emoji: '📈',
+      icon: 'trending-up',
       title: 'Consistent Growth Patterns',
       description: 'Your spending shows strong investment potential across all categories',
     },
     {
-      emoji: '🎯',
+      icon: 'layers-outline',
       title: 'Diversification Opportunity',
       description: 'Consider spreading purchases across different stock sectors',
     },
     {
-      emoji: '⏰',
+      icon: 'time-outline',
       title: 'Time Horizon Matters',
       description: 'Longer investment periods show significantly better returns',
     },
     {
-      emoji: '⚠️',
+      icon: 'warning-outline',
       title: 'Educational Purpose Only',
       description: 'These are hypothetical calculations, not investment advice',
     },
@@ -253,7 +254,7 @@ export default function SummaryScreen() {
         <View style={styles.insightsList}>
           {insights.map(item => (
             <View key={item.title} style={[styles.insightCard, { backgroundColor: theme.surface }]}>
-              <Text style={styles.insightEmoji}>{item.emoji}</Text>
+              <Ionicons name={item.icon as any} size={22} color={theme.text} style={styles.insightIcon} />
               <View style={styles.insightContent}>
                 <Text style={[styles.insightTitle, { color: theme.text }]}>{item.title}</Text>
                 <Text style={[styles.insightDescription, { color: theme.textSecondary }]}>{item.description}</Text>
@@ -421,6 +422,11 @@ const styles = StyleSheet.create({
   insightEmoji: {
     fontSize: sizes.avatarSm,
     marginRight: spacing.md,
+  },
+  insightIcon: {
+    marginRight: spacing.md,
+    width: sizes.avatarSm,
+    textAlign: 'center',
   },
   insightContent: {
     flex: 1,
