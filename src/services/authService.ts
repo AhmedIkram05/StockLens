@@ -57,6 +57,21 @@ export const authService = {
     }
   },
 
+  // Send a password reset email using Firebase Auth
+  async sendPasswordReset(email: string): Promise<void> {
+    try {
+      console.debug('authService.sendPasswordReset: sending reset for', email);
+      const { getAuthInstance } = await import('./firebase');
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      const auth = await getAuthInstance();
+      await sendPasswordResetEmail(auth, email);
+      console.debug('authService.sendPasswordReset: sendPasswordResetEmail returned successfully for', email);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    }
+  },
+
   // Get current user data from local SQLite
   async getUserData(userId: string) {
     try {
