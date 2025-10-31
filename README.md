@@ -1,7 +1,9 @@
 # StockLens
+
 Scan Your Spending, See Your Missed Investing
 
-### How to Run
+## How to Run
+
 1. Clone the repository
 2. Run `npm install` to install dependencies
 3. Run `npm start` to launch the Expo development server
