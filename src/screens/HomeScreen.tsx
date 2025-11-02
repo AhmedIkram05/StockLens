@@ -13,12 +13,12 @@ import StatCard from '../components/StatCard';
 import ReceiptCard from '../components/ReceiptCard';
 import EmptyState from '../components/EmptyState';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { projectUsingHistoricalCAGR } from '../services/projectionService';
 import useReceipts from '../hooks/useReceipts';
-import { formatCurrencyGBP, formatRelativeDate } from '../utils/formatters';
+import { formatCurrencyGBP, formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import ReceiptsSorter, { SortBy, SortDirection } from '../components/ReceiptsSorter';
+import { Ionicons } from '@expo/vector-icons';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
@@ -42,14 +42,7 @@ export default function HomeScreen() {
   // contentWidth used for computing grid item sizes
   const contentWidth = Math.min(width - contentHorizontalPadding * 2, isTablet ? 960 : width - contentHorizontalPadding * 2);
 
-  const formatAmount = (amount: number) => formatCurrencyGBP(amount || 0);
-
-  // live portfolio projection (MVP) — compute example projection using 3 tickers
-  const [portfolioProjection, setPortfolioProjection] = useState<number | null>(null);
-  const [portfolioLoading, setPortfolioLoading] = useState(true);
-  const [portfolioError, setPortfolioError] = useState<string | null>(null);
-
-  const [totalSpend, setTotalSpend] = useState<number>(0);
+  const formatAmount = (amount: number) => formatCurrencyRounded(amount || 0);
 
   const totalMoneySpentDerived = useMemo(() => {
     return allScans.reduce((s, r) => s + (r.amount || 0), 0);
@@ -73,43 +66,6 @@ export default function HomeScreen() {
 
   const formatReceiptLabel = (iso?: string) => formatRelativeDate(iso);
 
-  // note: no local focus-driven behaviour needed after hook extraction
-
-
-  useEffect(() => {
-    let mounted = true;
-    async function loadProjection() {
-      setPortfolioLoading(true);
-      setPortfolioError(null);
-      try {
-        const effectiveTotal = totalSpend || 0;
-        const tickers = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE'];
-        const perTicker = (effectiveTotal / tickers.length) || 0;
-        const results = await Promise.all(
-          tickers.map(async (t) => {
-            try {
-              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
-              return futureValue;
-            } catch (e) {
-              return perTicker * 1.15;
-            }
-          })
-        );
-        if (!mounted) return;
-        const totalFuture = results.reduce((s, v) => s + v, 0);
-        setPortfolioProjection(totalFuture);
-      } catch (err: any) {
-        if (mounted) setPortfolioError(err?.message || String(err));
-      } finally {
-        if (mounted) setPortfolioLoading(false);
-      }
-    }
-    loadProjection();
-    return () => {
-      mounted = false;
-    };
-  }, [totalSpend]);
-
   return (
     <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -127,13 +83,23 @@ export default function HomeScreen() {
 
             <View style={styles.statsContainer}>
               <StatCard
-                value={formatAmount(totalMoneySpentDerived)}
+                value={
+                  <View style={styles.valueWithIcon}>
+                    <Ionicons name="cash-outline" size={28} color={theme.surface} />
+                    <Text style={[styles.statValue, { color: theme.textOnColor, fontSize: 28 }]}>{formatAmount(totalMoneySpentDerived)}</Text>
+                  </View>
+                }
                 label="Total Money Spent"
                 subtitle="Across all scanned receipts"
                 variant="green"
               />
               <StatCard
-                value={allScans.length}
+                value={
+                  <View style={styles.valueWithIcon}>
+                    <Ionicons name="document-text-outline" size={28} color={theme.surface} />
+                    <Text style={[styles.statValue, { color: theme.textOnColor, fontSize: 28 }]}>{allScans.length}</Text>
+                  </View>
+                }
                 label="Receipts Scanned"
                 variant="blue"
               />
@@ -254,6 +220,7 @@ export default function HomeScreen() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -307,8 +274,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statValue: {
-    ...typography.metric,
-    marginBottom: spacing.sm,
+    ...typography.metricSm,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   statLabel: {
     ...typography.caption,
@@ -388,5 +356,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     // derive lineHeight from the caption font size so it scales on tablets
     lineHeight: Math.round(((typography.caption.fontSize as number) || 14) * 1.4),
+  },
+  valueWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
 });

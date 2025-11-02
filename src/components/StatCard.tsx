@@ -16,18 +16,18 @@ export default function StatCard({ value, label, subtitle, variant = 'white', st
   const { theme } = useTheme();
   
   const bg = variant === 'green' ? theme.primary : variant === 'blue' ? theme.secondary : theme.surface;
-  const textColor = variant === 'white' ? theme.text : theme.surface;
-  const align = (style as any)?.alignItems ?? 'center';
+  const textColor = variant === 'white' ? theme.text : theme.textOnColor;
 
   return (
-    <View style={[styles.card, { backgroundColor: bg, alignItems: align }, style]}>
-      <Text style={[styles.value, { color: textColor, textAlign: align === 'flex-start' || align === 'left' ? 'center' : 'center' }]}>{value}</Text>
-      {label ? <Text style={[styles.label, { color: textColor, textAlign: align === 'flex-start' || align === 'left' ? 'left' : 'center' }]}>{label}</Text> : null}
-      {subtitle ? <Text style={[styles.subtitle, { color: textColor, opacity: 0.9, textAlign: align === 'flex-start' || align === 'left' ? 'left' : 'center' }]}>{subtitle}</Text> : null}
+    <View style={[styles.card, { backgroundColor: bg }, style]}>
+      <Text style={[styles.value, { color: textColor }]}>{value}</Text>
+      {label ? <Text style={[styles.label, { color: textColor }]}>{label}</Text> : null}
+      {subtitle ? <Text style={[styles.subtitle, { color: textColor, opacity: 0.85 }]}>{subtitle}</Text> : null}
     </View>
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   card: {
     borderRadius: radii.md,
@@ -35,17 +35,22 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xs,
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     ...shadows.level2,
   },
   value: {
     ...typography.metricSm,
     marginBottom: spacing.sm,
+    textAlign: 'center',
   },
   label: {
     ...typography.body,
+    textAlign: 'center',
   },
   subtitle: {
-    ...typography.caption,
+    fontSize: 11,
+    lineHeight: 14,
     marginTop: spacing.xs,
+    textAlign: 'center',
   },
 });
