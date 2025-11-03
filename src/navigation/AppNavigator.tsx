@@ -88,7 +88,7 @@ function MainTabNavigator() {
         options={{
           title: 'Scan Receipt',
           tabBarLabel: 'Scan',
-          headerShown: false, // Hide the header for Scan
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
             <Ionicons
               name={focused ? 'camera' : 'camera-outline'}
