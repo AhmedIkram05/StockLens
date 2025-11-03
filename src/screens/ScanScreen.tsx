@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,7 @@ import { parseAmountFromOcrText } from '../services/receiptParser';
 import { receiptService } from '../services/dataService';
 import { emit } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import ManualEntryModal from '../components/ManualEntryModal';
 import CameraControls from '../components/CameraControls';
 import { formatCurrencyGBP } from '../utils/formatters';
@@ -37,6 +37,7 @@ export default function ScanScreen() {
   const [draftReceiptId, setDraftReceiptId] = useState<number | null>(null);
   const [processing, setProcessing] = useState(false);
   const [ocrRaw, setOcrRaw] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(true);
   
   const [manualModalVisible, setManualModalVisible] = useState(false);
   const [manualEntryText, setManualEntryText] = useState<string>('');
@@ -44,6 +45,14 @@ export default function ScanScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { width, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
   const insets = useSafeAreaInsets();
+
+  // Automatically manage camera based on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      setIsCameraActive(true);
+      return () => setIsCameraActive(false);
+    }, [])
+  );
 
   // frameDimensions previously used for a rectangular overlay — removed to
   // simplify UI; Camera fills the view and preview shows the captured image.
@@ -274,12 +283,13 @@ export default function ScanScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
       <View style={styles.cameraContainer}>
-        <CameraView
-          style={styles.camera}
-          facing={facing}
-          ref={cameraRef}
-        />
-
+        {isCameraActive && (
+          <CameraView
+            style={styles.camera}
+            facing={facing}
+            ref={cameraRef}
+          />
+        )}
 
         <CameraControls
           onCapture={takePicture}
