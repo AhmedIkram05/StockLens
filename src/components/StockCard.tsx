@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -37,44 +38,17 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: pixelWidth, backgroundColor: theme.surface }, isLast && styles.cardLast]}>
       {badgeText ? (
-        // Diagonal ribbon badge that appears wrapped into the top-left corner.
-        // We size/position it dynamically based on the computed pixelWidth so it
-        // scales across device sizes.
-        <LinearGradient
-          colors={[badgeColor ?? theme.primary, '#000000ff']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.ribbon,
-            {
-              // narrow the ribbon so the visible diagonal band matches the
-              // expected visual area and centering is intuitive
-              width: Math.round(pixelWidth * 0.5),
-              height: 28,
-              left: Math.round(-pixelWidth * 0.16),
-              top: Math.round(-pixelWidth * 0.03),
-            },
-          ]}
-          accessible
-          accessibilityRole="text"
-          accessibilityLabel={`Badge: ${badgeText}`}
-        >
-          {/* subtle highlight to the top edge of the ribbon */}
-          <View style={styles.ribbonHighlight} pointerEvents="none" />
-          <Text
-            style={[
-              styles.ribbonText,
-              {
-                transform: [
-                  { translateX: Math.round(-pixelWidth * 0.04) },
-                  { translateY: Math.round(pixelWidth * 0.015) },
-                ],
-              },
-            ]}
+        // Modern horizontal badge in top-right corner
+        <View style={styles.badgeContainer}>
+          <LinearGradient
+            colors={[badgeColor ?? theme.primary, badgeColor ?? theme.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.badge}
           >
-            {badgeText}
-          </Text>
-        </LinearGradient>
+            <Text style={styles.badgeText}>{badgeText}</Text>
+          </LinearGradient>
+        </View>
       ) : null}
       <View style={styles.header}>
         <Text style={[styles.name, { color: theme.text }]}>{name}</Text>
@@ -106,6 +80,7 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
 
 const styles = StyleSheet.create<any>({
   card: {
+    position: 'relative',
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginRight: spacing.md,
@@ -114,6 +89,26 @@ const styles = StyleSheet.create<any>({
   },
   cardLast: {
     marginRight: 0,
+  },
+  // Modern horizontal badge in top-right corner
+  badgeContainer: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    zIndex: 1,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radii.pill,
+  },
+  badgeText: {
+    ...typography.captionStrong,
+    color: palette.white,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',
@@ -162,36 +157,5 @@ const styles = StyleSheet.create<any>({
   verticalDivider: {
     width: 1,
     marginHorizontal: spacing.md,
-  },
-
-  // Ribbon banner styles
-  ribbon: {
-    position: 'absolute',
-    zIndex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [{ rotate: '-45deg' }],
-    // subtle shadow to lift the ribbon above the card
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  ribbonHighlight: {
-    position: 'absolute',
-    left: 6,
-    top: 2,
-    width: 36,
-    height: 8,
-    borderRadius: 2,
-    transform: [{ rotate: '20deg' }],
-  },
-  ribbonText: {
-    ...typography.captionStrong,
-    color: palette.white,
-    includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 28,
-    textAlign: 'center',
   },
 });

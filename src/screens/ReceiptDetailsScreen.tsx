@@ -221,17 +221,17 @@ export default function ReceiptDetailsScreen() {
   // color: green for positive or zero, red for negative
   const valueColor = computedPercentReturn >= 0 ? palette.green : palette.red;
 
-    // determine badge: show Best/Worst for the current mode (past/future)
+    // determine badge: show Over/Underperformer for the current mode (past/future)
     let badgeTextToShow: string | undefined = undefined;
     if (mode === 'past') {
-      if (investmentValue.ticker === bestPastTicker) badgeTextToShow = 'Best';
-      else if (investmentValue.ticker === worstPastTicker) badgeTextToShow = 'Worst';
+      if (investmentValue.ticker === bestPastTicker) badgeTextToShow = 'Overperformer';
+      else if (investmentValue.ticker === worstPastTicker) badgeTextToShow = 'Underperformer';
     } else {
-      if (investmentValue.ticker === bestFutureTicker) badgeTextToShow = 'Best';
-      else if (investmentValue.ticker === worstFutureTicker) badgeTextToShow = 'Worst';
+      if (investmentValue.ticker === bestFutureTicker) badgeTextToShow = 'Overperformer';
+      else if (investmentValue.ticker === worstFutureTicker) badgeTextToShow = 'Underperformer';
     }
 
-    const badgeColorToShow = badgeTextToShow === 'Best' ? palette.green : badgeTextToShow === 'Worst' ? palette.red : undefined;
+    const badgeColorToShow = badgeTextToShow === 'Overperformer' ? palette.green : badgeTextToShow === 'Underperformer' ? palette.red : undefined;
 
     return (
       <StockCard
