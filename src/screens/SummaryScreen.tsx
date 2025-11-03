@@ -81,7 +81,7 @@ export default function SummaryScreen() {
           })
         );
         const totalFuture5 = futures.reduce((s, v) => s + v, 0);
-        if (mounted) setTotalMissedFiveYears(Math.round(totalFuture5));
+        if (mounted) setTotalMissedFiveYears(totalFuture5);
 
         const futures10 = await Promise.all(
           tickers.map(async t => {
@@ -94,7 +94,7 @@ export default function SummaryScreen() {
           })
         );
         const totalFuture10 = futures10.reduce((s, v) => s + v, 0);
-        if (mounted) setTotalMissedTenYears(Math.round(totalFuture10));
+        if (mounted) setTotalMissedTenYears(totalFuture10);
 
         const periods = [1, 3, 5, 10, 20];
         const bests: Record<number, { symbol: string; rate: number }> = {};
@@ -271,7 +271,7 @@ export default function SummaryScreen() {
         `Your average purchase of ${formatCurrency(avgPerReceipt)} could become a recurring investment`,
         'Even small amounts compound significantly over decades',
       ],
-      example: `If you invested just half your spending (${formatCurrency(totalMoneySpent / 2)}) today at 8% annual return, you'd have ${formatCurrency(Math.round((totalMoneySpent / 2) * Math.pow(1.08, 30)))} in 30 years.`,
+      example: `If you invested just half your spending (${formatCurrency(totalMoneySpent / 2)}) today at 8% annual return, you'd have ${formatCurrency((totalMoneySpent / 2) * Math.pow(1.08, 30))} in 30 years.`,
     },
     'High Spending Opportunity': {
       bullets: [
@@ -279,15 +279,15 @@ export default function SummaryScreen() {
         'High earners who invest aggressively often retire 10-15 years earlier',
         'Consider automatic transfers to investment accounts before spending',
       ],
-      example: `${formatCurrency(totalMoneySpent * 0.2)} invested monthly at 8% for 20 years = ${formatCurrency(Math.round((totalMoneySpent * 0.2) * (Math.pow(1.08, 20) - 1) / 0.08))}.`,
+      example: `${formatCurrency(totalMoneySpent * 0.2)} invested monthly at 8% for 20 years = ${formatCurrency((totalMoneySpent * 0.2) * (Math.pow(1.08, 20) - 1) / 0.08)}.`,
     },
     'Small Purchases Add Up': {
       bullets: [
-        `Your average £${Math.round(avgPerReceipt)} purchase happened ${receiptsScanned} times`,
+        `Your average £${avgPerReceipt.toFixed(2)} purchase happened ${receiptsScanned} times`,
         'Small frequent expenses are the #1 wealth killer',
         'Cutting just 30% of these could fund a retirement account',
       ],
-      example: `Reducing spending by 30% saves ${formatCurrency(totalMoneySpent * 0.3)}/year. Over 25 years at 7%, that's ${formatCurrency(Math.round((totalMoneySpent * 0.3) * (Math.pow(1.07, 25) - 1) / 0.07))}.`,
+      example: `Reducing spending by 30% saves ${formatCurrency(totalMoneySpent * 0.3)}/year. Over 25 years at 7%, that's ${formatCurrency((totalMoneySpent * 0.3) * (Math.pow(1.07, 25) - 1) / 0.07)}.`,
     },
     'Consistent Spending Pattern': {
       bullets: [
@@ -295,7 +295,7 @@ export default function SummaryScreen() {
         'Set up automatic investments during consistent periods',
         'Awareness is the first step to financial optimization',
       ],
-      example: `With consistent spending of ${formatCurrency(avgPerReceipt)} per purchase, redirecting 25% monthly (${formatCurrency(avgPerReceipt * 0.25 * receiptsScanned / 12)}) for 20 years at 7% = ${formatCurrency(Math.round((avgPerReceipt * 0.25 * receiptsScanned / 12) * 12 * (Math.pow(1.07, 20) - 1) / 0.07))}.`,
+      example: `With consistent spending of ${formatCurrency(avgPerReceipt)} per purchase, redirecting 25% monthly (${formatCurrency(avgPerReceipt * 0.25 * receiptsScanned / 12)}) for 20 years at 7% = ${formatCurrency((avgPerReceipt * 0.25 * receiptsScanned / 12) * 12 * (Math.pow(1.07, 20) - 1) / 0.07)}.`,
     },
     'Peak Spending Month': {
       bullets: [
@@ -303,7 +303,7 @@ export default function SummaryScreen() {
         'Plan investments during low-spend months to balance cash flow',
         'Seasonal spending awareness helps optimize saving strategies',
       ],
-      example: `If you invested surplus from off-peak months (estimated ${formatCurrency(avgPerReceipt * 5)}), you'd accumulate ${formatCurrency(Math.round(avgPerReceipt * 5 * 12 * Math.pow(1.07, 10)))} over 10 years at 7%.`,
+      example: `If you invested surplus from off-peak months (estimated ${formatCurrency(avgPerReceipt * 5)}), you'd accumulate ${formatCurrency(avgPerReceipt * 5 * 12 * Math.pow(1.07, 10))} over 10 years at 7%.`,
     },
     'Time is Your Superpower': {
       bullets: [
@@ -311,7 +311,7 @@ export default function SummaryScreen() {
         'A 25-year-old investing £200/month reaches £500k+ by 65',
         'The same £200/month starting at 35 only reaches £250k',
       ],
-      example: `Starting today with ${formatCurrency(avgPerReceipt)}/month vs waiting 5 years could mean ${formatCurrency(Math.round(avgPerReceipt * 12 * (Math.pow(1.08, 25) - Math.pow(1.08, 20)) / 0.08))} more wealth.`,
+      example: `Starting today with ${formatCurrency(avgPerReceipt)}/month vs waiting 5 years could mean ${formatCurrency(avgPerReceipt * 12 * (Math.pow(1.08, 25) - Math.pow(1.08, 20)) / 0.08)} more wealth.`,
     },
     'Inflation is Eating Your Cash': {
       bullets: [
@@ -319,7 +319,7 @@ export default function SummaryScreen() {
         'Savings accounts (~1-2%) lose value after inflation',
         'Stocks historically return 7-10%, beating inflation by 4-7%',
       ],
-      example: `Your ${formatCurrency(totalMoneySpent)} in cash will have the buying power of only ${formatCurrency(Math.round(totalMoneySpent * Math.pow(0.97, 10)))} in 10 years. Invested at 8%, it becomes ${formatCurrency(Math.round(totalMoneySpent * Math.pow(1.08, 10)))}.`,
+      example: `Your ${formatCurrency(totalMoneySpent)} in cash will have the buying power of only ${formatCurrency(totalMoneySpent * Math.pow(0.97, 10))} in 10 years. Invested at 8%, it becomes ${formatCurrency(totalMoneySpent * Math.pow(1.08, 10))}.`,
     },
   };
 
@@ -417,7 +417,7 @@ export default function SummaryScreen() {
             <View style={styles.valueWithIcon}>
               <Ionicons name="trending-up" size={28} color={theme.primary} />
               <Text style={[styles.projectionValue, { color: theme.text }]}>
-                {formatCurrency(Math.round(totalMoneySpent * Math.pow(1.10, 20)))}
+                {formatCurrency(totalMoneySpent * Math.pow(1.10, 20))}
               </Text>
             </View>
           }
@@ -473,7 +473,7 @@ export default function SummaryScreen() {
               <View style={styles.valueWithIcon}>
                 <Ionicons name="calculator-outline" size={22} color={theme.surface} />
                 <Text style={[styles.cardValueText, { color: theme.textOnColor }]}>
-                  {formatCurrency(Math.round(avgPerReceipt || 0))}
+                  {formatCurrency(avgPerReceipt || 0)}
                 </Text>
               </View>
             }
