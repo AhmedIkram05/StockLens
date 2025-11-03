@@ -34,6 +34,16 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { receipts: allScans, loading: receiptsLoading, error: receiptsError } = useReceipts(user?.uid);
 
+  // Extract first name from user profile
+  const { userProfile } = useAuth();
+  const firstName = useMemo(() => {
+    if (userProfile?.full_name) {
+      const nameParts = userProfile.full_name.trim().split(' ');
+      return nameParts[0];
+    }
+    return '';
+  }, [userProfile?.full_name]);
+
   // Check if user has any scans
   const hasScans = allScans.length > 0;
 
@@ -74,7 +84,7 @@ export default function HomeScreen() {
             <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
               <PageHeader>
                 <View style={styles.titleContainer}>
-                  <Text style={[styles.titlePrefix, { color: theme.text }]}>Your </Text>
+                  <Text style={[styles.titlePrefix, { color: theme.text }]}>{firstName}'s </Text>
                   <Text style={[styles.titleStock, { color: theme.text }]}>Stock</Text>
                   <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
                 </View>
