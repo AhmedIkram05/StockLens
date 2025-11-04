@@ -6,12 +6,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography } from '../styles/theme';
+import { palette } from '../styles/palette';
 import ScreenContainer from '../components/ScreenContainer';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import ReceiptCard from '../components/ReceiptCard';
-import EmptyState from '../components/EmptyState';
+import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import useReceipts from '../hooks/useReceipts';
 import { formatCurrencyGBP, formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
@@ -116,7 +117,10 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.recentScans}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Scans</Text>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Recent Scans</Text>
+              </View>
+
               <ReceiptsSorter
                 sortBy={sortBy}
                 sortDirection={sortDirection}
@@ -136,13 +140,13 @@ export default function HomeScreen() {
                   // grid wrapper — keep simple row/wrap layout; padding is handled
                   // by ScreenContainer / ResponsiveContainer so we don't double-pad
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {list.map((scan) => (
-                      <View
-                        key={scan.id}
-                        // flexBasis percentage ensures consistent wrapping; cast to any to satisfy RN typing for percentage strings
-                        style={{ flexBasis: `${100 / cols}%`, paddingHorizontal: spacing.xs } as any}
-                      >
-                        <View style={{ width: '100%' }}>
+                    {list.map((scan) => {
+                      return (
+                        <View
+                          key={scan.id}
+                          // flexBasis percentage ensures consistent wrapping; cast to any to satisfy RN typing for percentage strings
+                          style={{ flexBasis: `${100 / cols}%`, paddingHorizontal: spacing.xs } as any}
+                        >
                           <ReceiptCard
                             image={scan.image}
                             amount={formatAmount(scan.amount)}
@@ -158,8 +162,8 @@ export default function HomeScreen() {
                             }
                           />
                         </View>
-                      </View>
-                    ))}
+                      );
+                    })}
                   </View>
                 );
               })()}
@@ -172,56 +176,24 @@ export default function HomeScreen() {
           </>
         ) : (
           <>
-            <PageHeader>
-              <View style={styles.titleContainer}>
-                <Text style={styles.titlePrefix}>Your </Text>
-                <Text style={styles.titleStock}>Stock</Text>
-                <Text style={styles.titleLens}>Lens</Text>
-              </View>
-              <Text style={styles.subtitle}>Track your missed opportunities</Text>
-            </PageHeader>
-
             <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+              <PageHeader>
+                <View style={styles.titleContainer}>
+                  <Text style={[styles.titlePrefix, { color: theme.text }]}>{firstName}'s </Text>
+                  <Text style={[styles.titleStock, { color: theme.text }]}>Stock</Text>
+                  <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
+                </View>
+                <Text style={[styles.subtitle, { color: theme.textSecondary }]}>What if you invested instead?</Text>
+              </PageHeader>
+
               <View style={styles.emptyStateContainer}>
-              <EmptyState
-                title="No Receipts Yet"
-                subtitle="Scan your first receipt to discover what your purchases could have been worth"
-                primaryText="Scan your first receipt"
-                onPrimaryPress={() => navigation.navigate('MainTabs' as any, { screen: 'Scan' })}
-              />
-
-              <View style={styles.onboardingCards}>
-                                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-                  <View style={styles.numberCircle}>
-                    <Text style={styles.numberText}>1</Text>
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={[styles.cardTitle, { color: theme.text }]}>Scan Your Receipts</Text>
-                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Take photos of your spending to track expenses</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-                  <View style={styles.numberCircle}>
-                    <Text style={styles.numberText}>2</Text>
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={[styles.cardTitle, { color: theme.text }]}>See Investment Potential</Text>
-                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Discover what your spending could be worth if invested</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-                  <View style={styles.numberCircle}>
-                    <Text style={styles.numberText}>3</Text>
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</Text>
-                    <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Monitor your spending patterns and investment opportunities</Text>
-                  </View>
-                </View>
+                <EmptyStateWithOnboarding
+                  title="No Receipts Yet"
+                  subtitle="Scan your first receipt to discover what your purchases could have been worth"
+                  primaryText="Scan Your First Receipt"
+                  onPrimaryPress={() => navigation.navigate('MainTabs' as any, { screen: 'Scan' })}
+                />
               </View>
-            </View>
             </ResponsiveContainer>
           </>
         )}
@@ -314,63 +286,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     alignItems: 'center',
   },
-  onboardingCards: {
-    width: '100%',
-  },
-  onboardingCardsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  onboardingCardTablet: {
-    flex: 1,
-    marginHorizontal: spacing.sm,
-    // avoid hardcoded minWidth; derive from theme tokens
-    minWidth: Math.round(spacing.xxl * 5),
-  },
-  onboardingCard: {
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    ...shadows.level1,
-  },
-  numberCircle: {
-    width: Math.round(spacing.xxl * 1.5),
-    height: Math.round(spacing.xxl * 1.5),
-    borderRadius: radii.pill,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  numberCircleTablet: {
-    width: Math.round(spacing.xxl * 2),
-    height: Math.round(spacing.xxl * 2),
-    marginRight: spacing.lg,
-  },
-  numberText: {
-    ...typography.metricSm,
-  },
-  numberTextTablet: {
-    // use theme typography sizes instead of hardcoded values
-    fontSize: (typography.metric && (typography.metric.fontSize as number)) || 20,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
-  },
-  cardSubtitle: {
-    ...typography.caption,
-    // derive lineHeight from the caption font size so it scales on tablets
-    lineHeight: Math.round(((typography.caption.fontSize as number) || 14) * 1.4),
-  },
   valueWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  
 });
