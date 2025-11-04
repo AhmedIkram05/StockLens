@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import YearSelector from '../components/YearSelector';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
@@ -119,10 +118,13 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   label: {
-    ...typography.overline,
+    ...typography.captionStrong,
     marginBottom: spacing.xs,
   },
-  rowButtons: { flexDirection: 'row', marginTop: spacing.md },
+  formSection: {
+    marginTop: spacing.lg,
+  },
+  rowButtons: { flexDirection: 'row' },
   smallButton: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.md, backgroundColor: 'transparent', marginRight: spacing.sm },
   smallButtonActive: { backgroundColor: palette.green },
   smallButtonText: { },
@@ -158,8 +160,11 @@ const styles = StyleSheet.create({
   presetButtonActive: { backgroundColor: palette.blue },
   presetText: { },
   presetTextActive: { color: palette.white },
-  rateHint: { ...typography.caption, marginTop: spacing.xs },
-  rateInputWrapper: { marginTop: spacing.sm },
+  rateHint: { ...typography.caption },
+  rateInputWrapper: {},
+  timeInputRow: { flexDirection: 'row', gap: spacing.md },
+  timeInputCol: { flex: 1 },
+  timeLabel: { ...typography.caption, marginBottom: spacing.xs },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md, alignItems: 'center' },
   resultsRowStack: { flexDirection: 'column', alignItems: 'flex-start' },
   resultsCol: { flex: 1, alignItems: 'center', minWidth: 80 },
@@ -197,13 +202,15 @@ const styles = StyleSheet.create({
 function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaultContribution?: number; defaultYears?: number }) {
   const { isTablet, isSmallPhone } = useBreakpoint();
   const { theme } = useTheme();
-  const yearsOptions = [1, 3, 5, 10, 20];
-  const [principalStr, setPrincipalStr] = useState<string>('0');
+  
+  // State for all inputs
+  const [initialInvestmentStr, setInitialInvestmentStr] = useState<string>('0');
+  const [interestRateStr, setInterestRateStr] = useState<string>('15');
+  const [compoundFrequency, setCompoundFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually'>('monthly');
+  const [yearsStr, setYearsStr] = useState<string>(String(defaultYears));
+  const [monthsStr, setMonthsStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
-  const [frequency, setFrequency] = useState<'monthly' | 'annually'>('monthly');
-  const [years, setYears] = useState<number>(defaultYears);
-  const [manualRateStr, setManualRateStr] = useState<string>('15');
-  const [effectiveRate, setEffectiveRate] = useState<number>(Number(String(manualRateStr).replace(/,/g, '.')) / 100 || 0.15);
+  const [contributionFrequency, setContributionFrequency] = useState<'weekly' | 'biweekly' | 'monthly' | 'annually'>('monthly');
 
   const parseCurrency = (s: string) => {
     const cleaned = String(s).replace(/[^0-9.-]/g, '').replace(',', '.');
@@ -211,36 +218,73 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
     return Number.isFinite(n) ? n : 0;
   };
 
-  useEffect(() => {
-    const parsed = Number(String(manualRateStr).replace(/,/g, '.'));
-    setEffectiveRate(Number.isFinite(parsed) ? parsed / 100 : 0);
-  }, [manualRateStr]);
+  const parseNumber = (s: string) => {
+    const cleaned = String(s).replace(/[^0-9.-]/g, '').replace(',', '.');
+    const n = Number(cleaned);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
 
-  const P = useMemo(() => parseCurrency(principalStr), [principalStr]);
+  // Parse all inputs
+  const P = useMemo(() => parseCurrency(initialInvestmentStr), [initialInvestmentStr]);
+  const annualRate = useMemo(() => parseNumber(interestRateStr) / 100, [interestRateStr]);
+  const years = useMemo(() => parseNumber(yearsStr), [yearsStr]);
+  const months = useMemo(() => parseNumber(monthsStr), [monthsStr]);
+  const totalTime = years + months / 12;
   const PMT = useMemo(() => parseCurrency(contributionStr), [contributionStr]);
-  const r = effectiveRate;
-  const n = frequency === 'monthly' ? 12 : 1;
-  const t = years;
+
+  // Compound frequency (n = times compounded per year)
+  const n = compoundFrequency === 'daily' ? 365 : 
+            compoundFrequency === 'weekly' ? 52 : 
+            compoundFrequency === 'monthly' ? 12 : 
+            compoundFrequency === 'quarterly' ? 4 : 1;
+
+  // Contribution frequency (p = payments per year)
+  const p = contributionFrequency === 'weekly' ? 52 : 
+            contributionFrequency === 'biweekly' ? 26 : 
+            contributionFrequency === 'monthly' ? 12 : 1;
 
   const { fvTotal, totalContrib, interestEarned } = useMemo(() => {
-    if (r === 0) {
-      const fvLump = P;
-      const fvContrib = PMT * n * t;
-      const fv = fvLump + fvContrib;
-      return { fvTotal: fv, totalContrib: P + fvContrib, interestEarned: fv - (P + fvContrib) };
+    if (totalTime <= 0) {
+      return { fvTotal: P, totalContrib: P, interestEarned: 0 };
     }
-    const periodicRate = r / n;
-    const fvLump = P * Math.pow(1 + periodicRate, n * t);
-    const fvContrib = PMT * ((Math.pow(1 + periodicRate, n * t) - 1) / periodicRate);
-    const fv = fvLump + fvContrib;
-    const totalContrib = P + PMT * n * t;
-    const interest = fv - totalContrib;
-    return { fvTotal: fv, totalContrib, interestEarned: interest };
-  }, [P, PMT, r, n, t]);
 
-  // animate pill when years changes
-  // Removed unused animation: the previous pill animation relied on
-  // container dimensions that weren't set. Keeping UI simple and static.
+    if (annualRate === 0) {
+      const fvLump = P;
+      const fvContrib = PMT * p * totalTime;
+      const fv = fvLump + fvContrib;
+      return { fvTotal: fv, totalContrib: P + fvContrib, interestEarned: 0 };
+    }
+
+    // Compound interest formula with regular contributions
+    // FV = P(1 + r/n)^(nt) + PMT × [((1 + r/n)^(nt) - 1) / (r/n)] × (1 + r/n)^((n-p)/n)
+    const periodicRate = annualRate / n;
+    const nt = n * totalTime;
+    
+    // Future value of initial investment
+    const fvLump = P * Math.pow(1 + periodicRate, nt);
+    
+    // Future value of contributions
+    // Adjust for contribution frequency vs compound frequency
+    let fvContrib = 0;
+    if (p === n) {
+      // Same frequency: standard formula
+      fvContrib = PMT * ((Math.pow(1 + periodicRate, nt) - 1) / periodicRate);
+    } else {
+      // Different frequencies: adjust by converting contribution periods
+      const contributionPeriodicRate = annualRate / p;
+      const pt = p * totalTime;
+      fvContrib = PMT * ((Math.pow(1 + contributionPeriodicRate, pt) - 1) / contributionPeriodicRate);
+      // Adjust for compounding frequency difference
+      const adjustmentFactor = Math.pow(1 + periodicRate, nt) / Math.pow(1 + contributionPeriodicRate, pt);
+      fvContrib *= adjustmentFactor;
+    }
+    
+    const fv = fvLump + fvContrib;
+    const totalContrib = P + PMT * p * totalTime;
+    const interest = fv - totalContrib;
+    
+    return { fvTotal: fv, totalContrib, interestEarned: interest };
+  }, [P, PMT, annualRate, n, p, totalTime]);
 
   const cumulativePct = useMemo(() => {
     if (totalContrib <= 0) return 0;
@@ -253,52 +297,105 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
     <View style={[styles.calcContainer]}>
       <View style={[styles.formRow, !isTablet && styles.formRowStack]}>
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
-          <Text style={[styles.label, { color: theme.text }]}>Principal (£)</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Initial Investment (£)</Text>
           <FormInput
             keyboardType="decimal-pad"
-            value={principalStr}
-            onChangeText={setPrincipalStr}
+            value={initialInvestmentStr}
+            onChangeText={setInitialInvestmentStr}
             inputStyle={{ minHeight: 48 }}
             placeholder="0.00"
             selectionColor={palette.green}
           />
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Contribution (£)</Text>
-          <FormInput
-            keyboardType="decimal-pad"
-            value={contributionStr}
-            onChangeText={setContributionStr}
-            inputStyle={{ minHeight: 48 }}
-            placeholder="0.00"
-            selectionColor={palette.green}
-          />
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Interest Rate (% per year)</Text>
+            <FormInput
+              keyboardType="decimal-pad"
+              value={interestRateStr}
+              onChangeText={setInterestRateStr}
+              inputStyle={{ minHeight: 48 }}
+              placeholder="15"
+              selectionColor={palette.green}
+            />
+          </View>
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Frequency</Text>
-          <View style={styles.rowButtons}>
-            <TouchableOpacity onPress={() => setFrequency('monthly')} style={[styles.smallButton, frequency === 'monthly' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, { color: frequency === 'monthly' ? palette.white : theme.text }, frequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setFrequency('annually')} style={[styles.smallButton, frequency === 'annually' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, { color: frequency === 'annually' ? palette.white : theme.text }, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
-            </TouchableOpacity>
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Compound Frequency</Text>
+            <View style={styles.rowButtons}>
+              <TouchableOpacity onPress={() => setCompoundFrequency('daily')} style={[styles.smallButton, compoundFrequency === 'daily' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'daily' ? palette.white : theme.text }, compoundFrequency === 'daily' && styles.smallButtonTextActive]}>Daily</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCompoundFrequency('weekly')} style={[styles.smallButton, compoundFrequency === 'weekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'weekly' ? palette.white : theme.text }, compoundFrequency === 'weekly' && styles.smallButtonTextActive]}>Weekly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCompoundFrequency('monthly')} style={[styles.smallButton, compoundFrequency === 'monthly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'monthly' ? palette.white : theme.text }, compoundFrequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCompoundFrequency('quarterly')} style={[styles.smallButton, compoundFrequency === 'quarterly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'quarterly' ? palette.white : theme.text }, compoundFrequency === 'quarterly' && styles.smallButtonTextActive]}>Quarterly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCompoundFrequency('annually')} style={[styles.smallButton, compoundFrequency === 'annually' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'annually' ? palette.white : theme.text }, compoundFrequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
         <View style={[styles.formCol, !isTablet && styles.formColStack]}>
-          <Text style={[styles.label, { color: theme.text }]}>Years</Text>
-          <YearSelector options={yearsOptions} value={years} onChange={setYears} compact={isSmallPhone} />
+          <Text style={[styles.label, { color: theme.text }]}>Time Period</Text>
+          <View style={styles.timeInputRow}>
+            <View style={styles.timeInputCol}>
+              <Text style={[styles.timeLabel, { color: theme.textSecondary }]}>Years</Text>
+              <FormInput
+                keyboardType="number-pad"
+                value={yearsStr}
+                onChangeText={setYearsStr}
+                inputStyle={{ minHeight: 48 }}
+                placeholder="0"
+                selectionColor={palette.green}
+              />
+            </View>
+            <View style={styles.timeInputCol}>
+              <Text style={[styles.timeLabel, { color: theme.textSecondary }]}>Months</Text>
+              <FormInput
+                keyboardType="number-pad"
+                value={monthsStr}
+                onChangeText={setMonthsStr}
+                inputStyle={{ minHeight: 48 }}
+                placeholder="0"
+                selectionColor={palette.green}
+              />
+            </View>
+          </View>
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Rate (%)</Text>
-          <View style={styles.rateInputWrapper}>
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Regular Contribution (£)</Text>
             <FormInput
               keyboardType="decimal-pad"
-              value={manualRateStr}
-              onChangeText={setManualRateStr}
+              value={contributionStr}
+              onChangeText={setContributionStr}
               inputStyle={{ minHeight: 48 }}
-              placeholder="12"
+              placeholder="0.00"
               selectionColor={palette.green}
             />
-            <Text style={[styles.rateHint, { color: theme.textSecondary }]}>Enter annual % (e.g. 12 for 12%)</Text>
+          </View>
+
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Contribution Frequency</Text>
+            <View style={styles.rowButtons}>
+              <TouchableOpacity onPress={() => setContributionFrequency('weekly')} style={[styles.smallButton, contributionFrequency === 'weekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: contributionFrequency === 'weekly' ? palette.white : theme.text }, contributionFrequency === 'weekly' && styles.smallButtonTextActive]}>Weekly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setContributionFrequency('biweekly')} style={[styles.smallButton, contributionFrequency === 'biweekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: contributionFrequency === 'biweekly' ? palette.white : theme.text }, contributionFrequency === 'biweekly' && styles.smallButtonTextActive]}>Bi-weekly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setContributionFrequency('monthly')} style={[styles.smallButton, contributionFrequency === 'monthly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: contributionFrequency === 'monthly' ? palette.white : theme.text }, contributionFrequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setContributionFrequency('annually')} style={[styles.smallButton, contributionFrequency === 'annually' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: contributionFrequency === 'annually' ? palette.white : theme.text }, contributionFrequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>

@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import StatCard from '../components/StatCard';
 import ResponsiveContainer from '../components/ResponsiveContainer';
+import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
@@ -408,6 +409,18 @@ export default function SummaryScreen() {
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Your investment insights at a glance</Text>
         </PageHeader>
 
+        {receiptsScanned === 0 ? (
+          <ResponsiveContainer maxWidth={isTablet ? 960 : screenWidth - contentHorizontalPadding * 2}>
+            <EmptyStateWithOnboarding
+              iconName="stats-chart-outline"
+              title="No Data Yet"
+              subtitle="Start scanning receipts to see your investment insights and projections"
+              primaryText="Scan Your First Receipt"
+              onPrimaryPress={() => navigation.navigate('Scan' as never)}
+            />
+          </ResponsiveContainer>
+        ) : (
+          <>
         {/* Center and cap content width so tablet layout matches the rest of the app */}
         <ResponsiveContainer maxWidth={isTablet ? 960 : screenWidth - contentHorizontalPadding * 2}>
 
@@ -598,6 +611,8 @@ export default function SummaryScreen() {
         </View>
 
         </ResponsiveContainer>
+        </>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
