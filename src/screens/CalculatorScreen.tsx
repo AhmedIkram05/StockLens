@@ -119,10 +119,13 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   label: {
-    ...typography.overline,
+    ...typography.captionStrong,
     marginBottom: spacing.xs,
   },
-  rowButtons: { flexDirection: 'row', marginTop: spacing.md },
+  formSection: {
+    marginTop: spacing.lg,
+  },
+  rowButtons: { flexDirection: 'row' },
   smallButton: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, borderRadius: radii.md, backgroundColor: 'transparent', marginRight: spacing.sm },
   smallButtonActive: { backgroundColor: palette.green },
   smallButtonText: { },
@@ -158,8 +161,8 @@ const styles = StyleSheet.create({
   presetButtonActive: { backgroundColor: palette.blue },
   presetText: { },
   presetTextActive: { color: palette.white },
-  rateHint: { ...typography.caption, marginTop: spacing.xs },
-  rateInputWrapper: { marginTop: spacing.sm },
+  rateHint: { ...typography.caption },
+  rateInputWrapper: {},
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md, alignItems: 'center' },
   resultsRowStack: { flexDirection: 'column', alignItems: 'flex-start' },
   resultsCol: { flex: 1, alignItems: 'center', minWidth: 80 },
@@ -200,7 +203,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
   const yearsOptions = [1, 3, 5, 10, 20];
   const [principalStr, setPrincipalStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
-  const [frequency, setFrequency] = useState<'monthly' | 'annually'>('monthly');
+  const [frequency, setFrequency] = useState<'weekly' | 'biweekly' | 'monthly' | 'annually'>('monthly');
   const [years, setYears] = useState<number>(defaultYears);
   const [manualRateStr, setManualRateStr] = useState<string>('15');
   const [effectiveRate, setEffectiveRate] = useState<number>(Number(String(manualRateStr).replace(/,/g, '.')) / 100 || 0.15);
@@ -219,7 +222,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
   const P = useMemo(() => parseCurrency(principalStr), [principalStr]);
   const PMT = useMemo(() => parseCurrency(contributionStr), [contributionStr]);
   const r = effectiveRate;
-  const n = frequency === 'monthly' ? 12 : 1;
+  const n = frequency === 'weekly' ? 52 : frequency === 'biweekly' ? 26 : frequency === 'monthly' ? 12 : 1;
   const t = years;
 
   const { fvTotal, totalContrib, interestEarned } = useMemo(() => {
@@ -263,24 +266,34 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
             selectionColor={palette.green}
           />
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Contribution (£)</Text>
-          <FormInput
-            keyboardType="decimal-pad"
-            value={contributionStr}
-            onChangeText={setContributionStr}
-            inputStyle={{ minHeight: 48 }}
-            placeholder="0.00"
-            selectionColor={palette.green}
-          />
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Contribution (£)</Text>
+            <FormInput
+              keyboardType="decimal-pad"
+              value={contributionStr}
+              onChangeText={setContributionStr}
+              inputStyle={{ minHeight: 48 }}
+              placeholder="0.00"
+              selectionColor={palette.green}
+            />
+          </View>
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Frequency</Text>
-          <View style={styles.rowButtons}>
-            <TouchableOpacity onPress={() => setFrequency('monthly')} style={[styles.smallButton, frequency === 'monthly' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, { color: frequency === 'monthly' ? palette.white : theme.text }, frequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setFrequency('annually')} style={[styles.smallButton, frequency === 'annually' && styles.smallButtonActive]}>
-              <Text style={[styles.smallButtonText, { color: frequency === 'annually' ? palette.white : theme.text }, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
-            </TouchableOpacity>
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Frequency</Text>
+            <View style={styles.rowButtons}>
+              <TouchableOpacity onPress={() => setFrequency('weekly')} style={[styles.smallButton, frequency === 'weekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: frequency === 'weekly' ? palette.white : theme.text }, frequency === 'weekly' && styles.smallButtonTextActive]}>Weekly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setFrequency('biweekly')} style={[styles.smallButton, frequency === 'biweekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: frequency === 'biweekly' ? palette.white : theme.text }, frequency === 'biweekly' && styles.smallButtonTextActive]}>Bi-weekly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setFrequency('monthly')} style={[styles.smallButton, frequency === 'monthly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: frequency === 'monthly' ? palette.white : theme.text }, frequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setFrequency('annually')} style={[styles.smallButton, frequency === 'annually' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: frequency === 'annually' ? palette.white : theme.text }, frequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -288,17 +301,19 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
           <Text style={[styles.label, { color: theme.text }]}>Years</Text>
           <YearSelector options={yearsOptions} value={years} onChange={setYears} compact={isSmallPhone} />
 
-          <Text style={[styles.label, { color: theme.text, marginTop: spacing.md }]}>Rate (%)</Text>
-          <View style={styles.rateInputWrapper}>
-            <FormInput
-              keyboardType="decimal-pad"
-              value={manualRateStr}
-              onChangeText={setManualRateStr}
-              inputStyle={{ minHeight: 48 }}
-              placeholder="12"
-              selectionColor={palette.green}
-            />
-            <Text style={[styles.rateHint, { color: theme.textSecondary }]}>Enter annual % (e.g. 12 for 12%)</Text>
+          <View style={styles.formSection}>
+            <Text style={[styles.label, { color: theme.text }]}>Rate (%)</Text>
+            <View style={styles.rateInputWrapper}>
+              <FormInput
+                keyboardType="decimal-pad"
+                value={manualRateStr}
+                onChangeText={setManualRateStr}
+                inputStyle={{ minHeight: 48 }}
+                placeholder="12"
+                selectionColor={palette.green}
+              />
+              <Text style={[styles.rateHint, { color: theme.textSecondary }]}>Enter annual % (e.g. 12 for 12%)</Text>
+            </View>
           </View>
         </View>
       </View>

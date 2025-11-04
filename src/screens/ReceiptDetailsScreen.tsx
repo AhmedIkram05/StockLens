@@ -52,18 +52,7 @@ export default function ReceiptDetailsScreen() {
 
   const [selectedYears, setSelectedYears] = useState<typeof YEAR_OPTIONS[number]>(5);
   const [selectedFutureYears, setSelectedFutureYears] = useState<typeof YEAR_OPTIONS[number]>(5);
-  // Keep the amount as a string for reliable decimal input, parse to number on save
-  const [amountStr, setAmountStr] = useState<string>(initialAmount != null ? String(initialAmount) : '');
   const [amount, setAmount] = useState<number>(initialAmount ?? 0);
-
-  // Use editable amount (parsed from string) as the base for projections and displays
-  // Keep `amount` in sync with `amountStr` for computed projections
-  useEffect(() => {
-    const parsed = Number(String(amountStr).replace(/,/g, '.'));
-    setAmount(Number.isFinite(parsed) ? parsed : 0);
-  }, [amountStr]);
-
-  // (Confirm scan modal removed)
 
   const totalAmount = amount;
   const { userProfile } = useAuth();
@@ -465,10 +454,6 @@ type Styles = {
   deleteButtonCompact: ViewStyle;
   deleteIcon: TextStyle;
   deleteText: TextStyle;
-  saveButton: ViewStyle;
-  saveButtonText: TextStyle;
-  cancelButton: ViewStyle;
-  cancelButtonText: TextStyle;
 };
 
 // Stylesheet
@@ -486,7 +471,8 @@ const styles = StyleSheet.create<Styles>({
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: spacing.md,
     marginBottom: spacing.lg,
   },
@@ -627,29 +613,6 @@ const styles = StyleSheet.create<Styles>({
     marginRight: spacing.sm,
   },
   deleteText: {
-    color: palette.white,
-    ...typography.button,
-  },
-  saveButton: {
-    backgroundColor: palette.green,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  saveButtonText: {
-    color: palette.white,
-    ...typography.button,
-  },
-  cancelButton: {
-    backgroundColor: alpha.subtleBlack,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonText: {
     color: palette.white,
     ...typography.button,
   },
