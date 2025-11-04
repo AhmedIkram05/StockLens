@@ -206,7 +206,7 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
   // State for all inputs
   const [initialInvestmentStr, setInitialInvestmentStr] = useState<string>('0');
   const [interestRateStr, setInterestRateStr] = useState<string>('15');
-  const [compoundFrequency, setCompoundFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually'>('monthly');
+  const [compoundFrequency, setCompoundFrequency] = useState<'weekly' | 'biweekly' | 'monthly' | 'annually'>('monthly');
   const [yearsStr, setYearsStr] = useState<string>(String(defaultYears));
   const [monthsStr, setMonthsStr] = useState<string>('0');
   const [contributionStr, setContributionStr] = useState<string>(String(defaultContribution));
@@ -233,10 +233,9 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
   const PMT = useMemo(() => parseCurrency(contributionStr), [contributionStr]);
 
   // Compound frequency (n = times compounded per year)
-  const n = compoundFrequency === 'daily' ? 365 : 
-            compoundFrequency === 'weekly' ? 52 : 
-            compoundFrequency === 'monthly' ? 12 : 
-            compoundFrequency === 'quarterly' ? 4 : 1;
+  const n = compoundFrequency === 'weekly' ? 52 : 
+            compoundFrequency === 'biweekly' ? 26 : 
+            compoundFrequency === 'monthly' ? 12 : 1;
 
   // Contribution frequency (p = payments per year)
   const p = contributionFrequency === 'weekly' ? 52 : 
@@ -322,17 +321,14 @@ function CalculatorBody({ defaultContribution = 25, defaultYears = 5 }: { defaul
           <View style={styles.formSection}>
             <Text style={[styles.label, { color: theme.text }]}>Compound Frequency</Text>
             <View style={styles.rowButtons}>
-              <TouchableOpacity onPress={() => setCompoundFrequency('daily')} style={[styles.smallButton, compoundFrequency === 'daily' && styles.smallButtonActive]}>
-                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'daily' ? palette.white : theme.text }, compoundFrequency === 'daily' && styles.smallButtonTextActive]}>Daily</Text>
-              </TouchableOpacity>
               <TouchableOpacity onPress={() => setCompoundFrequency('weekly')} style={[styles.smallButton, compoundFrequency === 'weekly' && styles.smallButtonActive]}>
                 <Text style={[styles.smallButtonText, { color: compoundFrequency === 'weekly' ? palette.white : theme.text }, compoundFrequency === 'weekly' && styles.smallButtonTextActive]}>Weekly</Text>
               </TouchableOpacity>
+              <TouchableOpacity onPress={() => setCompoundFrequency('biweekly')} style={[styles.smallButton, compoundFrequency === 'biweekly' && styles.smallButtonActive]}>
+                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'biweekly' ? palette.white : theme.text }, compoundFrequency === 'biweekly' && styles.smallButtonTextActive]}>Bi-weekly</Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => setCompoundFrequency('monthly')} style={[styles.smallButton, compoundFrequency === 'monthly' && styles.smallButtonActive]}>
                 <Text style={[styles.smallButtonText, { color: compoundFrequency === 'monthly' ? palette.white : theme.text }, compoundFrequency === 'monthly' && styles.smallButtonTextActive]}>Monthly</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setCompoundFrequency('quarterly')} style={[styles.smallButton, compoundFrequency === 'quarterly' && styles.smallButtonActive]}>
-                <Text style={[styles.smallButtonText, { color: compoundFrequency === 'quarterly' ? palette.white : theme.text }, compoundFrequency === 'quarterly' && styles.smallButtonTextActive]}>Quarterly</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setCompoundFrequency('annually')} style={[styles.smallButton, compoundFrequency === 'annually' && styles.smallButtonActive]}>
                 <Text style={[styles.smallButtonText, { color: compoundFrequency === 'annually' ? palette.white : theme.text }, compoundFrequency === 'annually' && styles.smallButtonTextActive]}>Annually</Text>
