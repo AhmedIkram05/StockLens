@@ -17,7 +17,6 @@ import ProfileScreen from '../screens/SettingsScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import ReceiptDetailsScreen from '../screens/ReceiptDetailsScreen';
-import CalculatorScreen from '../screens/CalculatorScreen';
 import SplashScreen from '../screens/OnboardingScreen';
 import { useAuth } from '../contexts/AuthContext';
 import LockScreen from '../screens/LockScreen';
@@ -180,7 +179,6 @@ export default function AppNavigator() {
           ) : (
             <>
               <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-              <Stack.Screen name="Calculator" component={CalculatorScreen} />
               <Stack.Screen name="ReceiptDetails" component={ReceiptDetailsScreen} />
             </>
           )

@@ -511,19 +511,6 @@ export default function SummaryScreen() {
           />
         </View>
 
-        {/* Compound interest calculator CTA (navigates to full page) */}
-        <TouchableOpacity 
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('Calculator' as never)} 
-          accessibilityRole="button"
-          accessibilityLabel="Open compound interest calculator page"
-          style={[styles.calculatorCTA, { backgroundColor: theme.surface }]}>
-          <View style={{ width: '100%' }}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Compound interest calculator</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Open calculator page</Text>
-          </View>
-        </TouchableOpacity>
-
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Investment Insights</Text>
         </View>
@@ -836,15 +823,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radii.md,
     gap: spacing.xs,
-  },
-  calculatorCTA: {
-    width: '100%',
-    marginTop: spacing.md,
-    borderRadius: radii.xl,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.level2,
   },
   ctaButtonText: {
     ...typography.bodyStrong,
