@@ -293,7 +293,15 @@ export default function ScanScreen() {
 
         <CameraControls
           onCapture={takePicture}
-          bottomOffset={insets.bottom + (isSmallPhone ? spacing.lg : spacing.xl)}
+          // Make the bottom offset larger on tablets so the capture button
+          // doesn't sit too low compared to other controls. Use a named
+          // variable so the calculation is clearer and easier to tweak.
+          bottomOffset={(() => {
+            const base = insets.bottom;
+            if (isSmallPhone) return base + spacing.lg;
+            if (isTablet) return base + spacing.xxl + spacing.xl; // larger gap on tablets
+            return base + spacing.xl;
+          })()}
           horizontalPadding={contentHorizontalPadding}
         />
       </View>

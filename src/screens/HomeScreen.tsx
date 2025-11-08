@@ -5,7 +5,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../contexts/ThemeContext';
-import { radii, shadows, spacing, typography } from '../styles/theme';
+import { radii, shadows, spacing, typography, breakpoints } from '../styles/theme';
 import { palette } from '../styles/palette';
 import ScreenContainer from '../components/ScreenContainer';
 import ResponsiveContainer from '../components/ResponsiveContainer';
@@ -51,7 +51,11 @@ export default function HomeScreen() {
   const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone, width } = useBreakpoint();
   const scrollPadding = useMemo(() => ({ paddingBottom: sectionVerticalSpacing }), [sectionVerticalSpacing]);
   // contentWidth used for computing grid item sizes
-  const contentWidth = Math.min(width - contentHorizontalPadding * 2, isTablet ? 960 : width - contentHorizontalPadding * 2);
+  const contentWidth = width - contentHorizontalPadding * 2;
+  // compute a phone-reference card max-width so cards on tablets match phone visuals
+  const phoneReferenceScreenWidth = Math.min(width, breakpoints.largePhone);
+  const phoneContentPadding = spacing.md; // same padding used on phones in useBreakpoint
+  const phoneCardMaxWidth = phoneReferenceScreenWidth - phoneContentPadding * 2;
 
   const formatAmount = (amount: number) => formatCurrencyRounded(amount || 0);
 
@@ -82,7 +86,7 @@ export default function HomeScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {hasScans ? (
           <>
-            <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+            <ResponsiveContainer maxWidth={width - contentHorizontalPadding * 2}>
               <PageHeader>
                 <View style={styles.titleContainer}>
                   <Text style={[styles.titlePrefix, { color: theme.text }]}>{firstName}'s </Text>
@@ -132,7 +136,7 @@ export default function HomeScreen() {
               {(() => {
                 const preview = sortedReceipts.slice(0, 3);
                 const list = showAllHistory ? sortedReceipts : preview;
-                const cols = isTablet ? 2 : 1;
+                const cols = 1; // force single-column on tablets so cards match phone visuals
                 // Use percentage widths so items wrap cleanly without negative margins
                 const itemWidthPercent = `${100 / cols}%`;
 
@@ -176,7 +180,7 @@ export default function HomeScreen() {
           </>
         ) : (
           <>
-            <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+            <ResponsiveContainer maxWidth={width - contentHorizontalPadding * 2}>
               <PageHeader>
                 <View style={styles.titleContainer}>
                   <Text style={[styles.titlePrefix, { color: theme.text }]}>{firstName}'s </Text>

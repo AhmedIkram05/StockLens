@@ -294,7 +294,7 @@ export default function ReceiptDetailsScreen() {
           <BackButton onPress={() => navigation.goBack()} />
         </View>
 
-        <ResponsiveContainer maxWidth={isTablet ? 960 : width - contentHorizontalPadding * 2}>
+  <ResponsiveContainer maxWidth={width - contentHorizontalPadding * 2}>
           <>
             <View style={{ width: '100%' }}>
               <ReceiptCard
