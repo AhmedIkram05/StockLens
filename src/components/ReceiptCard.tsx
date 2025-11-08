@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 
@@ -10,13 +10,14 @@ type Props = {
   merchant?: string;
   time?: string;
   onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function ReceiptCard({ image, amount, merchant, time, onPress }: Props) {
+export default function ReceiptCard({ image, amount, merchant, time, onPress, style }: Props) {
   const { theme } = useTheme();
 
   return (
-    <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface }]} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface }, style]} onPress={onPress} activeOpacity={0.85}>
       {image ? <Image source={{ uri: image }} style={styles.image} /> : <View style={styles.placeholder} />}
       <View style={styles.info}>
         <Text style={[styles.amount, { color: theme.text }]}>{amount}</Text>

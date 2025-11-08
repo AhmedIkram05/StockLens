@@ -410,7 +410,7 @@ export default function SummaryScreen() {
         </PageHeader>
 
         {receiptsScanned === 0 ? (
-          <ResponsiveContainer maxWidth={isTablet ? 960 : screenWidth - contentHorizontalPadding * 2}>
+          <ResponsiveContainer maxWidth={screenWidth - contentHorizontalPadding * 2}>
             <EmptyStateWithOnboarding
               iconName="stats-chart-outline"
               title="No Data Yet"
@@ -421,8 +421,8 @@ export default function SummaryScreen() {
           </ResponsiveContainer>
         ) : (
           <>
-        {/* Center and cap content width so tablet layout matches the rest of the app */}
-        <ResponsiveContainer maxWidth={isTablet ? 960 : screenWidth - contentHorizontalPadding * 2}>
+  {/* Center content width so tablet layout matches the rest of the app */}
+  <ResponsiveContainer maxWidth={screenWidth - contentHorizontalPadding * 2}>
 
         {/* Full-width 20-year projection card */}
         <StatCard
