@@ -1,3 +1,33 @@
+/**
+ * AppNavigator
+ * 
+ * Root navigation structure for the StockLens app using React Navigation v7.
+ * Implements a two-level navigation hierarchy:
+ * 1. Stack Navigator (root) - handles auth flow and modal screens
+ * 2. Bottom Tab Navigator - main app with 4 tabs
+ * 
+ * Navigation Flow:
+ * - Unauthenticated: Splash → Login/SignUp
+ * - Authenticated & Locked: LockScreen (biometric gate)
+ * - Authenticated & Unlocked: MainTabs → ReceiptDetails (modal)
+ * 
+ * Type Safety:
+ * - RootStackParamList: Defines all stack screen params
+ * - MainTabParamList: Defines all tab screen params
+ * 
+ * Features:
+ * - Automatic biometric unlock attempt when app opens locked
+ * - Theme-aware tab bar with SafeAreaView edges
+ * - Smooth horizontal slide transitions (200ms)
+ * - Loading state with ActivityIndicator during auth check
+ * 
+ * Tab Structure:
+ * 1. Dashboard - Receipt history and spending overview
+ * 2. Scan - Camera for capturing receipts
+ * 3. Summary - Analytics and insights
+ * 4. Settings - User preferences and account
+ */
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,13 +51,21 @@ import SplashScreen from '../screens/OnboardingScreen';
 import { useAuth } from '../contexts/AuthContext';
 import LockScreen from '../screens/LockScreen';
 
+/** Root stack navigation parameter list - defines all stack screens and their params */
 export type RootStackParamList = {
+  /** Onboarding/splash screen shown before authentication */
   Splash: undefined;
+  /** Login screen for existing users */
   Login: undefined;
+  /** Registration screen for new users */
   SignUp: undefined;
+  /** Biometric lock screen shown when app is locked */
   Lock: undefined;
+  /** Main bottom tab navigator (post-auth) */
   MainTabs: undefined;
+  /** Calculator screen (future feature, currently unused) */
   Calculator: undefined;
+  /** Receipt details modal with projection calculator */
   ReceiptDetails: {
     receiptId: string;
     totalAmount: number;
@@ -36,16 +74,28 @@ export type RootStackParamList = {
   };
 };
 
+/** Bottom tab navigation parameter list - defines all tab screens */
 export type MainTabParamList = {
+  /** Home/dashboard tab showing receipt history */
   Dashboard: undefined;
+  /** Scan tab with camera for capturing receipts */
   Scan: undefined;
+  /** Summary tab with analytics and insights */
   Summary: undefined;
+  /** Settings tab with user preferences */
   Settings: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/**
+ * MainTabNavigator
+ * 
+ * Bottom tab bar with 4 tabs: Dashboard, Scan, Summary, Settings.
+ * Uses Ionicons for tab icons (filled when active, outlined when inactive).
+ * Tab bar is theme-aware and positioned absolutely with SafeAreaView for notches.
+ */
 function MainTabNavigator() {
   const { theme, isDark } = useTheme();
 
@@ -133,6 +183,24 @@ function MainTabNavigator() {
   );
 }
 
+/**
+ * AppNavigator (Root Navigator)
+ * 
+ * Main navigation component wrapped in NavigationContainer.
+ * Handles authentication state and conditional rendering:
+ * - Loading: Shows ActivityIndicator
+ * - Unauthenticated: Shows Splash → Login/SignUp flow
+ * - Authenticated & Locked: Shows LockScreen (biometric gate)
+ * - Authenticated & Unlocked: Shows MainTabs + ReceiptDetails modal
+ * 
+ * Auto-unlock behavior:
+ * - When user is authenticated but locked, automatically attempts biometric unlock
+ * - Uses useEffect to trigger unlock on mount if conditions are met
+ * 
+ * Transition animations:
+ * - Horizontal iOS-style slide transitions
+ * - 200ms duration for smooth navigation
+ */
 export default function AppNavigator() {
   const { user, loading, locked, unlockWithBiometrics } = useAuth();
   const { theme } = useTheme();

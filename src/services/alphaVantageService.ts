@@ -1,12 +1,65 @@
+/**
+ * Alpha Vantage Service - Stock market data fetching with aggressive caching
+ * 
+ * Features:
+ * - Two-tier caching: in-memory (Map) + persistent (SQLite alpha_cache table)
+ * - Automatic background refresh for stale data (returns stale data immediately)
+ * - Retry logic with exponential backoff (3 attempts)
+ * - Deduplication of concurrent requests (inFlightRefresh)
+ * - TTL-based cache expiration (30 days monthly, 24 hours daily, 5 min quotes)
+ * 
+ * API Functions:
+ * - getMonthlyAdjusted: Fetch monthly OHLCV data (for multi-year projections)
+ * - getDailyAdjusted: Fetch daily OHLCV data (for 1-year projections)
+ * - getQuote: Fetch real-time stock quote
+ * - getCachedMonthlyAdjusted: Read from cache without network (offline support)
+ * - getCachedDailyAdjusted: Read from cache without network (offline support)
+ * 
+ * Integration:
+ * - API key from EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY or ALPHA_VANTAGE_KEY
+ * - Emits 'alpha_cache_hit' and 'historical-updated' events via eventBus
+ * - Used by stockService (dataService.ts) for all stock data needs
+ * 
+ * Cache Strategy:
+ * 1. Check in-memory cache (fastest)
+ * 2. Check SQLite alpha_cache (persistent across app restarts)
+ * 3. If fresh: return cached data
+ * 4. If stale: return cached data + trigger background refresh
+ * 5. If missing: fetch from API, cache, and return
+ */
+
 import Constants from 'expo-constants';
 import { emit } from './eventBus';
 import { databaseService } from './database';
 
+/**
+ * MemCacheEntry - In-memory cache entry structure
+ * 
+ * @property value - Cached value (OHLCV[] or quote object)
+ * @property expiresAt - Timestamp (ms) when entry expires
+ */
 type MemCacheEntry = { value: any; expiresAt: number };
+/**
+ * In-memory cache for fast lookups
+ */
 const serviceMemCache = new Map<string, MemCacheEntry>();
 
+/**
+ * Tracks in-flight background refresh requests to prevent duplicates
+ */
 const inFlightRefresh: Record<string, Promise<any> | undefined> = {};
 
+/**
+ * OHLCV type - Historical price data point
+ * 
+ * @property date - Trading date (YYYY-MM-DD format)
+ * @property open - Opening price
+ * @property high - Highest price
+ * @property low - Lowest price
+ * @property close - Closing price
+ * @property adjustedClose - Adjusted closing price (accounts for splits/dividends)
+ * @property volume - Trading volume (optional)
+ */
 export type OHLCV = {
   date: string; // YYYY-MM-DD
   open: number;
@@ -17,8 +70,21 @@ export type OHLCV = {
   volume?: number;
 };
 
+/**
+ * Alpha Vantage API base URL
+ */
 const API_BASE = 'https://www.alphavantage.co/query';
 
+/**
+ * Get Alpha Vantage API key from environment/config
+ * 
+ * @returns API key string (empty if not configured)
+ * 
+ * Priority:
+ * 1. expo-constants extra.EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY
+ * 2. process.env.EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY
+ * 3. process.env.ALPHA_VANTAGE_KEY
+ */
 function getApiKey(): string {
   return (
     Constants.expoConfig?.extra?.EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY ||
@@ -28,6 +94,19 @@ function getApiKey(): string {
   );
 }
 
+/**
+ * Fetch JSON from Alpha Vantage API with retry logic
+ * 
+ * @param url - Full API URL with parameters
+ * @returns Parsed JSON response
+ * 
+ * Features:
+ * - 3 retry attempts with exponential backoff (250ms, 500ms, 1000ms)
+ * - Validates HTTP status code
+ * - Checks for Alpha Vantage error messages ('Error Message', 'Note')
+ * 
+ * @throws Error if all retries fail or API returns error
+ */
 async function fetchJson(url: string) {
   let lastErr: any = null;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -54,6 +133,14 @@ async function fetchJson(url: string) {
 
 /**
  * Parse monthly adjusted time series returned by Alpha Vantage into OHLCV[]
+ * 
+ * @param json - Raw API response
+ * @returns Array of OHLCV records sorted by date (oldest first)
+ * 
+ * Extracts:
+ * - 1. open, 2. high, 3. low, 4. close, 5. adjusted close, 6. volume
+ * 
+ * @throws Error if response structure is unexpected
  */
 function parseMonthlyAdjusted(json: any): OHLCV[] {
   const series = json['Monthly Adjusted Time Series'] || json['Monthly Time Series'];
@@ -77,6 +164,14 @@ function parseMonthlyAdjusted(json: any): OHLCV[] {
 
 /**
  * Parse daily adjusted time series returned by Alpha Vantage into OHLCV[]
+ * 
+ * @param json - Raw API response
+ * @returns Array of OHLCV records sorted by date (oldest first)
+ * 
+ * Extracts:
+ * - 1. open, 2. high, 3. low, 4. close, 5. adjusted close, 6. volume
+ * 
+ * @throws Error if response structure is unexpected
  */
 function parseDailyAdjusted(json: any): OHLCV[] {
   const series = json['Time Series (Daily)'] || json['Daily Time Series'] || json['Time Series (Daily)'];
@@ -98,7 +193,35 @@ function parseDailyAdjusted(json: any): OHLCV[] {
     .sort((a, b) => (a.date > b.date ? 1 : -1));
 }
 
+/**
+ * alphaVantageService - Stock market data API client
+ * 
+ * Methods:
+ * - getMonthlyAdjusted: Fetch/cache monthly OHLCV (30-day TTL)
+ * - getDailyAdjusted: Fetch/cache daily OHLCV (24-hour TTL)
+ * - getQuote: Fetch/cache real-time quote (5-min TTL)
+ * - getCachedMonthlyAdjusted: Offline cache read (no network)
+ * - getCachedDailyAdjusted: Offline cache read (no network)
+ */
 export const alphaVantageService = {
+  /**
+   * Get monthly adjusted OHLCV data for a stock symbol
+   * 
+   * @param symbol - Stock ticker (e.g., 'AAPL', 'GOOGL')
+   * @returns Array of monthly OHLCV records
+   * 
+   * Cache Strategy:
+   * 1. Check in-memory cache (TTL: 30 days)
+   * 2. Check SQLite alpha_cache table
+   * 3. If fresh (< 30 days): return cached data
+   * 4. If stale: return cached data + trigger background refresh
+   * 5. If missing: fetch from API, cache to SQLite + memory, return
+   * 
+   * Features:
+   * - Emits 'alpha_cache_hit' event on cache hits
+   * - Persists raw JSON for offline use
+   * - Background refresh keeps data fresh without blocking UI
+   */
   getMonthlyAdjusted: async (symbol: string): Promise<OHLCV[]> => {
   const cacheKey = `av:monthly:${symbol}`;
   // Try in-memory cache first
@@ -158,8 +281,19 @@ export const alphaVantageService = {
     return parsed;
   },
 
-  // Read cached daily adjusted raw JSON from the durable alpha_cache table without network.
-  // Returns parsed OHLCV[] when present and parsable, otherwise null.
+  /**
+   * Read cached daily adjusted OHLCV from SQLite without network
+   * 
+   * @param symbol - Stock ticker
+   * @returns Array of OHLCV records or null if not cached
+   * 
+   * Features:
+   * - Offline support (no API call)
+   * - Emits 'alpha_cache_hit' event
+   * - Returns stale data without checking TTL
+   * 
+   * Usage: For offline mode or when network is unavailable
+   */
   getCachedDailyAdjusted: async (symbol: string): Promise<OHLCV[] | null> => {
     try {
       const rows = await databaseService.executeQuery(
@@ -177,8 +311,18 @@ export const alphaVantageService = {
     }
   },
 
-  // Read cached monthly adjusted raw JSON from the durable alpha_cache table without network.
-  // Returns parsed OHLCV[] when present and parsable, otherwise null.
+  /**
+   * Read cached monthly adjusted OHLCV from SQLite without network
+   * 
+   * @param symbol - Stock ticker
+   * @returns Array of OHLCV records or null if not cached
+   * 
+   * Features:
+   * - Offline support (no API call)
+   * - Returns stale data without checking TTL
+   * 
+   * Usage: For offline mode or when network is unavailable
+   */
   getCachedMonthlyAdjusted: async (symbol: string): Promise<OHLCV[] | null> => {
     try {
       const rows = await databaseService.executeQuery(
@@ -195,6 +339,24 @@ export const alphaVantageService = {
     }
   },
 
+  /**
+   * Get daily adjusted OHLCV data for a stock symbol
+   * 
+   * @param symbol - Stock ticker (e.g., 'TSLA', 'NVDA')
+   * @returns Array of daily OHLCV records (full history with outputsize=full)
+   * 
+   * Cache Strategy:
+   * 1. Check in-memory cache (TTL: 24 hours)
+   * 2. Check SQLite alpha_cache table
+   * 3. If fresh (< 24 hours): return cached data
+   * 4. If stale: return cached data + trigger background refresh
+   * 5. If missing: fetch from API with outputsize=full, cache, return
+   * 
+   * Features:
+   * - Emits 'alpha_cache_hit' event on cache hits
+   * - Persists raw JSON for offline use
+   * - Background refresh keeps data fresh without blocking UI
+   */
   getDailyAdjusted: async (symbol: string): Promise<OHLCV[]> => {
     const cacheKey = `av:daily:${symbol}`;
 
@@ -252,6 +414,27 @@ export const alphaVantageService = {
     return parsed;
   },
 
+  /**
+   * Get real-time stock quote
+   * 
+   * @param symbol - Stock ticker
+   * @returns Quote object with price and timestamp
+   * 
+   * Cache Strategy:
+   * 1. Check in-memory cache (TTL: 5 minutes)
+   * 2. Check SQLite alpha_cache table
+   * 3. If fresh (< 5 min): return cached quote
+   * 4. If stale: return cached quote + trigger background refresh
+   * 5. If missing: fetch from API, cache, return
+   * 
+   * Response Format:
+   * { price: number, timestamp?: string }
+   * 
+   * Features:
+   * - Short TTL (5 min) for near-real-time quotes
+   * - Handles multiple Alpha Vantage response formats
+   * - Background refresh for stale quotes
+   */
   getQuote: async (symbol: string): Promise<{ price: number; timestamp?: string }> => {
     const key = getApiKey();
     if (!key) throw new Error('Alpha Vantage API key not configured. Set ALPHA_VANTAGE_KEY in expo extra or environment.');
@@ -345,7 +528,20 @@ export const alphaVantageService = {
   },
 };
 
-// Background refresh helpers
+/**
+ * Background refresh helper for monthly data
+ * 
+ * @param symbol - Stock ticker
+ * @param cacheKey - In-memory cache key
+ * 
+ * Features:
+ * - Deduplicates concurrent refresh requests (inFlightRefresh)
+ * - Fetches fresh data from API
+ * - Updates SQLite cache and in-memory cache
+ * - Emits 'historical-updated' event when complete
+ * 
+ * Usage: Called automatically when stale data is detected
+ */
 async function backgroundRefreshMonthly(symbol: string, cacheKey: string) {
   try {
     if (inFlightRefresh[cacheKey]) return inFlightRefresh[cacheKey];
@@ -374,6 +570,20 @@ async function backgroundRefreshMonthly(symbol: string, cacheKey: string) {
   }
 }
 
+/**
+ * Background refresh helper for daily data
+ * 
+ * @param symbol - Stock ticker
+ * @param cacheKey - In-memory cache key
+ * 
+ * Features:
+ * - Deduplicates concurrent refresh requests (inFlightRefresh)
+ * - Fetches fresh data from API with outputsize=full
+ * - Updates SQLite cache and in-memory cache
+ * - Emits 'historical-updated' event when complete
+ * 
+ * Usage: Called automatically when stale data is detected
+ */
 async function backgroundRefreshDaily(symbol: string, cacheKey: string) {
   try {
     if (inFlightRefresh[cacheKey]) return inFlightRefresh[cacheKey];
@@ -402,8 +612,12 @@ async function backgroundRefreshDaily(symbol: string, cacheKey: string) {
   }
 }
 
-// Expose a helper used above for immediate fetch-only quote refresh
-// (keeps the main getQuote implementation small)
+/**
+ * Internal helper for immediate quote fetch (used by background refresh)
+ * 
+ * Exposed as (alphaVantageService as any).getQuoteFetchOnly
+ * Not intended for external use - use getQuote() instead
+ */
 (alphaVantageService as any).getQuoteFetchOnly = async (symbol: string) => {
   const key = getApiKey();
   const url = `${API_BASE}?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(key)}`;

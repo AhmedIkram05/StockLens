@@ -1,3 +1,15 @@
+/**
+ * YearSelector Component
+ * 
+ * An animated segmented control for selecting time horizons (e.g., 1Y, 5Y, 10Y, 20Y).
+ * Features a sliding green pill indicator that smoothly animates between options.
+ * 
+ * Used in investment projection screens to allow users to adjust the time period for calculations.
+ * The pill indicator animates to the selected option using React Native Animated API (220ms timing).
+ * 
+ * Supports compact mode for smaller displays and generic number type for flexibility.
+ */
+
 import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { View, TouchableOpacity, Text, Animated, ViewStyle, StyleProp } from 'react-native';
 import { spacing, typography, radii, shadows } from '../styles/theme';
@@ -5,13 +17,23 @@ import { palette, alpha } from '../styles/palette';
 import { useTheme } from '../contexts/ThemeContext';
 
 type Props<T extends number> = {
+  /** Array of year options (e.g., [1, 5, 10, 20]) */
   options: T[];
+  /** Currently selected year value */
   value: T;
+  /** Callback or setState function triggered when selection changes */
   onChange: ((v: T) => void) | Dispatch<SetStateAction<T>>;
+  /** When true, uses smaller padding and sizing */
   compact?: boolean;
+  /** Optional custom styling for the container */
   style?: StyleProp<ViewStyle>;
 };
 
+/**
+ * Renders a segmented control with animated pill indicator.
+ * Pill position is calculated based on selected index and animates smoothly on change.
+ * Each option is rendered as a pressable segment with "XY" label format.
+ */
 export default function YearSelector<T extends number = number>({ options, value, onChange, compact = false, style }: Props<T>) {
   const { theme } = useTheme();
   const containerWidthRef = useRef<number>(0);

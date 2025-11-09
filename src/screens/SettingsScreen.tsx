@@ -1,3 +1,21 @@
+/**
+ * SettingsScreen
+ * 
+ * User preferences and account management screen.
+ * Features:
+ * - User profile display (name, email)
+ * - Dark mode toggle
+ * - Biometric authentication (Face ID/Touch ID) toggle
+ * - Data management (clear local receipts, delete account)
+ * - App information (version, support)
+ * - Sign out functionality
+ * 
+ * Uses native Alert dialogs for destructive actions (sign out, clear data, delete account).
+ * Biometric settings are persisted using expo-secure-store.
+ * 
+ * Data clearing only removes local receipts; Firebase data remains intact unless account is deleted.
+ */
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
@@ -10,6 +28,10 @@ import { receiptService } from '../services/dataService';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
+/**
+ * Renders the settings screen with user preferences and account actions.
+ * Loads biometric enabled state on mount and syncs with secure storage on changes.
+ */
 export default function SettingsScreen() {
   const { signOutUser, userProfile } = useAuth();
   const { mode, setMode, isDark, theme } = useTheme();
@@ -189,8 +211,5 @@ const styles = StyleSheet.create({
   },
   arrow: {
     ...typography.bodyStrong,
-  },
-  redText: {
-    color: '#FF3B30',
   },
 });

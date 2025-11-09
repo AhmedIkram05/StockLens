@@ -1,3 +1,20 @@
+/**
+ * HomeScreen (Dashboard Tab)
+ * 
+ * The main dashboard displaying user's receipt history and spending summary.
+ * Features:
+ * - Welcome header with user's first name
+ * - Total spending stat card
+ * - Sortable receipt list (by date or amount)
+ * - Empty state with onboarding for new users
+ * - Navigation to receipt details and scan screen
+ * 
+ * Sorting: Users can sort receipts by date (newest/oldest) or amount (highest/lowest).
+ * The list shows first 3 receipts by default with "Show more" option.
+ * 
+ * Uses Firebase Firestore for real-time receipt syncing via useReceipts hook.
+ */
+
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
@@ -24,6 +41,11 @@ type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
   StackNavigationProp<RootStackParamList>
 >;
+
+/**
+ * Renders the dashboard with spending stats and receipt history.
+ * Calculates total spending from all receipts and provides sorting controls.
+ */
 export default function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const [showAllHistory, setShowAllHistory] = useState(false);

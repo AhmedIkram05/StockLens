@@ -1,3 +1,24 @@
+/**
+ * LoginScreen
+ * 
+ * User authentication screen for existing users.
+ * Features:
+ * - Email and password input fields
+ * - Firebase Authentication integration
+ * - Biometric prompt after successful login (Face ID/Touch ID)
+ * - Navigation to SignUp screen for new users
+ * - Responsive layout adapting to phone/tablet sizes
+ * 
+ * Flow:
+ * 1. User enters email and password
+ * 2. App calls authService.signIn() with Firebase Auth
+ * 3. On success, prompts user to enable biometric authentication
+ * 4. Marks user as signed in via AuthContext
+ * 5. App navigator redirects to main tabs
+ * 
+ * Error handling displays native alerts for validation and auth failures.
+ */
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +36,10 @@ import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
+/**
+ * Renders the login form with email/password inputs and biometric setup.
+ * Validates inputs and handles Firebase authentication errors.
+ */
 export default function LoginScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, isSmallPhone, sectionVerticalSpacing, isTablet, orientation } = useBreakpoint();

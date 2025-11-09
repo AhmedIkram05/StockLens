@@ -1,7 +1,54 @@
+/**
+ * Event Bus - Simple pub/sub system for cross-component communication
+ * 
+ * Features:
+ * - Lightweight event emitter pattern
+ * - Type-agnostic payloads (any data structure)
+ * - Automatic cleanup (unsubscribe function returned)
+ * - Error isolation (listener errors don't crash other listeners)
+ * 
+ * Events Used in App:
+ * - 'receipts-changed': Emitted when receipts are added/deleted (payload: { userId })
+ * - 'alpha_cache_hit': Emitted when stock data served from cache
+ * - 'historical-updated': Emitted when stock data refreshed in background
+ * 
+ * Integration:
+ * - Used by dataService to notify UI of receipt changes
+ * - Used by alphaVantageService to track cache hits
+ * - useReceipts hook subscribes to 'receipts-changed' for auto-refresh
+ * 
+ * Usage:
+ * const unsubscribe = subscribe('receipts-changed', (payload) => { ... });
+ * emit('receipts-changed', { userId: 'abc123' });
+ * unsubscribe(); // cleanup on unmount
+ */
+
+/**
+ * Listener function type
+ * 
+ * @param payload - Optional event data (any type)
+ */
 type Listener = (payload?: any) => void;
 
+/**
+ * Internal registry of event listeners
+ * 
+ * Map of event name → Set of listener functions
+ */
 const listeners: Record<string, Set<Listener>> = {};
 
+/**
+ * Subscribe to an event
+ * 
+ * @param event - Event name (e.g., 'receipts-changed')
+ * @param fn - Listener function to call when event is emitted
+ * @returns Unsubscribe function (call to remove listener)
+ * 
+ * Features:
+ * - Automatically creates listener set if event doesn't exist
+ * - Unsubscribe cleans up empty listener sets
+ * - Can subscribe multiple listeners to same event
+ */
 export const subscribe = (event: string, fn: Listener) => {
   if (!listeners[event]) listeners[event] = new Set();
   listeners[event].add(fn);
@@ -11,6 +58,20 @@ export const subscribe = (event: string, fn: Listener) => {
   };
 };
 
+/**
+ * Emit an event to all subscribed listeners
+ * 
+ * @param event - Event name (e.g., 'receipts-changed')
+ * @param payload - Optional data to pass to listeners
+ * 
+ * Features:
+ * - Calls all listeners synchronously in registration order
+ * - Catches and logs listener errors (prevents one bad listener from breaking others)
+ * - No-op if no listeners registered for event
+ * 
+ * Usage:
+ * emit('receipts-changed', { userId: auth.currentUser.uid });
+ */
 export const emit = (event: string, payload?: any) => {
   const set = listeners[event];
   if (!set) return;

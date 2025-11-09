@@ -1,3 +1,13 @@
+/**
+ * FormInput Component
+ * 
+ * A styled text input component with theme-aware appearance and consistent spacing.
+ * Wraps React Native's TextInput with standardized styling for forms throughout the app.
+ * 
+ * Automatically applies theme colors for background, text, border, and placeholder.
+ * Supports all standard TextInput props (placeholder, secureTextEntry, keyboardType, etc.).
+ */
+
 import React from 'react';
 import { View, TextInput, StyleSheet, TextInputProps, TextStyle, ViewStyle } from 'react-native';
 import { palette, alpha } from '../styles/palette';
@@ -5,10 +15,16 @@ import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
 type Props = TextInputProps & {
+  /** Optional custom styling for the container View */
   containerStyle?: ViewStyle;
+  /** Optional custom styling for the TextInput itself */
   inputStyle?: TextStyle;
 };
 
+/**
+ * Renders a themed text input with consistent styling.
+ * Inherits all standard TextInput props (value, onChangeText, placeholder, etc.).
+ */
 export default function FormInput({ containerStyle, inputStyle, style, ...rest }: Props) {
   const { theme } = useTheme();
   

@@ -1,3 +1,26 @@
+/**
+ * LockScreen
+ * 
+ * Biometric authentication gate shown when app returns from background (if enabled).
+ * Features:
+ * - Face ID / Touch ID authentication button
+ * - Fallback password entry field
+ * - "Forgot password" flow sending reset email
+ * - User profile display (name, email)
+ * 
+ * Flow:
+ * 1. User returns to app after backgrounding
+ * 2. LockScreen appears if biometric auth is enabled
+ * 3. User can:
+ *    a) Authenticate with Face ID/Touch ID (calls unlockWithBiometrics)
+ *    b) Enter password manually (calls unlockWithCredentials)
+ *    c) Send password reset email via forgot password flow
+ * 4. On successful auth, AuthContext unlocks and navigates to main app
+ * 
+ * Credentials are securely stored using expo-secure-store.
+ * Password reset uses Firebase Auth's sendPasswordResetEmail.
+ */
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
@@ -12,6 +35,10 @@ import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
+/**
+ * Renders the biometric lock screen with Face ID/password unlock options.
+ * Handles biometric authentication, credential validation, and password reset flows.
+ */
 export default function LockScreen() {
   const { unlockWithBiometrics, unlockWithCredentials, user, userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
