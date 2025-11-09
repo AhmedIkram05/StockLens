@@ -12,13 +12,13 @@ import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
 import ReceiptCard from '../components/ReceiptCard';
 import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding';
+import IconValue from '../components/IconValue';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import useReceipts from '../hooks/useReceipts';
 import { formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import ReceiptsSorter, { SortBy, SortDirection } from '../components/ReceiptsSorter';
-import { Ionicons } from '@expo/vector-icons';
 
 type HomeNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
@@ -89,10 +89,13 @@ export default function HomeScreen() {
             <View style={styles.statsContainer}>
               <StatCard
                 value={
-                  <View style={styles.valueWithIcon}>
-                    <Ionicons name="cash-outline" size={28} color={theme.surface} />
-                    <Text style={[{ color: theme.textOnColor, fontSize: 28 }]}>{formatAmount(totalMoneySpentDerived)}</Text>
-                  </View>
+                  <IconValue
+                    iconName="cash-outline"
+                    iconSize={28}
+                    iconColor={theme.surface}
+                    value={formatAmount(totalMoneySpentDerived)}
+                    valueStyle={{ color: theme.textOnColor, fontSize: 28 }}
+                  />
                 }
                 label="Total Money Spent"
                 subtitle="Across all scanned receipts"
@@ -100,10 +103,13 @@ export default function HomeScreen() {
               />
               <StatCard
                 value={
-                  <View style={styles.valueWithIcon}>
-                    <Ionicons name="document-text-outline" size={28} color={theme.surface} />
-                    <Text style={[{ color: theme.textOnColor, fontSize: 28 }]}>{allScans.length}</Text>
-                  </View>
+                  <IconValue
+                    iconName="document-text-outline"
+                    iconSize={28}
+                    iconColor={theme.surface}
+                    value={allScans.length}
+                    valueStyle={{ color: theme.textOnColor, fontSize: 28 }}
+                  />
                 }
                 label="Receipts Scanned"
                 variant="blue"
@@ -240,12 +246,6 @@ const styles = StyleSheet.create({
   emptyStateContainer: {
     paddingBottom: spacing.xxl,
     alignItems: 'center',
-  },
-  valueWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
