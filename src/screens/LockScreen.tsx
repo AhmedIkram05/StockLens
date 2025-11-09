@@ -79,7 +79,7 @@ export default function LockScreen() {
   return (
     <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <View style={[styles.inner, { paddingHorizontal: 0 }]}> 
-        <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
+        <View style={styles.logoContainer}>
           <Logo />
         </View>
 
@@ -126,9 +126,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  logoContainerCompact: {
-    // allow logo to size itself on small phones
   },
   bioButton: { backgroundColor: palette.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
   or: { textAlign: 'center', marginVertical: spacing.md },

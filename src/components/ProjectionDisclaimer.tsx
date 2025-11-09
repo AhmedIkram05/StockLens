@@ -7,7 +7,6 @@ import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 
 interface ProjectionDisclaimerProps {
-  // No props needed, but can add if customization is required later
 }
 
 export default function ProjectionDisclaimer({}: ProjectionDisclaimerProps) {

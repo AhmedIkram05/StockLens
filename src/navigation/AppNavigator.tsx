@@ -71,7 +71,7 @@ function MainTabNavigator() {
         options={{
           title: 'Dashboard',
           tabBarLabel: 'Dashboard',
-          headerShown: false, // Hide the header for Dashboard
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
             <Ionicons
               name={focused ? 'grid' : 'grid-outline'}
@@ -103,7 +103,7 @@ function MainTabNavigator() {
         options={{
           title: 'Summary',
           tabBarLabel: 'Summary',
-          headerShown: false, // Hide the header for Summary
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
             <Ionicons
               name={focused ? 'bar-chart' : 'bar-chart-outline'}
@@ -119,7 +119,7 @@ function MainTabNavigator() {
         options={{
           title: 'Settings',
           tabBarLabel: 'Settings',
-          headerShown: false, // Hide the header for Settings
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
             <Ionicons
               name={focused ? 'settings' : 'settings-outline'}
@@ -137,17 +137,14 @@ export default function AppNavigator() {
   const { user, loading, locked, unlockWithBiometrics } = useAuth();
   const { theme } = useTheme();
 
-  // If a signed-in user exists and the UI is locked, try to auto-unlock using biometrics once
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         if (!loading && user && locked) {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           unlockWithBiometrics();
         }
       } catch (err) {
-        // swallow
       }
     })();
     return () => { mounted = false; };
@@ -173,7 +170,6 @@ export default function AppNavigator() {
         }}
       >
         {user ? (
-          // If user is signed in but locked, show LockScreen; otherwise show main app
           locked ? (
             <Stack.Screen name="Lock" component={LockScreen} />
           ) : (

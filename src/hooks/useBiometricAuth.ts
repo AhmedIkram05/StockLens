@@ -16,21 +16,11 @@ export async function isBiometricAvailable(): Promise<boolean> {
 
 export async function authenticateBiometric(promptMessage = 'Authenticate'): Promise<{ success: boolean; error?: string }> {
   try {
-    // check available authentication types (useful for debugging and ensuring
-    // the device supports Face ID / Touch ID). This does not change behavior
-    // but helps determine why the system may be showing passcode only.
     try {
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      // types is an array of numbers; 1 == fingerprint, 2 == facial (platform dependent)
-      // eslint-disable-next-line no-console
       console.debug('Supported auth types:', types);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
 
-    // Do not explicitly set a fallback label here. Let the OS decide whether to
-    // show Face ID / Touch ID or device passcode. If you want to force biometrics
-    // only (no passcode fallback), set `disableDeviceFallback: true`.
     const res = await LocalAuthentication.authenticateAsync({ promptMessage });
     if (res.success) return { success: true };
     return { success: false, error: res.error ?? 'Authentication failed' };
@@ -39,9 +29,6 @@ export async function authenticateBiometric(promptMessage = 'Authenticate'): Pro
   }
 }
 
-// Store simple email/password credentials (encrypted by SecureStore). For production consider
-// storing a short-lived refresh token or a server-side key. This project uses credentials for
-// convenience in the academic scope.
 export async function saveBiometricCredentials(email: string, password: string): Promise<void> {
   const payload = JSON.stringify({ email, password });
   await SecureStore.setItemAsync(BIOMETRIC_CREDENTIALS_KEY, payload, {

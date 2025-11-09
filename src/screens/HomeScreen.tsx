@@ -1,12 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../contexts/ThemeContext';
-import { radii, shadows, spacing, typography, breakpoints } from '../styles/theme';
-import { palette } from '../styles/palette';
+import { radii, spacing, typography } from '../styles/theme';
 import ScreenContainer from '../components/ScreenContainer';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import PageHeader from '../components/PageHeader';
@@ -15,7 +14,7 @@ import ReceiptCard from '../components/ReceiptCard';
 import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import useReceipts from '../hooks/useReceipts';
-import { formatCurrencyGBP, formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
+import { formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
 import ReceiptsSorter, { SortBy, SortDirection } from '../components/ReceiptsSorter';
@@ -33,9 +32,8 @@ export default function HomeScreen() {
   const { theme } = useTheme();
 
   const { user } = useAuth();
-  const { receipts: allScans, loading: receiptsLoading, error: receiptsError } = useReceipts(user?.uid);
+  const { receipts: allScans } = useReceipts(user?.uid);
 
-  // Extract first name from user profile
   const { userProfile } = useAuth();
   const firstName = useMemo(() => {
     if (userProfile?.full_name) {
@@ -45,17 +43,9 @@ export default function HomeScreen() {
     return '';
   }, [userProfile?.full_name]);
 
-  // Check if user has any scans
   const hasScans = allScans.length > 0;
 
-  const { contentHorizontalPadding, sectionVerticalSpacing, isTablet, isLargePhone, width } = useBreakpoint();
-  const scrollPadding = useMemo(() => ({ paddingBottom: sectionVerticalSpacing }), [sectionVerticalSpacing]);
-  // contentWidth used for computing grid item sizes
-  const contentWidth = width - contentHorizontalPadding * 2;
-  // compute a phone-reference card max-width so cards on tablets match phone visuals
-  const phoneReferenceScreenWidth = Math.min(width, breakpoints.largePhone);
-  const phoneContentPadding = spacing.md; // same padding used on phones in useBreakpoint
-  const phoneCardMaxWidth = phoneReferenceScreenWidth - phoneContentPadding * 2;
+  const { contentHorizontalPadding, sectionVerticalSpacing, width } = useBreakpoint();
 
   const formatAmount = (amount: number) => formatCurrencyRounded(amount || 0);
 
@@ -101,7 +91,7 @@ export default function HomeScreen() {
                 value={
                   <View style={styles.valueWithIcon}>
                     <Ionicons name="cash-outline" size={28} color={theme.surface} />
-                    <Text style={[styles.statValue, { color: theme.textOnColor, fontSize: 28 }]}>{formatAmount(totalMoneySpentDerived)}</Text>
+                    <Text style={[{ color: theme.textOnColor, fontSize: 28 }]}>{formatAmount(totalMoneySpentDerived)}</Text>
                   </View>
                 }
                 label="Total Money Spent"
@@ -112,7 +102,7 @@ export default function HomeScreen() {
                 value={
                   <View style={styles.valueWithIcon}>
                     <Ionicons name="document-text-outline" size={28} color={theme.surface} />
-                    <Text style={[styles.statValue, { color: theme.textOnColor, fontSize: 28 }]}>{allScans.length}</Text>
+                    <Text style={[{ color: theme.textOnColor, fontSize: 28 }]}>{allScans.length}</Text>
                   </View>
                 }
                 label="Receipts Scanned"
@@ -136,9 +126,7 @@ export default function HomeScreen() {
               {(() => {
                 const preview = sortedReceipts.slice(0, 3);
                 const list = showAllHistory ? sortedReceipts : preview;
-                const cols = 1; // force single-column on tablets so cards match phone visuals
-                // Use percentage widths so items wrap cleanly without negative margins
-                const itemWidthPercent = `${100 / cols}%`;
+                const cols = 1;
 
                 return (
                   // grid wrapper — keep simple row/wrap layout; padding is handled
@@ -148,7 +136,6 @@ export default function HomeScreen() {
                       return (
                         <View
                           key={scan.id}
-                          // flexBasis percentage ensures consistent wrapping; cast to any to satisfy RN typing for percentage strings
                           style={{ flexBasis: `${100 / cols}%`, paddingHorizontal: spacing.xs } as any}
                         >
                           <ReceiptCard
@@ -208,9 +195,6 @@ export default function HomeScreen() {
 
 // Styles
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollView: {
     flex: 1,
   },
@@ -235,39 +219,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: spacing.md,
-    // keep side-by-side on all devices
-  },
-  statCardGreen: {
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    width: '48%',
-    alignItems: 'center',
-    ...shadows.level2,
-    marginBottom: spacing.md,
-  },
-  statCardBlue: {
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    width: '48%',
-    alignItems: 'center',
-    ...shadows.level2,
-    marginBottom: spacing.md,
-  },
-  statSubtitle: {
-    ...typography.caption,
-    opacity: 0.9,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  statValue: {
-    ...typography.metricSm,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  statLabel: {
-    ...typography.caption,
-    textAlign: 'center',
-    opacity: 0.9,
   },
   sectionTitle: {
     ...typography.sectionTitle,

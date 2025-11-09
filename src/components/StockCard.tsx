@@ -25,20 +25,11 @@ type Props = {
 export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
   const { isTablet, width } = useBreakpoint();
   const { theme } = useTheme();
-
-  // Compute a responsive pixel width for cards:
-  // - On phones we want a compact card that leaves room for peeking neighbors (approx 82% of viewport)
-  // - On tablets we want visibly wider cards but not full width (approx 40% of viewport)
-  // This calculation uses the container width from the breakpoint hook and keeps
-  // proportions responsive rather than hardcoded.
-  // Allow callers to provide an explicit pixel cardWidth (useful for carousels to compute
-  // snap intervals). If not provided, fall back to our internal responsive heuristic.
   const pixelWidth = cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: pixelWidth, backgroundColor: theme.surface }, isLast && styles.cardLast]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82)), backgroundColor: theme.surface }, isLast && styles.cardLast]}>
       {badgeText ? (
-        // Modern horizontal badge in top-right corner
         <View style={styles.badgeContainer}>
           <LinearGradient
             colors={[badgeColor ?? theme.primary, badgeColor ?? theme.primary]}
@@ -90,7 +81,6 @@ const styles = StyleSheet.create<any>({
   cardLast: {
     marginRight: 0,
   },
-  // Modern horizontal badge in top-right corner
   badgeContainer: {
     position: 'absolute',
     top: spacing.md,

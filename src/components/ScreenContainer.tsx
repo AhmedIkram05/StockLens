@@ -22,11 +22,6 @@ export default function ScreenContainer({ children, style, contentStyle, noPaddi
     justifyContent: 'space-between',
   };
 
-  // Conditionally include padding only when not disabled. Prefer the breakpoint
-  // provided `contentHorizontalPadding` so all components using `useBreakpoint`
-  // and `ResponsiveContainer` compute widths consistently. This avoids
-  // mismatches where different parts of the layout subtract different gutters
-  // and content becomes misaligned or clipped on tablets.
   const horizontalPadding = noPadding ? 0 : contentHorizontalPadding;
 
   const paddedStyle: ViewStyle = { ...baseInnerStyle, paddingHorizontal: horizontalPadding, paddingVertical: sectionVerticalSpacing };

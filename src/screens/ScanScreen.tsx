@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../components/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { palette, alpha } from '../styles/palette';
+import { palette } from '../styles/palette';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Constants from 'expo-constants';
@@ -43,19 +43,15 @@ export default function ScanScreen() {
   const [manualEntryText, setManualEntryText] = useState<string>('');
   const pendingRef = useRef<{ draftId: number | null; ocrText: string | null; photoUri: string | null; amount: number | null }>({ draftId: null, ocrText: null, photoUri: null, amount: null });
   const cameraRef = useRef<CameraView>(null);
-  const { width, isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
   const insets = useSafeAreaInsets();
 
-  // Automatically manage camera based on screen focus
   useFocusEffect(
     useCallback(() => {
       setIsCameraActive(true);
       return () => setIsCameraActive(false);
     }, [])
   );
-
-  // frameDimensions previously used for a rectangular overlay — removed to
-  // simplify UI; Camera fills the view and preview shows the captured image.
 
   if (!permission) {
     return <View />;
@@ -95,19 +91,12 @@ export default function ScanScreen() {
           base64: true,
         });
         setPhoto(photo.uri);
-        // photo.base64 is available when base64: true
         if ((photo as any).base64) setPhotoBase64((photo as any).base64 as string);
-        // Intentionally do NOT save captured photos to the user's photo library.
-        // We avoid requesting photo-library permissions and keep captured images private to the app.
-        // Create a lightweight draft receipt immediately so it appears on the
-        // dashboard while OCR runs (quicker UX). We save image_uri and scanned
-        // timestamp; OCR results will update this draft later.
         let createdDraftId: number | null = null;
         try {
           const createdId = await receiptService.create({
             user_id: userProfile?.uid || 'anon',
             image_uri: photo.uri,
-            // draft: leave total_amount undefined until OCR completes
             total_amount: undefined,
             ocr_data: '',
             synced: 0,
@@ -118,20 +107,10 @@ export default function ScanScreen() {
             try { emit('receipts-changed', { id: createdId, userId: userProfile?.uid }); } catch (e) {}
           }
         } catch (e) {
-          // ignore draft creation failures - OCR will still continue
           console.warn('Failed to create draft receipt', e);
         }
 
-        // Run OCR in background and populate a suggestion when ready so the user can accept it on iOS
-        
-        (async () => {
-          // run OCR in background and update suggestion via callback
-          await processReceiptHandler(photo.uri, (photo as any).base64 || null, createdDraftId, (amount, ocrText) => {
-            // suggestion handled via pendingRef and UI prompt
-            // store the OCR text for later save
-            pendingRef.current = { draftId: createdDraftId, ocrText: ocrText || null, photoUri: photo.uri, amount: amount };
-          });
-        })();
+        await processReceiptHandler(photo.uri, (photo as any).base64, createdDraftId);
       } catch (error) {
         Alert.alert('Error', 'Failed to capture image');
       }
@@ -143,21 +122,16 @@ export default function ScanScreen() {
     setPhotoBase64(null);
     setDraftReceiptId(null);
     setProcessing(false);
-    // clear any pending reference data
     pendingRef.current = { draftId: null, ocrText: null, photoUri: null, amount: null };
   };
 
-  // Delete a draft receipt (used when user chooses to rescan and we don't want
-  // to keep the lightweight draft row that was created when the photo was taken)
   const discardDraft = async (draftId?: number | null) => {
     const id = draftId ?? draftReceiptId;
     if (!id) return;
     try {
       await receiptService.delete(Number(id));
       try { emit('receipts-changed', { id }); } catch (e) {}
-    } catch (e) {
-      // ignore delete errors
-    }
+    } catch (e) {}
   };
 
   if (photo) {
@@ -165,7 +139,6 @@ export default function ScanScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
-          {/* Manual entry modal (Android fallback) */}
           <ManualEntryModal
             visible={manualModalVisible}
             value={manualEntryText}
@@ -185,7 +158,6 @@ export default function ScanScreen() {
               <Text style={styles.processingText}>Processing...</Text>
             </View>
           )}
-  {/* Android uses the ManualEntryModal above; iOS uses a native prompt where available */}
         </View>
       </SafeAreaView>
       );
@@ -201,7 +173,6 @@ export default function ScanScreen() {
     const photoUri = overrideUri ?? photo;
     const photoB64 = overrideBase64 ?? photoBase64;
     if (!photoUri) return;
-    // Minimal flow: call service helper that encapsulates preprocessing + fallbacks
     if (!skipOverlay) setProcessing(true);
     try {
       const extras = (Constants as any).manifest?.extra || (Constants as any).expoConfig?.extra || {};
@@ -221,12 +192,10 @@ export default function ScanScreen() {
         if (!skipOverlay) {
           const draft = draftIdArg ?? draftReceiptId ?? null;
           pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri ?? null, amount: null };
-          // show prompt (preserves existing Confirm / Enter manually / Rescan options)
           const displayAmount = 'No amount detected';
           showConfirmationPrompt(displayAmount, {
             onConfirm: async () => { await saveAndNavigate(0, draft, ocrText || null, photoUri || null); },
             onEnterManually: () => {
-              // keep existing iOS-native prompt behaviour in the screen
               if (Platform.OS === 'ios' && (Alert as any).prompt) {
                 (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
                   const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
@@ -293,13 +262,10 @@ export default function ScanScreen() {
 
         <CameraControls
           onCapture={takePicture}
-          // Make the bottom offset larger on tablets so the capture button
-          // doesn't sit too low compared to other controls. Use a named
-          // variable so the calculation is clearer and easier to tweak.
           bottomOffset={(() => {
             const base = insets.bottom;
             if (isSmallPhone) return base + spacing.lg;
-            if (isTablet) return base + spacing.xxl + spacing.xl; // larger gap on tablets
+            if (isTablet) return base + spacing.xxl + spacing.xl;
             return base + spacing.xl;
           })()}
           horizontalPadding={contentHorizontalPadding}
@@ -308,7 +274,6 @@ export default function ScanScreen() {
     </SafeAreaView>
   );
 
-  // Helper: save receipt (create/update) and navigate to ReceiptDetails
   async function saveAndNavigate(amount: number, draftId: number | null, ocrText: string | null, photoUri: string | null) {
     try {
       if (draftId) {
@@ -331,11 +296,7 @@ export default function ScanScreen() {
 
 }
 
-  const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
+const styles = StyleSheet.create({
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',

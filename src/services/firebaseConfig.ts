@@ -1,6 +1,5 @@
 import Constants from 'expo-constants';
 
-// Firebase configuration only
 const firebaseConfig = {
   apiKey: Constants.expoConfig?.extra?.EXPO_PUBLIC_API_KEY || process.env.EXPO_PUBLIC_API_KEY,
   authDomain: Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_DOMAIN || process.env.EXPO_PUBLIC_AUTH_DOMAIN,
@@ -11,7 +10,6 @@ const firebaseConfig = {
   measurementId: Constants.expoConfig?.extra?.EXPO_PUBLIC_MEASUREMENT_ID || process.env.EXPO_PUBLIC_MEASUREMENT_ID,
 };
 
-// Validate that all required Firebase config values are present
 const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
 const missingKeys = requiredKeys.filter(key => !firebaseConfig[key as keyof typeof firebaseConfig]);
 

@@ -11,7 +11,7 @@ export interface ThemeColors {
   surface: string;
   text: string;
   textSecondary: string;
-  textOnColor: string; // Text for colored backgrounds (white in light, black in dark)
+  textOnColor: string;
   border: string;
 }
 
@@ -53,7 +53,6 @@ const THEME_STORAGE_KEY = 'theme_mode';
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('light');
 
-  // Load saved theme preference
   useEffect(() => {
     const loadTheme = async () => {
       try {
@@ -68,7 +67,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     loadTheme();
   }, []);
 
-  // Save theme preference
   const setMode = async (newMode: ThemeMode) => {
     setModeState(newMode);
     try {
@@ -78,7 +76,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Determine current theme
   const getCurrentTheme = (): ThemeColors => {
     return mode === 'dark' ? darkTheme : lightTheme;
   };

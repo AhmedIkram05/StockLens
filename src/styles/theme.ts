@@ -2,7 +2,6 @@ import { TextStyle, ViewStyle } from 'react-native';
 import { palette } from './palette';
 import { scale, moderateScale } from '../utils/responsive';
 
-// Shared style tokens keep typography, spacing, and elevation consistent across screens.
 export const spacing = {
   xs: scale(4),
   sm: scale(8),
@@ -12,9 +11,6 @@ export const spacing = {
   xxl: scale(32),
 } as const;
 
-// Standard control and component sizes (keep as tokens so components can be
-// copy/pasted and reused without hardcoded numbers). These use the same
-// responsive helpers so they scale consistently across devices.
 export const sizes = {
   controlSm: Math.round(moderateScale(36)),
   controlMd: Math.round(moderateScale(44)),
@@ -49,10 +45,6 @@ export const typography = {
   pageSubtitle: {
     fontSize: moderateScale(20),
     fontStyle: 'italic',
-    // Provide an explicit lineHeight to avoid glyph clipping on some platforms
-    // (italic fonts can have tall ascenders that render slightly outside the
-    // font's em-box). A slightly larger lineHeight prevents the top of the
-    // subtitle from appearing cut off on iOS and Android.
     lineHeight: Math.round(moderateScale(26)),
   },
   sectionTitle: {

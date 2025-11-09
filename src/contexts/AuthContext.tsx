@@ -17,13 +17,9 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signOutUser: () => Promise<void>;
-  // locked indicates the UI is locked and requires biometric or credentials to unlock
   locked: boolean;
-  // attempt biometric unlock and, if successful, unlock the UI (does not sign in)
   unlockWithBiometrics: () => Promise<boolean>;
-  // attempt manual unlock via credentials (verifies via authService)
   unlockWithCredentials: (email: string, password: string) => Promise<boolean>;
-  // mark that the user has just signed in so the app doesn't lock immediately
   markSignedIn: () => void;
 }
 
@@ -56,21 +52,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const appState = useRef<AppStateStatus | null>(null);
   const [locked, setLocked] = useState(false);
-  // Toggle to disable lock screen for testing (iOS & Android).
-  // Set to `true` to skip lock behavior during development/testing.
-  // Remember to set this back to `false` before production/testing real auth flows.
   const DISABLE_LOCK = true;
-  // recentlySignedIn prevents immediate lock when user signs in during the same session
   const recentlySignedIn = useRef(false);
   const { setMode } = useTheme();
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
-    // Use dynamic import to defer Firebase loading until after app is ready
     const initAuth = async () => {
       try {
-        // Add a small delay to ensure React Native native modules are fully initialized
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const { getAuthInstance } = await import('../services/firebase');
@@ -83,23 +73,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(usr);
           if (usr) {
             try {
-              // Ensure local profile exists / load it
               const profile = await userService.getByUid(usr.uid);
               if (!profile) {
-                // create minimal profile
                 await userService.upsert(usr.uid, usr.displayName || null, usr.email || '');
                 setUserProfile(await userService.getByUid(usr.uid));
               } else {
                 setUserProfile(profile);
               }
-            // If the app restored an existing user (cold start), lock the UI so that
-            // biometric / passcode is required to proceed. If the user has just signed
-            // in during this session, don't lock immediately.
             if (usr && !recentlySignedIn.current) {
               if (!DISABLE_LOCK) {
                 setLocked(true);
               } else {
-                // ensure unlocked when lock is disabled
                 setLocked(false);
               }
             }
@@ -126,18 +110,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  // Lock UI when app goes to background
   useEffect(() => {
     appState.current = AppState.currentState;
     const handle = (nextAppState: AppStateStatus) => {
       if (appState.current && appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        // move to background -> lock UI (unless lock is disabled for testing)
         if (!DISABLE_LOCK) {
           setLocked(true);
         } else {
           setLocked(false);
         }
-        // after locking, clear recentlySignedIn so the next start requires unlock
         recentlySignedIn.current = false;
       }
       appState.current = nextAppState;
@@ -147,10 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => sub.remove();
   }, []);
 
-  // Unlock UI using biometric authentication (does not alter Firebase session)
   const unlockWithBiometrics = async (): Promise<boolean> => {
     try {
-      // Short-circuit biometric flow when lock is disabled for testing
       if (DISABLE_LOCK) {
         setLocked(false);
         return true;
@@ -172,10 +151,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Unlock UI by verifying credentials against the backend
   const unlockWithCredentials = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Short-circuit manual unlock when lock is disabled for testing
       if (DISABLE_LOCK) {
         setLocked(false);
         return true;
@@ -197,13 +174,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const auth = await getAuthInstance();
       await signOut(auth);
-      // Clear local profile from state (keep local DB record)
       setUserProfile(null);
-      // When no user is signed in, revert UI to the default light theme.
       try {
         setMode('light');
       } catch (err) {
-        // ignore any theme errors
       }
     } catch (error) {
       console.error('Error signing out:', error);
@@ -213,9 +187,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const markSignedIn = () => {
     recentlySignedIn.current = true;
-    // temporarily avoid auto-lock for this session until background event
     setLocked(false);
-    // reset flag after short time to avoid keeping it forever
     setTimeout(() => { recentlySignedIn.current = false; }, 2000);
   };
 

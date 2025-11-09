@@ -27,7 +27,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   left: {
-    // left column for main title content
   },
   subtitle: {
     marginTop: spacing.xs,
