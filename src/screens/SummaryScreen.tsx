@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import StatCard from '../components/StatCard';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding';
+import IconValue from '../components/IconValue';
+import ExpandableCard from '../components/ExpandableCard';
 
 export default function SummaryScreen() {
   const { user } = useAuth();
@@ -354,12 +356,13 @@ export default function SummaryScreen() {
         {/* Full-width 20-year projection card */}
         <StatCard
           value={
-            <View style={styles.valueWithIcon}>
-              <Ionicons name="trending-up" size={28} color={theme.primary} />
-              <Text style={[styles.projectionValue, { color: theme.text }]}>
-                {formatCurrency(totalMoneySpent * Math.pow(1.10, 20))}
-              </Text>
-            </View>
+            <IconValue
+              iconName="trending-up"
+              iconSize={28}
+              iconColor={theme.primary}
+              value={formatCurrency(totalMoneySpent * Math.pow(1.10, 20))}
+              valueStyle={[styles.projectionValue, { color: theme.text }]}
+            />
           }
           label="20-Year Portfolio Projection"
           subtitle={`If your total spending of ${formatCurrency(totalMoneySpent)} grew at 10% per year`}
@@ -371,10 +374,13 @@ export default function SummaryScreen() {
         <View style={styles.statsContainer}>
           <StatCard
             value={
-              <View style={styles.valueWithIcon}>
-                <Ionicons name="cash-outline" size={28} color={theme.surface} />
-                <Text style={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}>{formatCurrency(totalMoneySpent)}</Text>
-              </View>
+              <IconValue
+                iconName="cash-outline"
+                iconSize={28}
+                iconColor={theme.surface}
+                value={formatCurrency(totalMoneySpent)}
+                valueStyle={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}
+              />
             }
             label="Total Money Spent"
             subtitle="Across all scanned receipts"
@@ -382,10 +388,13 @@ export default function SummaryScreen() {
           />
           <StatCard
             value={
-              <View style={styles.valueWithIcon}>
-                <Ionicons name="document-text-outline" size={28} color={theme.surface} />
-                <Text style={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}>{receiptsScanned}</Text>
-              </View>
+              <IconValue
+                iconName="document-text-outline"
+                iconSize={28}
+                iconColor={theme.surface}
+                value={receiptsScanned}
+                valueStyle={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}
+              />
             }
             label="Receipts Scanned"
             variant="blue"
@@ -395,12 +404,13 @@ export default function SummaryScreen() {
         <View style={[styles.cardsGrid, cardsGridStyle]}>
           <StatCard
             value={
-              <View style={styles.valueWithIcon}>
-                <Ionicons name="receipt-outline" size={22} color={theme.surface} />
-                <Text style={[styles.cardValueText, { color: theme.textOnColor }]}>
-                  {highestImpactReceipt?.amount ? formatCurrency(highestImpactReceipt.amount) : '—'}
-                </Text>
-              </View>
+              <IconValue
+                iconName="receipt-outline"
+                iconSize={22}
+                iconColor={theme.surface}
+                value={highestImpactReceipt?.amount ? formatCurrency(highestImpactReceipt.amount) : '—'}
+                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+              />
             }
             label="Highest value receipt"
             subtitle={highestImpactReceipt ? getReceiptSubtitle(highestImpactReceipt) : 'No receipts yet'}
@@ -410,12 +420,13 @@ export default function SummaryScreen() {
 
           <StatCard
             value={
-              <View style={styles.valueWithIcon}>
-                <Ionicons name="calculator-outline" size={22} color={theme.surface} />
-                <Text style={[styles.cardValueText, { color: theme.textOnColor }]}>
-                  {formatCurrency(avgPerReceipt || 0)}
-                </Text>
-              </View>
+              <IconValue
+                iconName="calculator-outline"
+                iconSize={22}
+                iconColor={theme.surface}
+                value={formatCurrency(avgPerReceipt || 0)}
+                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+              />
             }
             label="Average per receipt"
             variant="blue"
@@ -424,12 +435,13 @@ export default function SummaryScreen() {
 
           <StatCard
             value={
-              <View style={styles.valueWithIcon}>
-                <Ionicons name="calendar-outline" size={22} color={theme.surface} />
-                <Text style={[styles.cardValueText, { color: theme.textOnColor }]}>
-                  {mostActiveMonth ?? '—'}
-                </Text>
-              </View>
+              <IconValue
+                iconName="calendar-outline"
+                iconSize={22}
+                iconColor={theme.surface}
+                value={mostActiveMonth ?? '—'}
+                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+              />
             }
             label="Most active month"
             subtitle="Month with most receipts"
@@ -447,25 +459,17 @@ export default function SummaryScreen() {
             const isExpanded = expandedInsight === item.title;
             const details = insightDetails[item.title];
             return (
-              <Pressable
+              <ExpandableCard
                 key={item.title}
-                onPress={() => setExpandedInsight(isExpanded ? null : item.title)}
-                style={[styles.insightCard, { backgroundColor: theme.surface }]}
-              >
-                <Ionicons name={item.icon as any} size={22} color={theme.primary} style={styles.insightIcon} />
-                <View style={styles.insightContent}>
-                  <View style={styles.insightHeader}>
-                    <Text style={[styles.insightTitle, { color: theme.text }]}>{item.title}</Text>
-                    <Ionicons 
-                      name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-                      size={20} 
-                      color={theme.textSecondary} 
-                    />
-                  </View>
-                  <Text style={[styles.insightDescription, { color: theme.textSecondary }]}>{item.description}</Text>
-                  
-                  {isExpanded && details && (
-                    <View style={styles.expandedContent}>
+                icon={item.icon as any}
+                iconColor={theme.primary}
+                title={item.title}
+                description={item.description}
+                isExpanded={isExpanded}
+                onToggle={() => setExpandedInsight(isExpanded ? null : item.title)}
+                expandedContent={
+                  details ? (
+                    <>
                       {details.bullets.map((bullet, index) => (
                         <Text key={index} style={[styles.bulletPoint, { color: theme.textSecondary }]}>
                           • {bullet}
@@ -475,10 +479,10 @@ export default function SummaryScreen() {
                         <Text style={[styles.exampleLabel, { color: theme.text }]}>Example</Text>
                         <Text style={[styles.exampleText, { color: theme.textSecondary }]}>{details.example}</Text>
                       </View>
-                    </View>
-                  )}
-                </View>
-              </Pressable>
+                    </>
+                  ) : undefined
+                }
+              />
             );
           })}
         </View>
@@ -492,34 +496,26 @@ export default function SummaryScreen() {
             const isExpanded = expandedDefinition === item.term;
             const details = definitionDetails[item.term];
             return (
-              <Pressable
+              <ExpandableCard
                 key={item.term}
-                onPress={() => setExpandedDefinition(isExpanded ? null : item.term)}
-                style={[styles.definitionCard, { backgroundColor: theme.surface }]}
-              >
-                <Ionicons name={item.icon as any} size={22} color={theme.secondary} style={styles.definitionIcon} />
-                <View style={styles.definitionContent}>
-                  <View style={styles.definitionHeader}>
-                    <Text style={[styles.definitionTerm, { color: theme.text }]}>{item.term}</Text>
-                    <Ionicons 
-                      name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-                      size={20} 
-                      color={theme.textSecondary} 
-                    />
-                  </View>
-                  <Text style={[styles.definitionShort, { color: theme.textSecondary }]}>{item.shortDescription}</Text>
-                  
-                  {isExpanded && details && (
-                    <View style={styles.expandedContent}>
+                icon={item.icon as any}
+                iconColor={theme.secondary}
+                title={item.term}
+                description={item.shortDescription}
+                isExpanded={isExpanded}
+                onToggle={() => setExpandedDefinition(isExpanded ? null : item.term)}
+                expandedContent={
+                  details ? (
+                    <>
                       <Text style={[styles.definitionExplanation, { color: theme.text }]}>{details.explanation}</Text>
                       <View style={[styles.exampleBox, { backgroundColor: isDark ? '#1a1a1a' : '#f9f9f9' }]}>
                         <Text style={[styles.exampleLabel, { color: theme.text }]}>Example</Text>
                         <Text style={[styles.exampleText, { color: theme.textSecondary }]}>{details.example}</Text>
                       </View>
-                    </View>
-                  )}
-                </View>
-              </Pressable>
+                    </>
+                  ) : undefined
+                }
+              />
             );
           })}
         </View>
@@ -561,51 +557,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.sectionTitle,
   },
-  valueWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
   projectionValue: {
     ...typography.metric,
     fontWeight: '700',
     textAlign: 'center',
-  },
-  insightCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadows.level1,
-  },
-  insightIcon: {
-    marginRight: spacing.md,
-    width: sizes.avatarSm,
-    textAlign: 'center',
-  },
-  insightContent: {
-    flex: 1,
-  },
-  insightTitle: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
-  },
-  insightDescription: {
-    ...typography.caption,
-  },
-  insightHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  expandedContent: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e0e0e0',
   },
   bulletPoint: {
     ...typography.caption,
@@ -628,34 +583,6 @@ const styles = StyleSheet.create({
   },
   definitionsList: {
     marginBottom: spacing.xl,
-  },
-  definitionCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadows.level1,
-  },
-  definitionIcon: {
-    marginRight: spacing.md,
-    width: sizes.avatarSm,
-    textAlign: 'center',
-  },
-  definitionContent: {
-    flex: 1,
-  },
-  definitionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  definitionTerm: {
-    ...typography.bodyStrong,
-  },
-  definitionShort: {
-    ...typography.caption,
   },
   definitionExplanation: {
     ...typography.body,

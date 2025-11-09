@@ -5,7 +5,7 @@ import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
 import AuthFooter from '../components/AuthFooter';
 import { useNavigation } from '@react-navigation/native';
-import BackButton from '../components/BackButton';
+import IconButton from '../components/IconButton';
 import { authService, SignUpData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { palette, alpha } from '../styles/palette';
@@ -89,7 +89,7 @@ export default function SignUpScreen() {
         ]}
       >
         <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
-          <BackButton onPress={handleBack} />
+          <IconButton name="chevron-back" onPress={handleBack} accessibilityLabel="Go back" />
         </View>
 
         <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>

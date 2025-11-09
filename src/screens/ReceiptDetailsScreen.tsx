@@ -9,7 +9,7 @@ import {
 import type { TextStyle, ViewStyle } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
-import BackButton from '../components/BackButton';
+import IconButton from '../components/IconButton';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -37,7 +37,6 @@ import YearSelector from '../components/YearSelector';
 import StockCard from '../components/StockCard';
 import ReceiptCard from '../components/ReceiptCard';
 import Carousel from '../components/Carousel';
-import ProjectionDisclaimer from '../components/ProjectionDisclaimer';
 
 
 export default function ReceiptDetailsScreen() {
@@ -291,7 +290,7 @@ export default function ReceiptDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.headerRow, isSmallPhone && styles.headerRowCompact]}>
-          <BackButton onPress={() => navigation.goBack()} />
+          <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         </View>
 
   <ResponsiveContainer maxWidth={width - contentHorizontalPadding * 2}>
@@ -408,7 +407,12 @@ export default function ReceiptDetailsScreen() {
           </View>
         </DangerButton>
 
-        <ProjectionDisclaimer />
+        <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact, { backgroundColor: theme.surface }]}>
+          <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
+          <Text style={[styles.warningText, { color: theme.text }]}>
+            Projections are hypothetical. Past performance does not guarantee future results.
+          </Text>
+        </View>
         </ScrollView>
     </ScreenContainer>
   );
@@ -442,6 +446,10 @@ type Styles = {
   footerLabel: TextStyle;
   footerValue: TextStyle;
   verticalDivider: ViewStyle;
+  warningBox: ViewStyle;
+  warningBoxCompact: ViewStyle;
+  warningIcon: ViewStyle;
+  warningText: TextStyle;
 };
 
 // Stylesheet
@@ -548,5 +556,24 @@ const styles = StyleSheet.create<Styles>({
     width: 1,
     backgroundColor: alpha.faintBlack,
     marginHorizontal: spacing.md,
+  },
+  warningBox: {
+    marginTop: spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.md,
+    padding: spacing.lg,
+  },
+  warningBoxCompact: {
+    padding: spacing.md,
+  },
+  warningIcon: {
+    marginRight: spacing.md,
+  },
+  warningText: {
+    ...typography.caption,
+    lineHeight: 18,
+    flex: 1,
+    textAlign: 'left',
   },
 });

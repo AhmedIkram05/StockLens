@@ -7,13 +7,15 @@ import {
   Alert,
   Image,
   Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../components/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { palette } from '../styles/palette';
-import { radii, spacing, typography } from '../styles/theme';
+import { palette, alpha } from '../styles/palette';
+import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Constants from 'expo-constants';
 import { performOcrWithFallback } from '../services/ocrService';
@@ -22,8 +24,6 @@ import { receiptService } from '../services/dataService';
 import { emit } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import ManualEntryModal from '../components/ManualEntryModal';
-import CameraControls from '../components/CameraControls';
 import { formatCurrencyGBP } from '../utils/formatters';
 import showConfirmationPrompt from '../components/ConfirmationPrompt';
 
@@ -43,8 +43,10 @@ export default function ScanScreen() {
   const [manualEntryText, setManualEntryText] = useState<string>('');
   const pendingRef = useRef<{ draftId: number | null; ocrText: string | null; photoUri: string | null; amount: number | null }>({ draftId: null, ocrText: null, photoUri: null, amount: null });
   const cameraRef = useRef<CameraView>(null);
-  const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing } = useBreakpoint();
+  const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing, width } = useBreakpoint();
   const insets = useSafeAreaInsets();
+
+  const captureButtonSize = isSmallPhone ? 60 : isTablet ? 80 : 70;
 
   useFocusEffect(
     useCallback(() => {
@@ -139,20 +141,39 @@ export default function ScanScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
-          <ManualEntryModal
-            visible={manualModalVisible}
-            value={manualEntryText}
-            onChange={setManualEntryText}
-            onCancel={() => setManualModalVisible(false)}
-            onConfirm={async () => {
-              const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-              const parsed = Number(cleaned);
-              if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-              setManualModalVisible(false);
-              const draft = draftReceiptId;
-              await saveAndNavigate(parsed, draft, ocrRaw, photo);
-            }}
-          />
+          <Modal visible={manualModalVisible} transparent animationType="fade" onRequestClose={() => setManualModalVisible(false)}>
+            <View style={styles.modalBackdrop}>
+              <View style={styles.modalCard}>
+                <Text style={styles.modalTitle}>Manual entry</Text>
+                <Text style={styles.modalSubtitle}>Enter the total amount</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  keyboardType="decimal-pad"
+                  value={manualEntryText}
+                  onChangeText={setManualEntryText}
+                  placeholder="0.00"
+                />
+                <View style={styles.modalRow}>
+                  <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setManualModalVisible(false)}>
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, styles.modalConfirm]}
+                    onPress={async () => {
+                      const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+                      const parsed = Number(cleaned);
+                      if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
+                      setManualModalVisible(false);
+                      const draft = draftReceiptId;
+                      await saveAndNavigate(parsed, draft, ocrRaw, photo);
+                    }}
+                  >
+                    <Text style={styles.modalConfirmText}>Confirm</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
           {processing && (
             <View style={styles.processingOverlay} pointerEvents="none">
               <Text style={styles.processingText}>Processing...</Text>
@@ -260,16 +281,33 @@ export default function ScanScreen() {
           />
         )}
 
-        <CameraControls
-          onCapture={takePicture}
-          bottomOffset={(() => {
-            const base = insets.bottom;
-            if (isSmallPhone) return base + spacing.lg;
-            if (isTablet) return base + spacing.xxl + spacing.xl;
-            return base + spacing.xl;
-          })()}
-          horizontalPadding={contentHorizontalPadding}
-        />
+        <View
+          style={[
+            styles.cameraControls,
+            {
+              paddingHorizontal: contentHorizontalPadding,
+              bottom: (() => {
+                const base = insets.bottom;
+                if (isSmallPhone) return base + spacing.lg;
+                if (isTablet) return base + spacing.xxl + spacing.xl;
+                return base + spacing.xl;
+              })(),
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={takePicture}
+            style={[
+              styles.captureButton,
+              {
+                width: captureButtonSize,
+                height: captureButtonSize,
+                borderRadius: captureButtonSize / 2,
+              },
+            ]}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -349,5 +387,68 @@ const styles = StyleSheet.create({
   processingText: {
     color: palette.white,
     ...typography.sectionTitle,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: alpha.overlayBlack,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    width: '86%',
+    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    padding: spacing.lg,
+    ...shadows.level2,
+  },
+  modalTitle: {
+    ...typography.bodyStrong,
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    ...typography.caption,
+    color: alpha.subtleBlack,
+    marginBottom: spacing.md,
+  },
+  modalInput: {
+    backgroundColor: palette.lightGray,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalBtn: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.md,
+    marginLeft: spacing.sm,
+  },
+  modalCancel: {
+    backgroundColor: palette.lightGray,
+  },
+  modalConfirm: {
+    backgroundColor: palette.green,
+  },
+  modalCancelText: {
+    color: palette.black,
+  },
+  modalConfirmText: {
+    color: palette.white,
+  },
+  cameraControls: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  captureButton: {
+    backgroundColor: palette.green,
+    borderWidth: 1,
+    borderColor: palette.white,
   },
 });

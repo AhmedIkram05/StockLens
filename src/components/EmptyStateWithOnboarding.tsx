@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import EmptyState from './EmptyState';
 import { useTheme } from '../contexts/ThemeContext';
-import { typography, spacing, radii, shadows } from '../styles/theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
+import { typography, spacing, radii, shadows, sizes } from '../styles/theme';
 import { palette } from '../styles/palette';
 
 interface EmptyStateWithOnboardingProps {
@@ -21,6 +22,9 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
   onPrimaryPress,
 }) => {
   const { theme } = useTheme();
+  const { isTablet } = useBreakpoint();
+  
+  const circleSize = isTablet ? sizes.controlLg : sizes.controlMd;
 
   return (
     <>
@@ -34,7 +38,10 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
 
       <View style={styles.onboardingCards}>
         <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-          <View style={[styles.numberCircle, { backgroundColor: theme.primary }]}>
+          <View style={[
+            styles.numberCircle,
+            { backgroundColor: theme.primary, width: circleSize, height: circleSize }
+          ]}>
             <Text style={[styles.numberText, { color: palette.white }]}>1</Text>
           </View>
           <View style={styles.cardContent}>
@@ -46,7 +53,10 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
         </View>
 
         <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-          <View style={[styles.numberCircle, { backgroundColor: theme.primary }]}>
+          <View style={[
+            styles.numberCircle,
+            { backgroundColor: theme.primary, width: circleSize, height: circleSize }
+          ]}>
             <Text style={[styles.numberText, { color: palette.white }]}>2</Text>
           </View>
           <View style={styles.cardContent}>
@@ -58,7 +68,10 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
         </View>
 
         <View style={[styles.onboardingCard, { backgroundColor: theme.surface }]}>
-          <View style={[styles.numberCircle, { backgroundColor: theme.primary }]}>
+          <View style={[
+            styles.numberCircle,
+            { backgroundColor: theme.primary, width: circleSize, height: circleSize }
+          ]}>
             <Text style={[styles.numberText, { color: palette.white }]}>3</Text>
           </View>
           <View style={styles.cardContent}>
@@ -87,8 +100,6 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   numberCircle: {
-    width: 48,
-    height: 48,
     borderRadius: radii.pill,
     justifyContent: 'center',
     alignItems: 'center',
