@@ -1,3 +1,29 @@
+/**
+ * SignUpScreen
+ * 
+ * User registration screen for new users.
+ * Features:
+ * - Full name, email, password, and confirm password inputs
+ * - Real-time form validation (password length, matching passwords)
+ * - Firebase Authentication account creation
+ * - Firestore user profile creation
+ * - Biometric prompt after successful registration
+ * - Back navigation to Login screen
+ * 
+ * Validation rules:
+ * - Full name: Cannot be empty
+ * - Email: Must be valid format (validated by Firebase)
+ * - Password: Minimum 6 characters
+ * - Confirm password: Must match password field
+ * 
+ * Flow:
+ * 1. User fills form with validation feedback
+ * 2. App creates Firebase Auth account
+ * 3. App creates Firestore user profile document
+ * 4. Prompts user to enable biometric authentication
+ * 5. Redirects to main app via AuthContext
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
@@ -13,6 +39,10 @@ import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTheme } from '../contexts/ThemeContext';
 
+/**
+ * Renders the registration form with validation and Firebase account creation.
+ * Form validation runs on every field change to enable/disable submit button.
+ */
 export default function SignUpScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();

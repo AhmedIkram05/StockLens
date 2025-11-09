@@ -1,7 +1,31 @@
 /**
- * OCR service (minimal)
- * - Provides two helpers: upload image file URI or base64 payload to OCR.Space
- * - Small preprocess helper to resize and return base64 (used to improve OCR quality)
+ * OCR Service - Receipt text recognition using OCR.Space API
+ * 
+ * Features:
+ * - Image file upload (URI) to OCR.Space
+ * - Base64 image string upload to OCR.Space
+ * - Image preprocessing (resize/compression) for better OCR quality
+ * - Multi-strategy fallback approach (base64 → file → larger base64)
+ * - 30-second timeout protection
+ * - Automatic retry logic (3 attempts with exponential backoff)
+ * 
+ * Integration:
+ * - Uses OCR.Space API with OCREngine 2 (better for receipts)
+ * - Leverages expo-image-manipulator for image preprocessing
+ * - FormData-based multipart requests for image uploads
+ * 
+ * Usage:
+ * Call performOcrWithFallback() for automatic fallback handling, or use
+ * recognizeImageWithOCRSpace()/recognizeBase64WithOCRSpace() directly.
+ */
+
+/**
+ * OcrResult type - Result structure from OCR operations
+ * 
+ * @property text - Extracted text from image (empty string if failed)
+ * @property raw - Raw API response or error object
+ * @property success - Whether OCR succeeded
+ * @property errorMessage - Human-readable error message if failed
  */
 export type OcrResult = {
   text: string;
@@ -10,6 +34,18 @@ export type OcrResult = {
   errorMessage?: string;
 };
 
+/**
+ * Internal helper to send FormData to OCR.Space API
+ * 
+ * @param formData - FormData containing image file or base64 string
+ * @param apiKey - OCR.Space API key
+ * @returns OcrResult with extracted text or error
+ * 
+ * Features:
+ * - 30-second timeout protection (AbortController)
+ * - Error handling for API responses and network failures
+ * - Validates ParsedText is non-empty
+ */
 async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult> {
   const TIMEOUT_MS = 30000;
   const controller = new AbortController();
@@ -58,6 +94,19 @@ async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult>
   }
 }
 
+/**
+ * Recognize text from an image URI using OCR.Space (file upload method)
+ * 
+ * @param imageUri - Local file URI (e.g., from expo-camera)
+ * @param apiKey - OCR.Space API key
+ * @returns OcrResult with extracted text or error
+ * 
+ * Process:
+ * 1. Extracts filename and MIME type from URI
+ * 2. Creates FormData with image file
+ * 3. Sets OCREngine=2 (best for receipts), language=eng
+ * 4. Sends multipart request to OCR.Space
+ */
 export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: string): Promise<OcrResult> {
   if (!apiKey) throw new Error('OCR Space API key is required');
   const uri = imageUri;
@@ -77,6 +126,22 @@ export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: strin
   return doOcrForm(formData, apiKey);
 }
 
+/**
+ * Recognize text from a base64-encoded image string using OCR.Space
+ * 
+ * @param base64Data - Base64 image string (with or without data: prefix)
+ * @param apiKey - OCR.Space API key
+ * @returns OcrResult with extracted text or error
+ * 
+ * Process:
+ * 1. Ensures base64 string has data:image/jpeg;base64, prefix
+ * 2. Creates FormData with base64Image field
+ * 3. Sets OCREngine=2, language=eng
+ * 4. Sends request to OCR.Space
+ * 
+ * Note: Base64 method often has better results than file upload due to
+ * preprocessing control (see preprocessImageToBase64).
+ */
 export async function recognizeBase64WithOCRSpace(base64Data: string, apiKey: string): Promise<OcrResult> {
   if (!apiKey) throw new Error('OCR Space API key is required');
   let payload = base64Data;
@@ -94,6 +159,23 @@ export async function recognizeBase64WithOCRSpace(base64Data: string, apiKey: st
   return doOcrForm(formData, apiKey);
 }
 
+/**
+ * Preprocess image to base64 for better OCR quality
+ * 
+ * @param uri - Local image URI
+ * @param targetWidth - Target width in pixels (default: 2200px)
+ * @returns Base64 string (without data: prefix) or null if failed
+ * 
+ * Process:
+ * 1. Uses expo-image-manipulator to resize image to targetWidth
+ * 2. Maintains aspect ratio, compresses as JPEG at 1.0 quality
+ * 3. Returns base64 string for OCR submission
+ * 
+ * Benefits:
+ * - Reduces file size for faster uploads
+ * - Normalizes image dimensions for consistent OCR quality
+ * - Improves text recognition accuracy for receipts
+ */
 export async function preprocessImageToBase64(uri: string, targetWidth = 2200): Promise<string | null> {
   try {
     const ImageManipulator = await import('expo-image-manipulator');
@@ -106,6 +188,28 @@ export async function preprocessImageToBase64(uri: string, targetWidth = 2200): 
   }
 }
 
+/**
+ * Perform OCR with automatic fallback strategies
+ * 
+ * @param imageUri - Local image URI
+ * @param base64Data - Optional pre-computed base64 string
+ * @param apiKey - OCR.Space API key
+ * @returns OcrResult with text or error
+ * 
+ * Fallback Strategy (tries in order until success):
+ * 1. Base64 upload with 1400px preprocessing (fastest, best quality)
+ * 2. Direct file upload if base64 fails or returns empty text
+ * 3. Base64 upload with 2000px preprocessing (last resort for poor images)
+ * 
+ * Process:
+ * - Each strategy is wrapped in try/catch
+ * - Continues to next strategy if current returns empty text
+ * - Returns first successful result with non-empty text
+ * - Returns failure result if all strategies fail
+ * 
+ * Usage:
+ * This is the recommended entry point for OCR operations.
+ */
 export async function performOcrWithFallback(imageUri: string, base64Data: string | null, apiKey: string): Promise<OcrResult> {
   if (!apiKey) throw new Error('OCR Space API key is required');
   let b64 = base64Data || null;

@@ -1,3 +1,27 @@
+/**
+ * ReceiptDetailsScreen
+ * 
+ * Individual receipt view with investment projection calculator.
+ * Features:
+ * - Receipt amount, merchant, date, timestamp display
+ * - Delete receipt functionality
+ * - Year selector (1Y, 3Y, 5Y, 10Y, 20Y)
+ * - Horizontal carousel of stock projection cards
+ * - Real-time projection calculations using historical CAGR
+ * - Popular/High Growth badges for notable stocks
+ * 
+ * Projection calculation:
+ * - Fetches historical stock data from Alpha Vantage API
+ * - Calculates CAGR (Compound Annual Growth Rate) from historical data
+ * - Projects future value using formula: amount × (1 + CAGR)^years
+ * - Displays return percentage and gained/lost amount
+ * 
+ * Stock presets include: S&P 500, FTSE 100, AAPL, GOOGL, MSFT, TSLA, NVDA, AMZN, BRK.B, Gold, Bitcoin
+ * Each card shows: Stock name, ticker, future value, return %, gained amount
+ * 
+ * Uses event bus to refresh data when receipts are updated.
+ */
+
 import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
@@ -38,6 +62,11 @@ import StockCard from '../components/StockCard';
 import ReceiptCard from '../components/ReceiptCard';
 import Carousel from '../components/Carousel';
 
+/**
+ * Renders receipt details with investment projections.
+ * Calculates projections for all stock presets based on selected time horizon.
+ * Recalculates when year selection changes or receipt data updates.
+ */
 
 export default function ReceiptDetailsScreen() {
   const navigation = useNavigation<any>();

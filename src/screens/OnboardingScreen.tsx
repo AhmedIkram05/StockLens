@@ -1,3 +1,23 @@
+/**
+ * OnboardingScreen
+ * 
+ * Welcome screen with animated candlestick chart and app introduction.
+ * Displayed on first app launch before authentication.
+ * 
+ * Features:
+ * - Animated SVG candlestick chart showing rising stock prices
+ * - App tagline: "Scan Your Spending, See Your Missed Investing"
+ * - Get Started button navigating to SignUp screen
+ * - Responsive button width (50% tablet, 75% phone)
+ * 
+ * The candlestick animation:
+ * - Generates 25-30 OHLC (Open-High-Low-Close) data points
+ * - Simulates realistic price movements with baseline uptrend, major swings, micro fluctuations, and occasional shocks
+ * - Animates from opacity 0 to 1 over 2 seconds using React Native Animated API
+ * 
+ * Chart is purely visual/decorative to communicate investment/finance theme.
+ */
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Animated, Easing } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
@@ -14,6 +34,14 @@ import { useTheme } from '../contexts/ThemeContext';
 
 type OHLC = { open: number; high: number; low: number; close: number };
 
+/**
+ * Generates an array of OHLC candlestick data with realistic price movements.
+ * Uses sine waves for major/micro trends plus random shocks for volatility.
+ * 
+ * @param count - Number of candles to generate (default varies based on screen width)
+ * @param start - Starting price value (default: 100)
+ * @returns Array of OHLC objects with open, high, low, close prices
+ */
 const makeOHLCSeries = (count: number, start = 100) => {
   const res: OHLC[] = [];
   let prevClose = start;

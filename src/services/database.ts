@@ -1,7 +1,37 @@
+/**
+ * Database Service - SQLite database initialization and management
+ * 
+ * Features:
+ * - expo-sqlite database initialization and schema management
+ * - 5 core tables: users, receipts, alpha_cache, user_settings, auth_state
+ * - Foreign key constraints and cascading deletes
+ * - Indexes for performance optimization on common queries
+ * - Query execution helpers (executeQuery, executeNonQuery)
+ * - Cache pruning for Alpha Vantage historical data
+ * 
+ * Tables:
+ * - users: User profile records (uid, full_name, email, created_at, last_login)
+ * - receipts: Scanned receipts (user_id, image_uri, total_amount, ocr_data, synced)
+ * - alpha_cache: Cached stock market data (symbol, interval, params, fetched_at, raw_json)
+ * - user_settings: User preferences (user_id, theme, auto_backup)
+ * - auth_state: Authentication state storage (key-value pairs)
+ * 
+ * Integration:
+ * - Used by dataService for all CRUD operations
+ * - Used by alphaVantageService for caching stock data
+ * - Automatically migrates schema (adds missing columns)
+ */
+
 import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabaseSync('stocklens.db');
 
+/**
+ * DB_SCHEMAS - Table creation SQL statements
+ * 
+ * Each schema uses CREATE TABLE IF NOT EXISTS for idempotent initialization.
+ * Foreign keys are used to maintain referential integrity.
+ */
 export const DB_SCHEMAS = {
   users: `
     CREATE TABLE IF NOT EXISTS users (
@@ -53,6 +83,15 @@ export const DB_SCHEMAS = {
   `,
 };
 
+/**
+ * DB_INDEXES - Performance optimization indexes
+ * 
+ * Indexes:
+ * - idx_receipts_user_id_synced: Speed up queries filtering by user and sync status
+ * - idx_receipts_date_scanned: Optimize date-based sorting (most recent first)
+ * - idx_user_settings_user_id: Fast lookup of user preferences
+ * - idx_alpha_cache_symbol_interval: Quick cache lookups for stock data
+ */
 const DB_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_receipts_user_id_synced ON receipts (user_id, synced);`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_date_scanned ON receipts (date_scanned DESC);`,
@@ -60,6 +99,19 @@ const DB_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_alpha_cache_symbol_interval ON alpha_cache (symbol, interval);`,
 ];
 
+/**
+ * Initialize database schema and indexes
+ * 
+ * Process:
+ * 1. Enables foreign key constraints
+ * 2. Creates all tables (users, receipts, alpha_cache, user_settings, auth_state)
+ * 3. Creates all indexes for performance
+ * 4. Migrates schema if needed (adds ocr_data column if missing)
+ * 
+ * @throws Error if database initialization fails
+ * 
+ * Note: Safe to call multiple times (uses IF NOT EXISTS)
+ */
 export const initDatabase = async (): Promise<void> => {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -92,7 +144,22 @@ export const initDatabase = async (): Promise<void> => {
   }
 };
 
+/**
+ * databaseService - Query execution helpers
+ * 
+ * Provides two core methods:
+ * - executeQuery: For SELECT queries (returns rows)
+ * - executeNonQuery: For INSERT/UPDATE/DELETE (returns affected count or last ID)
+ * - pruneAlphaCacheOlderThan: Clean up old stock data cache entries
+ */
 export const databaseService = {
+  /**
+   * Execute a SELECT query and return all matching rows
+   * 
+   * @param query - SQL query string (parameterized with ?)
+   * @param params - Parameter values to bind to query
+   * @returns Array of result rows
+   */
   executeQuery: async (query: string, params: any[] = []): Promise<any[]> => {
     try {
       const result = await db.getAllAsync(query, params);
@@ -103,6 +170,13 @@ export const databaseService = {
     }
   },
 
+  /**
+   * Execute an INSERT/UPDATE/DELETE query
+   * 
+   * @param query - SQL query string (parameterized with ?)
+   * @param params - Parameter values to bind to query
+   * @returns For INSERT: lastInsertRowId, for UPDATE/DELETE: number of rows changed
+   */
   executeNonQuery: async (query: string, params: any[] = []): Promise<number> => {
     try {
       const result = await db.runAsync(query, params);
@@ -113,6 +187,18 @@ export const databaseService = {
     }
   },
   
+  /**
+   * Prune old Alpha Vantage cache entries
+   * 
+   * @param days - Delete cache entries older than this many days
+   * 
+   * Process:
+   * - Calculates cutoff timestamp (current time - days)
+   * - Deletes all alpha_cache rows fetched before cutoff
+   * - Best-effort operation (errors are logged but not thrown)
+   * 
+   * Usage: Call periodically to prevent unbounded cache growth
+   */
   pruneAlphaCacheOlderThan: async (days: number) => {
     try {
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();

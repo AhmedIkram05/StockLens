@@ -1,3 +1,15 @@
+/**
+ * StockCard Component
+ * 
+ * Displays investment projection data in a horizontal scrollable card format.
+ * Shows stock name, ticker, projected future value, return percentage, and gained amount.
+ * 
+ * Includes optional badge for special designations (e.g., "Popular", "High Growth").
+ * Card width is responsive, adapting to tablet vs phone screen sizes.
+ * 
+ * Used in Calculator/Projection screens to show what receipted spending could have earned if invested.
+ */
+
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,20 +20,37 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
+  /** Stock/investment name (e.g., "Apple Inc.", "S&P 500 Index") */
   name: string;
+  /** Optional ticker symbol (e.g., "AAPL", "SPY") */
   ticker?: string;
+  /** Formatted future value projection (e.g., "$1,234.56") */
   futureDisplay: string;
+  /** Original investment amount formatted (e.g., "$1,000.00") */
   formattedAmount: string;
+  /** Return percentage formatted (e.g., "+23.5%", "-5.2%") */
   percentDisplay: string;
+  /** Gained/lost amount formatted (e.g., "+$234.56") */
   gainDisplay: string;
+  /** Color for value/gain text (typically green for positive, red for negative) */
   valueColor?: string;
+  /** Callback triggered when the card is pressed */
   onPress?: () => void;
+  /** When true, removes right margin (for last card in horizontal scroll) */
   isLast?: boolean;
+  /** Optional fixed width for the card (overrides responsive width calculation) */
   cardWidth?: number;
+  /** Optional badge text displayed at top-right (e.g., "Popular") */
   badgeText?: string;
+  /** Optional badge background color (defaults to theme.primary) */
   badgeColor?: string;
 };
 
+/**
+ * Renders an investment projection card with stock details, future value, and returns.
+ * Card width is responsive: 82% of screen width on phones, 40% on tablets.
+ * Badge is positioned absolutely at top-right when provided.
+ */
 export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
   const { isTablet, width } = useBreakpoint();
   const { theme } = useTheme();

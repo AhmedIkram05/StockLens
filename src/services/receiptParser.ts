@@ -1,7 +1,58 @@
 /**
- * Improved parser: normalize OCR text (without mangling words), handle common OCR misreads
- * inside digit-containing tokens, try a high-confidence extraction for lines containing 'total',
- * then fall back to a scored candidate approach with decimal inference.
+ * Receipt Parser - Extract monetary amounts from OCR text
+ * 
+ * Features:
+ * - Multi-strategy amount extraction (keyword-based, bottom-scan, scoring fallback)
+ * - Token-aware OCR error correction (O→0, l/I→1 only in digit-containing tokens)
+ * - Keyword detection (total, amount, grand total, balance due, etc.)
+ * - Decimal inference for amounts without decimal points (e.g., 1250 → 12.50)
+ * - Currency symbol detection and scoring
+ * - Footer line filtering (thank you, barcode, payment method, etc.)
+ * 
+ * Strategies (in order):
+ * 1. High-confidence: Extract rightmost number from lines containing 'total' keyword
+ * 2. Bottom-scan: Extract rightmost number from last non-footer lines
+ * 3. Scored candidates: Collect all monetary tokens, score by position/keywords, pick best
+ * 
+ * Scoring Factors:
+ * - +50: Line contains 'total' keyword
+ * - +20: Within last 2 lines (bottom of receipt)
+ * - +10: Line contains currency symbol (£, $, €)
+ * - +5: Highest value among candidates
+ * - -40: Line contains 'change' or 'cash change'
+ * 
+ * Integration:
+ * - Used by ScanScreen after OCR to extract receipt amount
+ * - Handles common OCR misreads (O/0, l/I/1 confusion)
+ * - Returns null if no valid amount found
+ */
+
+/**
+ * Parse amount from OCR text with intelligent extraction and error correction
+ * 
+ * @param text - Raw OCR text from receipt image
+ * @returns Extracted amount as number or null if not found
+ * 
+ * Process:
+ * 1. Token-aware normalization: Fix O→0, l/I→1 only in tokens with digits
+ * 2. High-confidence pass: Extract from lines with 'total' keyword
+ * 3. Bottom-scan pass: Extract from last non-footer lines
+ * 4. Candidate scoring: Collect all monetary tokens, score, pick best
+ * 5. Decimal inference: Convert 1250 → 12.50 if no decimal and value ≥100
+ * 
+ * Decimal Inference Rules:
+ * - If token has no decimal point AND value ≥ 100 AND value/100 ≤ 500
+ * - Then divide by 100 (e.g., 1250 → 12.50, 2999 → 29.99)
+ * - Prevents false positives for large amounts (e.g., 10000 stays 10000)
+ * 
+ * Edge Cases:
+ * - Handles multiple decimal separators (1.234,56 → 1234.56)
+ * - Filters out 'change' amounts (lower priority scoring)
+ * - Skips footer lines (thank you, barcode, phone, address)
+ * - Returns null for invalid/empty input
+ * 
+ * Usage:
+ * amount = parseAmountFromOcrText(ocrResult.text)
  */
 export function parseAmountFromOcrText(text: string): number | null {
   if (!text) return null;

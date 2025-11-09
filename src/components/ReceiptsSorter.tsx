@@ -1,3 +1,15 @@
+/**
+ * ReceiptsSorter Component
+ * 
+ * A sorting control for receipt lists with two options: Date and Amount.
+ * Displays sort direction indicators (↑ for ascending, ↓ for descending).
+ * 
+ * When clicking the active sort option, it toggles between ascending/descending.
+ * When clicking an inactive option, it switches to that option with its default direction.
+ * 
+ * Default directions: Date sorts descending (newest first), Amount sorts ascending (lowest first).
+ */
+
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
@@ -8,8 +20,11 @@ export type SortBy = 'date' | 'amount';
 export type SortDirection = 'asc' | 'desc';
 
 interface ReceiptsSorterProps {
+  /** Currently active sort field */
   sortBy: SortBy;
+  /** Current sort direction (ascending or descending) */
   sortDirection: SortDirection;
+  /** Callback triggered when sort changes with new sortBy and sortDirection */
   onSortChange: (sortBy: SortBy, sortDirection: SortDirection) => void;
 }
 
@@ -18,6 +33,10 @@ const sortOptions: { key: SortBy; label: string }[] = [
   { key: 'amount', label: 'Amount' },
 ];
 
+/**
+ * Renders a row of sort buttons with active state and direction indicators.
+ * Clicking active button toggles direction; clicking inactive button switches to it.
+ */
 export default function ReceiptsSorter({ sortBy, sortDirection, onSortChange }: ReceiptsSorterProps) {
   const { theme } = useTheme();
 

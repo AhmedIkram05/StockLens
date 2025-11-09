@@ -1,18 +1,39 @@
+/**
+ * ReceiptCard Component
+ * 
+ * Displays a receipt preview in a card format with thumbnail image, amount, merchant, and timestamp.
+ * Used in lists/scrollviews to show receipt summaries before navigating to detail view.
+ * 
+ * Shows a placeholder if no image is available. Includes a chevron indicator for navigation.
+ * Fully pressable with activeOpacity feedback.
+ */
+
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 
 type Props = {
+  /** Unique identifier for the receipt (optional, for tracking) */
   id?: string | number;
+  /** URI string for the receipt image thumbnail */
   image?: string | undefined;
+  /** Receipt amount (can be number, string, or formatted React element) */
   amount?: number | string | React.ReactNode;
+  /** Merchant or store name */
   merchant?: string;
+  /** Timestamp or date string (e.g., "2 hours ago", "Nov 9, 2025") */
   time?: string;
+  /** Callback triggered when the card is pressed */
   onPress?: () => void;
+  /** Optional custom styling for the card container */
   style?: StyleProp<ViewStyle>;
 };
 
+/**
+ * Renders a pressable receipt card with image, transaction details, and navigation chevron.
+ * If no image is provided, displays a gray placeholder.
+ */
 export default function ReceiptCard({ image, amount, merchant, time, onPress, style }: Props) {
   const { theme } = useTheme();
 

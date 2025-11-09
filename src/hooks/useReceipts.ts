@@ -1,17 +1,56 @@
+/**
+ * useReceipts Hook
+ * 
+ * Fetches and manages receipt data for a specific user from Firestore.
+ * Provides automatic refresh on data changes via event bus subscription.
+ * 
+ * Features:
+ * - Initial data load on mount
+ * - Real-time updates via 'receipts-changed' event
+ * - Auto-refresh every 30 seconds (silent, no loading spinner)
+ * - Proper cleanup on unmount
+ * - Loading and error state management
+ * 
+ * Data transformation:
+ * - Converts Firestore receipt documents to simplified ReceiptShape format
+ * - Formats merchant names with fallback to date
+ * - Ensures image URIs are properly typed
+ * 
+ * @param userId - Firebase user ID to fetch receipts for. If undefined, returns empty array.
+ * @returns Object with receipts array, loading boolean, and error string (null if no error)
+ * 
+ * @example
+ * const { receipts, loading, error } = useReceipts(user?.uid);
+ * if (loading) return <Spinner />;
+ * if (error) return <ErrorMessage text={error} />;
+ * return <ReceiptList data={receipts} />;
+ */
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { receiptService } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
 import { formatRelativeDate } from '../utils/formatters';
 
 export type ReceiptShape = {
+  /** Unique receipt identifier (string representation of Firestore document ID) */
   id: string;
+  /** Merchant or store name (falls back to formatted date) */
   merchant: string;
+  /** Total purchase amount in currency */
   amount: number;
+  /** ISO date string of when receipt was scanned */
   date: string;
+  /** Optional time string (currently unused, empty string) */
   time?: string;
+  /** Optional URI to receipt image in Firebase Storage */
   image?: string;
 };
 
+/**
+ * Fetches receipts for the given user ID and subscribes to changes.
+ * Automatically refreshes when 'receipts-changed' event is emitted.
+ * Polls every 30 seconds for freshness while mounted.
+ */
 export default function useReceipts(userId?: string) {
   const [receipts, setReceipts] = useState<ReceiptShape[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

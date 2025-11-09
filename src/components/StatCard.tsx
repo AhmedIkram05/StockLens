@@ -1,17 +1,37 @@
+/**
+ * StatCard Component
+ * 
+ * A card component for displaying key statistics and metrics with optional labels and subtitles.
+ * Supports three color variants (green, blue, white) and automatically adjusts text color for contrast.
+ * 
+ * Used throughout the app for displaying spending totals, investment projections, and other numeric data.
+ * Text color automatically switches to ensure readability on colored backgrounds.
+ */
+
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
+  /** Main value/metric to display (can be text, number, or React element) */
   value: React.ReactNode;
+  /** Optional label displayed below the value */
   label?: string;
+  /** Optional subtitle displayed below the label */
   subtitle?: string;
+  /** Color variant for the card background. Default: 'white' */
   variant?: 'green' | 'blue' | 'white';
+  /** Text alignment within the card. Default: 'center' */
   align?: 'center' | 'left';
+  /** Optional custom styling for the card container */
   style?: StyleProp<ViewStyle>;
 };
 
+/**
+ * Renders a metric card with value, optional label, and optional subtitle.
+ * Background and text colors are determined by the variant prop.
+ */
 export default function StatCard({ value, label, subtitle, variant = 'white', style }: Props) {
   const { theme } = useTheme();
   
