@@ -372,7 +372,6 @@ export default function ReceiptDetailsScreen() {
 
         <DangerButton
           accessibilityLabel="Delete receipt"
-          style={[isSmallPhone && styles.deleteButtonCompact]}
           onPress={() =>
             Alert.alert(
               'Delete receipt',
@@ -417,14 +416,10 @@ export default function ReceiptDetailsScreen() {
 
 // Styles
 type Styles = {
-  container: ViewStyle;
   content: ViewStyle;
   contentCompact: ViewStyle;
   headerRow: ViewStyle;
   headerRowCompact: ViewStyle;
-  backButton: ViewStyle;
-  projectionHeader: ViewStyle;
-  projectionHeaderCompact: ViewStyle;
   projectionTitle: TextStyle;
   projectionSubtitle: TextStyle;
   carouselHeader: ViewStyle;
@@ -432,11 +427,8 @@ type Styles = {
   carouselSubtitle: TextStyle;
   carousel: ViewStyle;
   sectionSpacing: ViewStyle;
-  futureHeader: ViewStyle;
-  futureHeaderCompact: ViewStyle;
   futureTitle: TextStyle;
   futureSubtitle: TextStyle;
-  stockCard: ViewStyle;
   stockCardLast: ViewStyle;
   stockCardHeader: ViewStyle;
   stockName: TextStyle;
@@ -450,18 +442,10 @@ type Styles = {
   footerLabel: TextStyle;
   footerValue: TextStyle;
   verticalDivider: ViewStyle;
-  deleteButton: ViewStyle;
-  deleteButtonCompact: ViewStyle;
-  deleteIcon: TextStyle;
-  deleteText: TextStyle;
 };
 
 // Stylesheet
 const styles = StyleSheet.create<Styles>({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
   content: {
     paddingHorizontal: 0,
     paddingBottom: spacing.xxl,
@@ -480,24 +464,6 @@ const styles = StyleSheet.create<Styles>({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: sizes.controlMd,
-    height: sizes.controlMd,
-    borderRadius: radii.pill,
-    backgroundColor: palette.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.level2,
-  },
-  /* receipt card moved to `ReceiptCard` component - details removed */
-  projectionHeader: {
-    marginTop: spacing.xxl,
-    marginBottom: spacing.lg,
-  },
-  projectionHeaderCompact: {
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
   projectionTitle: {
     ...typography.sectionTitle,
     marginBottom: spacing.sm,
@@ -506,7 +472,6 @@ const styles = StyleSheet.create<Styles>({
     ...typography.body,
     opacity: 0.7,
   },
-  /* Year selector visuals are implemented inside `YearSelector` component now. */
   carouselHeader: {
     marginBottom: spacing.md,
   },
@@ -523,12 +488,6 @@ const styles = StyleSheet.create<Styles>({
   sectionSpacing: {
     height: spacing.xxl,
   },
-  futureHeader: {
-    marginBottom: spacing.lg,
-  },
-  futureHeaderCompact: {
-    marginBottom: spacing.md,
-  },
   futureTitle: {
     ...typography.sectionTitle,
     marginBottom: spacing.sm,
@@ -536,12 +495,6 @@ const styles = StyleSheet.create<Styles>({
   futureSubtitle: {
     ...typography.body,
     opacity: 0.7,
-  },
-  stockCard: {
-    backgroundColor: palette.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    ...shadows.level2,
   },
   stockCardLast: {
     marginRight: 0,
@@ -595,25 +548,5 @@ const styles = StyleSheet.create<Styles>({
     width: 1,
     backgroundColor: alpha.faintBlack,
     marginHorizontal: spacing.md,
-  },
-  deleteButton: {
-    marginTop: spacing.xxl + spacing.sm,
-    backgroundColor: palette.red,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.level2,
-  },
-  deleteButtonCompact: {
-    marginTop: spacing.xl,
-  },
-  deleteIcon: {
-    marginRight: spacing.sm,
-  },
-  deleteText: {
-    color: palette.white,
-    ...typography.button,
   },
 });

@@ -18,7 +18,6 @@ export default function OnboardingScreen() {
 
   const handleGetStarted = () => navigation.navigate('Login' as never);
 
-  // Graph sizing (kept from previous layout)
   const graphHeight = isTablet ? 420 : isSmallPhone ? 280 : 360;
   const graphWidth = Math.max(240, screenWidth - contentHorizontalPadding * 2);
   const insets = useSafeAreaInsets();
@@ -30,7 +29,7 @@ export default function OnboardingScreen() {
         <Text style={[typography.display, { color: theme.text, fontWeight: '800', marginBottom: spacing.md }]}>Stock
           <Text style={{ color: palette.green }}>Lens</Text>
         </Text>
-        <>{/* two lines tagline */}
+        <>
           <Text style={[typography.pageSubtitle, { color: theme.textSecondary }]}>Scan your Spending</Text>
           <Text style={[typography.pageSubtitle, { color: theme.textSecondary }]}>See your missed Investing</Text>
         </>

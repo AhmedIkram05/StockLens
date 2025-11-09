@@ -22,8 +22,6 @@ export function useBreakpoint(): BreakpointInfo {
     const isLargePhone = width >= breakpoints.largePhone && width < breakpoints.tablet;
     const isSmallPhone = width <= breakpoints.smallPhone;
 
-    // Use a modest side margin on phones so all screens have a small consistent gutter.
-    // Keep larger paddings for tablets.
     const contentHorizontalPadding = isTablet
       ? spacing.xxl
       : spacing.md;

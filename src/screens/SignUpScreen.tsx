@@ -5,7 +5,6 @@ import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
 import AuthFooter from '../components/AuthFooter';
 import { useNavigation } from '@react-navigation/native';
-// removed unused Ionicons import
 import BackButton from '../components/BackButton';
 import { authService, SignUpData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
@@ -25,7 +24,6 @@ export default function SignUpScreen() {
   const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
-    // Check if all fields are filled and passwords match
     const isValid =
       fullName.trim().length > 0 &&
       email.trim().length > 0 &&
@@ -42,7 +40,6 @@ export default function SignUpScreen() {
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
@@ -52,13 +49,10 @@ export default function SignUpScreen() {
     try {
       const signUpData: SignUpData = { fullName, email, password };
       await authService.signUp(signUpData);
-      // After sign up, offer to enable biometrics for convenience
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
-        // helper logs errors
       }
-      // Navigation will be handled automatically by the auth state change
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign up';
       if (error.code === 'auth/email-already-in-use') {
@@ -91,7 +85,6 @@ export default function SignUpScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
-          isSmallPhone && styles.contentCompact,
           { paddingBottom: sectionVerticalSpacing },
         ]}
       >
@@ -99,7 +92,6 @@ export default function SignUpScreen() {
           <BackButton onPress={handleBack} />
         </View>
 
-        {/* Title Section */}
         <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
           <Text style={[styles.title, { color: theme.text }]}>Create your account</Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
@@ -107,7 +99,6 @@ export default function SignUpScreen() {
           </Text>
         </View>
 
-        {/* Form Section */}
   <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
           <FormInput
             placeholder="Full Name"
@@ -168,7 +159,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: spacing.xxl,
   },
-  contentCompact: {},
   titleContainer: {
     alignItems: 'center',
     marginBottom: spacing.xxl,
@@ -184,8 +174,6 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.pageSubtitle,
     textAlign: 'center',
-    // use the global pageSubtitle.lineHeight token to avoid platform clipping
-    lineHeight: (typography.pageSubtitle.lineHeight as number) || Math.round((typography.pageSubtitle.fontSize as number) * 1.35),
   },
   formContainer: {
     flex: 1,

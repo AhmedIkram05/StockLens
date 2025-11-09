@@ -4,7 +4,6 @@ import type { Auth, Persistence } from 'firebase/auth';
 import db from './database';
 import { firebaseConfig } from './firebaseConfig';
 
-// Lazy initialization
 let app: FirebaseApp | null = null;
 let authInstance: Auth | null = null;
 
@@ -76,17 +75,12 @@ function createSQLitePersistence(): Persistence {
       await db.runAsync(`DELETE FROM ${AUTH_STATE_TABLE} WHERE key = ?`, [key]);
     }
 
-    _addListener(_key: string, _listener: (value: PersistenceValue | null) => void): void {
-      // Cross-instance change listeners are not supported for SQLite persistence in this project.
-    }
+    _addListener(_key: string, _listener: (value: PersistenceValue | null) => void): void {}
 
-    _removeListener(_key: string, _listener: (value: PersistenceValue | null) => void): void {
-      // Cross-instance change listeners are not supported for SQLite persistence in this project.
-    }
+    _removeListener(_key: string, _listener: (value: PersistenceValue | null) => void): void {}
   } as unknown as Persistence;
 }
 
-// Initialize Firebase only when first accessed
 function initializeFirebaseIfNeeded() {
   if (!app) {
     if (getApps().length === 0) {
@@ -98,7 +92,6 @@ function initializeFirebaseIfNeeded() {
   return app;
 }
 
-// Getter for auth - initializes Firebase on first access (async to allow dynamic import)
 export async function getAuthInstance(): Promise<Auth> {
   if (!authInstance) {
     const firebaseApp = initializeFirebaseIfNeeded();

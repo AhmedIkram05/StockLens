@@ -20,7 +20,6 @@ export interface UserSettings {
 }
 
 export const receiptService = {
-  // Create a new receipt
   create: async (receipt: Receipt): Promise<number> => {
     const query = `
       INSERT INTO receipts (user_id, image_uri, total_amount, ocr_data, synced)
@@ -38,20 +37,17 @@ export const receiptService = {
     return id;
   },
 
-  // Get all receipts for a user
   getByUserId: async (userId: string): Promise<Receipt[]> => {
     const query = 'SELECT * FROM receipts WHERE user_id = ? ORDER BY date_scanned DESC';
     return await databaseService.executeQuery(query, [userId]);
   },
 
-  // Get a single receipt by ID
   getById: async (id: number): Promise<Receipt | null> => {
     const query = 'SELECT * FROM receipts WHERE id = ?';
     const results = await databaseService.executeQuery(query, [id]);
     return results.length > 0 ? results[0] : null;
   },
 
-  // Update a receipt
   update: async (id: number, receipt: Partial<Receipt>): Promise<void> => {
   const allowedFields: Array<keyof Receipt> = ['user_id', 'image_uri', 'total_amount', 'date_scanned', 'ocr_data', 'synced'];
     const fields = Object.keys(receipt).filter(key => allowedFields.includes(key as keyof Receipt) && receipt[key as keyof Receipt] !== undefined);
@@ -67,13 +63,11 @@ export const receiptService = {
     await databaseService.executeNonQuery(query, values);
   },
 
-  // Delete a receipt
   delete: async (id: number): Promise<void> => {
     const query = 'DELETE FROM receipts WHERE id = ?';
     await databaseService.executeNonQuery(query, [id]);
   },
 
-  // Delete all receipts for a given user or all receipts when userId is not provided
   deleteAll: async (userId?: string): Promise<void> => {
     if (userId) {
       const query = 'DELETE FROM receipts WHERE user_id = ?';
@@ -82,25 +76,21 @@ export const receiptService = {
       const query = 'DELETE FROM receipts';
       await databaseService.executeNonQuery(query, []);
     }
-    // Notify listeners that receipts have changed so UI can refresh
-    try { emit('receipts-changed', { userId }); } catch (e) { /* ignore */ }
+    try { emit('receipts-changed', { userId }); } catch (e) {}
   },
 
-  // Get unsynced receipts
   getUnsynced: async (userId: string): Promise<Receipt[]> => {
     const query = 'SELECT * FROM receipts WHERE user_id = ? AND synced = 0';
     return await databaseService.executeQuery(query, [userId]);
   },
 
-  // Mark receipt as synced
   markAsSynced: async (id: number): Promise<void> => {
     const query = 'UPDATE receipts SET synced = 1 WHERE id = ?';
     await databaseService.executeNonQuery(query, [id]);
   },
 };
 
-export const userSettingsService = {
-  // Create or update user settings
+export const settingsService = {
   upsert: async (settings: UserSettings): Promise<void> => {
     const query = `
       INSERT OR REPLACE INTO user_settings (user_id, theme, auto_backup)
@@ -114,7 +104,6 @@ export const userSettingsService = {
     await databaseService.executeNonQuery(query, params);
   },
 
-  // Get user settings
   getByUserId: async (userId: string): Promise<UserSettings | null> => {
     const query = 'SELECT * FROM user_settings WHERE user_id = ?';
     const results = await databaseService.executeQuery(query, [userId]);
@@ -123,7 +112,6 @@ export const userSettingsService = {
 };
 
 export const userService = {
-  // Create or update a user profile (upsert by uid)
   upsert: async (uid: string, fullName: string | null, email: string): Promise<number> => {
     const timestamp = new Date().toISOString();
 
@@ -139,7 +127,6 @@ export const userService = {
       const params = [uid, fullName, email, timestamp];
       return await databaseService.executeNonQuery(query, params);
     } catch (error: any) {
-      // Handle situations where the email already exists under a different uid
       if (error?.message?.includes('UNIQUE constraint failed: users.email')) {
         const updateQuery = `
           UPDATE users
@@ -153,31 +140,23 @@ export const userService = {
     }
   },
 
-  // Get user by uid
   getByUid: async (uid: string) => {
     const query = 'SELECT * FROM users WHERE uid = ?';
     const results = await databaseService.executeQuery(query, [uid]);
     return results.length > 0 ? results[0] : null;
   },
 
-  // Delete user
   deleteByUid: async (uid: string) => {
     const query = 'DELETE FROM users WHERE uid = ?';
     await databaseService.executeNonQuery(query, [uid]);
   },
 };
 
-// --- Minimal stock data helper (MVP) ---
-/**
- * Fetch historical OHLCV for a symbol for the last `years` years.
- * Uses daily series for 1 year or less, otherwise monthly series.
- */
 export const stockService = {
   getHistoricalForTicker: async (symbol: string, years = 5): Promise<OHLCV[]> => {
     try {
       if (years <= 1) {
         const daily = await alphaVantageService.getDailyAdjusted(symbol);
-        // keep approximately last 365 days
         const cutoff = new Date();
         cutoff.setFullYear(cutoff.getFullYear() - 1);
         return daily.filter(d => new Date(d.date) >= cutoff);
@@ -187,7 +166,6 @@ export const stockService = {
         return monthly.slice(-monthsNeeded);
       }
     } catch (error: any) {
-      // Bubble up descriptive error for UI to show
       throw new Error(`Failed to fetch historical data for ${symbol}: ${error?.message || error}`);
     }
   },
@@ -201,58 +179,39 @@ export const stockService = {
   },
 };
 
-// --- One-time historical prefetch helpers ---
 const PREFETCH_MARKER_SYMBOL = '__stocklens_prefetch_done__';
 export const PREFETCH_TICKERS = ['NVDA', 'AAPL', 'MSFT', 'TSLA', 'NKE', 'AMZN', 'GOOGL', 'META', 'JPM', 'UNH'];
 
 async function ensureHistoricalPrefetch() {
   try {
-    // Check if marker exists in alpha_cache
     const rows = await databaseService.executeQuery(
       'SELECT * FROM alpha_cache WHERE symbol = ? LIMIT 1',
       [PREFETCH_MARKER_SYMBOL]
     );
-    if (rows && rows.length > 0) return; // already done
+    if (rows && rows.length > 0) return;
 
-    // Fetch monthly for each ticker (durable write is handled inside alphaVantageService).
-    // We intentionally do NOT fetch full daily series here to reduce API usage. Daily full
-    // history is only requested on-demand (when the user requests a 1-year outlook) so
-    // we avoid wasting rate-limit quota during the one-time prefetch.
     for (const t of PREFETCH_TICKERS) {
       try {
-        // monthly fetch will persist raw JSON to alpha_cache in alphaVantageService
         await alphaVantageService.getMonthlyAdjusted(t);
-      } catch (e) {
-        // ignore per-ticker errors
-      }
+      } catch (e) {}
     }
 
-    // insert a marker row to indicate prefetch complete
     try {
       await databaseService.executeNonQuery(
         `INSERT OR REPLACE INTO alpha_cache (symbol, interval, params, fetched_at, raw_json) VALUES (?, ?, ?, ?, ?)`,
         [PREFETCH_MARKER_SYMBOL, 'meta', '', new Date().toISOString(), JSON.stringify({ done: true })]
       );
-    } catch (e) {
-      /* ignore */
-    }
-  } catch (e) {
-    // best-effort
-  }
+    } catch (e) {}
+  } catch (e) {}
 }
 
 export { ensureHistoricalPrefetch };
 
-// Dev helper: force re-run of the historical prefetch by removing the marker and invoking the prefetch.
 export async function forceHistoricalPrefetch(): Promise<void> {
   try {
     await databaseService.executeNonQuery('DELETE FROM alpha_cache WHERE symbol = ?', [PREFETCH_MARKER_SYMBOL]);
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
   try {
     await ensureHistoricalPrefetch();
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
 }

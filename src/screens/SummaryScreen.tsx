@@ -1,17 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
-import { palette } from '../styles/palette';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
-import { getHistoricalCAGRFromToday, projectUsingHistoricalCAGR } from '../services/projectionService';
 import { ScrollView } from 'react-native';
 import { ensureHistoricalPrefetch, PREFETCH_TICKERS } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
-import useReceipts from '../hooks/useReceipts';
+import useReceipts, { ReceiptShape } from '../hooks/useReceipts';
 import { formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -24,25 +22,19 @@ export default function SummaryScreen() {
   const { user } = useAuth();
   const { theme, isDark } = useTheme();
   const [totalMoneySpent, setTotalMoneySpent] = useState<number>(0);
-  const [totalMissedFiveYears, setTotalMissedFiveYears] = useState<number>(0);
   const [receiptsScanned, setReceiptsScanned] = useState<number>(0);
-  const [highestImpactReceipt, setHighestImpactReceipt] = useState<any | null>(null);
-  const [totalMissedTenYears, setTotalMissedTenYears] = useState<number>(0);
+  const [highestImpactReceipt, setHighestImpactReceipt] = useState<ReceiptShape | null>(null);
   const [avgPerReceipt, setAvgPerReceipt] = useState<number>(0);
   const [mostActiveMonth, setMostActiveMonth] = useState<string | null>(null);
-  const [bestByPeriod, setBestByPeriod] = useState<Record<number, { symbol: string; rate: number }>>({});
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
   const [expandedDefinition, setExpandedDefinition] = useState<string | null>(null);
 
   const { receipts } = useReceipts(user?.uid);
 
-  // Top-3 stocks removed; replaced by compound calculator card.
-
   useEffect(() => {
     let mounted = true;
     async function loadTotals() {
       try {
-        // use receipts provided by the shared hook
         const r = receipts || [];
         const total = r.reduce((s, it) => s + (it.amount || 0), 0);
         if (!mounted) return;
@@ -71,62 +63,10 @@ export default function SummaryScreen() {
 
         const tickers = PREFETCH_TICKERS;
         const perTicker = total / Math.max(1, tickers.length);
-        const futures = await Promise.all(
-          tickers.map(async t => {
-            try {
-              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 5);
-              return futureValue;
-            } catch (e) {
-              return perTicker * 1.15;
-            }
-          })
-        );
-        const totalFuture5 = futures.reduce((s, v) => s + v, 0);
-        if (mounted) setTotalMissedFiveYears(totalFuture5);
-
-        const futures10 = await Promise.all(
-          tickers.map(async t => {
-            try {
-              const { futureValue } = await projectUsingHistoricalCAGR(perTicker, t, 10);
-              return futureValue;
-            } catch {
-              return (perTicker * 1.15) * 1.5;
-            }
-          })
-        );
-        const totalFuture10 = futures10.reduce((s, v) => s + v, 0);
-        if (mounted) setTotalMissedTenYears(totalFuture10);
-
-        const periods = [1, 3, 5, 10, 20];
-        const bests: Record<number, { symbol: string; rate: number }> = {};
-        await Promise.all(
-          periods.map(async years => {
-            let bestSym = '';
-            let bestRate = -Infinity;
-            await Promise.all(
-              tickers.map(async t => {
-                try {
-                  const cagr = await getHistoricalCAGRFromToday(t, years);
-                  const rate = cagr ?? 0;
-                  if (rate > bestRate) {
-                    bestRate = rate;
-                    bestSym = t;
-                  }
-                } catch (e) {
-                  // ignore per-ticker failures
-                }
-              })
-            );
-            bests[years] = { symbol: bestSym, rate: isFinite(bestRate) ? bestRate : 0 };
-          })
-        );
-        if (mounted) setBestByPeriod(bests);
       } catch (err) {
-        // ignore errors for now
       }
     }
 
-    // Ensure local prefetch/cache of common tickers to avoid hitting API limits
     ensureHistoricalPrefetch().catch(() => {});
 
   loadTotals();
@@ -142,11 +82,9 @@ export default function SummaryScreen() {
 
   const formatCurrency = (value: number) => formatCurrencyRounded(value);
 
-  // Dynamic insights based on user behavior
   const getDynamicInsights = () => {
     const dynamicInsights = [];
     
-    // Always show if user has spending data
     if (totalMoneySpent > 0) {
       dynamicInsights.push({
         icon: 'wallet-outline',
@@ -155,7 +93,6 @@ export default function SummaryScreen() {
       });
     }
     
-    // High spending detected
     if (totalMoneySpent > 1000) {
       dynamicInsights.push({
         icon: 'alert-circle-outline',
@@ -164,7 +101,6 @@ export default function SummaryScreen() {
       });
     }
     
-    // Frequent small purchases
     if (receiptsScanned > 20 && avgPerReceipt < 50) {
       dynamicInsights.push({
         icon: 'cash-outline',
@@ -173,7 +109,6 @@ export default function SummaryScreen() {
       });
     }
     
-    // Medium frequency purchases
     if (receiptsScanned >= 10 && receiptsScanned <= 20) {
       dynamicInsights.push({
         icon: 'trending-up',
@@ -182,7 +117,6 @@ export default function SummaryScreen() {
       });
     }
     
-    // Peak month insight
     if (mostActiveMonth) {
       dynamicInsights.push({
         icon: 'calendar-outline',
@@ -191,21 +125,18 @@ export default function SummaryScreen() {
       });
     }
     
-    // Time-based urgency
     dynamicInsights.push({
       icon: 'time-outline',
       title: 'Time is Your Superpower',
       description: 'Every year you wait costs exponentially more',
     });
     
-    // Inflation warning (always relevant)
     dynamicInsights.push({
       icon: 'pulse-outline',
       title: 'Inflation is Eating Your Cash',
       description: 'Cash loses purchasing power—investments can beat inflation',
     });
     
-    // Return top 5 most relevant
     return dynamicInsights.slice(0, 5);
   };
 
@@ -264,7 +195,6 @@ export default function SummaryScreen() {
     },
   ];
 
-  // Insight details for expandable tooltips - matched to dynamic insights
   const insightDetails: Record<string, { bullets: string[]; example: string }> = {
     'Your Spending Could Be Investing': {
       bullets: [
@@ -324,7 +254,6 @@ export default function SummaryScreen() {
     },
   };
 
-  // Definition details for expandable tooltips
   const definitionDetails: Record<string, { explanation: string; example: string }> = {
     'Compound Interest': {
       explanation: 'Compound interest is when you earn interest not just on your initial investment, but also on the interest you\'ve already earned. This creates exponential growth over time, often called the "snowball effect".',
@@ -389,7 +318,6 @@ export default function SummaryScreen() {
   );
   const navigation = useNavigation();
 
-  // Helper to derive the subtitle for a receipt: always use the formatted scan date
   const getReceiptSubtitle = (r: any) => {
     if (!r) return 'No receipts yet';
     try {
@@ -421,7 +349,6 @@ export default function SummaryScreen() {
           </ResponsiveContainer>
         ) : (
           <>
-  {/* Center content width so tablet layout matches the rest of the app */}
   <ResponsiveContainer maxWidth={screenWidth - contentHorizontalPadding * 2}>
 
         {/* Full-width 20-year projection card */}
@@ -606,15 +533,9 @@ export default function SummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   contentContainer: {
     paddingTop: 0,
     paddingBottom: spacing.xxl,
-  },
-  header: {
-    marginBottom: spacing.xl,
   },
   title: {
     ...typography.pageTitle,
@@ -628,50 +549,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
   },
-  card: {
-    borderRadius: radii.md,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.level2,
-  },
-  cardBlue: {
-    backgroundColor: '#007AFF',
-  },
-  cardGreen: {
-    backgroundColor: '#10b981',
-  },
-  cardValue: {
-    ...typography.metric,
-    marginBottom: spacing.sm,
-  },
-  cardValueDark: {
-    color: '#000000',
-  },
   cardValueText: {
     ...typography.metricSm,
     fontWeight: '700',
-    textAlign: 'center',
-  },
-  cardTitle: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  cardSubtitle: {
-    ...typography.caption,
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-  cardTitleDark: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  cardSubtitleDark: {
-    ...typography.caption,
-    opacity: 0.7,
     textAlign: 'center',
   },
   sectionHeader: {
@@ -680,71 +560,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.sectionTitle,
-  },
-  stockList: {
-    borderRadius: radii.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    ...shadows.level2,
-  },
-  stockRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  rowDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#f5f5f5',
-  },
-  stockInfo: {
-    flexShrink: 1,
-    paddingRight: spacing.md,
-  },
-  stockCompany: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
-  },
-  stockMeta: {
-    ...typography.caption,
-    opacity: 0.6,
-  },
-  stockGrowthContainer: {
-    alignItems: 'flex-end',
-  },
-  stockGrowth: {
-    ...typography.metricSm,
-  },
-  stockPeriod: {
-    ...typography.overline,
-    opacity: 0.6,
-    marginTop: spacing.xs,
-  },
-  quickStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'stretch',
-    marginBottom: spacing.md,
-  },
-  quickStatCard: {
-    flex: 1,
-    borderRadius: radii.lg,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.md,
-    alignItems: 'center',
-    ...shadows.level1,
-    marginBottom: spacing.md,
-  },
-  quickStatCardMargin: {
-    marginRight: spacing.md,
-  },
-  quickStatValue: {
-    ...typography.metricSm,
-    marginBottom: spacing.sm,
-  },
-  quickStatLabel: {
-    ...typography.caption,
-    textAlign: 'center',
   },
   valueWithIcon: {
     flexDirection: 'row',
@@ -764,10 +579,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
     ...shadows.level1,
-  },
-  insightEmoji: {
-    fontSize: sizes.avatarSm,
-    marginRight: spacing.md,
   },
   insightIcon: {
     marginRight: spacing.md,
@@ -814,18 +625,6 @@ const styles = StyleSheet.create({
   exampleText: {
     ...typography.caption,
     fontStyle: 'italic',
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
-    gap: spacing.xs,
-  },
-  ctaButtonText: {
-    ...typography.bodyStrong,
   },
   definitionsList: {
     marginBottom: spacing.xl,

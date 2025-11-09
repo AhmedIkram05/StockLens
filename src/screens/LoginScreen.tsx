@@ -8,7 +8,6 @@ import Logo from '../components/Logo';
 import FormInput from '../components/FormInput';
 import AuthFooter from '../components/AuthFooter';
 import { authService, SignInData } from '../services/authService';
-import * as biometric from '../hooks/useBiometricAuth';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -33,15 +32,11 @@ export default function LoginScreen() {
     try {
       const signInData: SignInData = { email, password };
       await authService.signIn(signInData);
-        // prevent immediate lock for this sign-in session
         try { markSignedIn(); } catch {}
-      // After successful sign in, give the user option to enable biometrics
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
-        // helper already logs errors
       }
-      // Navigation will be handled automatically by the auth state change
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign in';
       if (error.code === 'auth/user-not-found') {
@@ -59,7 +54,6 @@ export default function LoginScreen() {
     navigation.navigate('SignUp' as never);
   };
 
-  // Forgot password handler
   const [forgotDisabled, setForgotDisabled] = useState(false);
   const handleForgot = async () => {
     if (forgotDisabled) return;
@@ -70,7 +64,6 @@ export default function LoginScreen() {
     }
     setForgotDisabled(true);
     try {
-      // Use dynamic import to avoid any stale module bindings during HMR/runtime
       const mod = await import('../services/authService');
       if (!mod || !mod.authService || typeof mod.authService.sendPasswordReset !== 'function') {
         throw new Error('authService.sendPasswordReset is not available');
@@ -81,7 +74,6 @@ export default function LoginScreen() {
       console.warn('Password reset failed', err);
       Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
     } finally {
-      // 30s cooldown
       setTimeout(() => setForgotDisabled(false), 30000);
     }
   };
@@ -89,7 +81,7 @@ export default function LoginScreen() {
   return (
   <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
       <View style={styles.content}>
-        <View style={[styles.logoContainer, isSmallPhone && styles.logoContainerCompact]}>
+        <View style={styles.logoContainer}>
           <Logo />
         </View>
 
@@ -115,7 +107,6 @@ export default function LoginScreen() {
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scan your spending{'\n'}See your missed investing</Text>
         </PageHeader>
 
-        {/* Form Section */}
   <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact, isTablet && orientation === 'landscape' && styles.formContainerLandscapeTablet]}>
           <FormInput
             placeholder="Email"
@@ -151,10 +142,6 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.lightGray,
-  },
   content: {
     flex: 1,
     justifyContent: 'space-between',
@@ -168,10 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoContainerCompact: {
-    // keep same layout but allow logo to size itself
-  },
-  logo: {},
   titleContainer: {
     alignItems: 'center',
   },
@@ -181,8 +164,6 @@ const styles = StyleSheet.create({
   title: {
     ...typography.pageTitle,
     textAlign: 'center',
-    // spacing for top/bottom is applied responsively inline so it adapts
-    // to phones/tablets. Keep only typography here.
   },
   titleLens: {
     ...typography.pageTitle,
@@ -200,18 +181,6 @@ const styles = StyleSheet.create({
     // add extra space between subtitle and form on horizontal/tablet layouts
     marginTop: spacing.xl,
   },
-  inputContainer: {
-    marginBottom: spacing.md,
-  },
-  input: {
-    backgroundColor: palette.white,
-    borderWidth: 1,
-    borderColor: alpha.faintBlack,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: palette.black,
-  },
   loginButton: {
     backgroundColor: palette.green,
     borderRadius: radii.md,
@@ -225,23 +194,6 @@ const styles = StyleSheet.create({
   },
   signUpContainer: {
     alignItems: 'center',
-  },
-  signUpText: {
-    ...typography.caption,
-    marginBottom: spacing.sm,
-  },
-  signUpButton: {
-    borderWidth: 2,
-    borderColor: palette.green,
-    backgroundColor: palette.white,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  signUpButtonText: {
-    color: palette.green,
-    ...typography.button,
   },
   forgotContainer: {
     alignItems: 'center',

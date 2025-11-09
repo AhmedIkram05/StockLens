@@ -37,7 +37,6 @@ export default function SettingsScreen() {
     );
   };
 
-  // Load current biometric enabled state
   React.useEffect(() => {
     let mounted = true;
     (async () => {
@@ -188,12 +187,10 @@ const styles = StyleSheet.create({
     ...typography.overline,
     marginBottom: spacing.md,
   },
-  // iconContainer/iconEmoji/blueIcon/grayIcon/redIcon styles removed; now handled in SettingRow
   arrow: {
     ...typography.bodyStrong,
   },
   redText: {
-    color: '#FF3B30', // Keep red for destructive actions
+    color: '#FF3B30',
   },
-  
 });

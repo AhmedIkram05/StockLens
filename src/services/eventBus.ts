@@ -18,7 +18,6 @@ export const emit = (event: string, payload?: any) => {
     try {
       fn(payload);
     } catch (e) {
-      // swallow individual listener errors
       console.error('eventBus listener error', e);
     }
   }

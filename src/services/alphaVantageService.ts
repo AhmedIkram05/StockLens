@@ -2,11 +2,9 @@ import Constants from 'expo-constants';
 import { emit } from './eventBus';
 import { databaseService } from './database';
 
-// lightweight in-memory cache for runtime speed (per-process)
 type MemCacheEntry = { value: any; expiresAt: number };
 const serviceMemCache = new Map<string, MemCacheEntry>();
 
-// in-flight dedupe map to avoid duplicate background fetches for same key
 const inFlightRefresh: Record<string, Promise<any> | undefined> = {};
 
 export type OHLCV = {
@@ -31,7 +29,6 @@ function getApiKey(): string {
 }
 
 async function fetchJson(url: string) {
-  // simple retry
   let lastErr: any = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -44,13 +41,11 @@ async function fetchJson(url: string) {
         throw new Error(`AlphaVantage API Error: ${json['Error Message']}`);
       }
       if (json['Note']) {
-        // rate limit or other note
         throw new Error(`AlphaVantage Note: ${json['Note']}`);
       }
       return json;
     } catch (err: any) {
       lastErr = err;
-      // exponential backoff before retrying
       await new Promise(r => setTimeout(r, 250 * Math.pow(2, attempt)));
     }
   }

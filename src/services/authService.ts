@@ -12,7 +12,6 @@ export interface SignInData {
 }
 
 export const authService = {
-  // Sign up with email and password
   async signUp({ fullName, email, password }: SignUpData): Promise<UserCredential> {
     try {
       const { getAuthInstance } = await import('./firebase');
@@ -22,12 +21,10 @@ export const authService = {
       const auth = await getAuthInstance();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-      // Update the user profile with display name
       await updateProfile(userCredential.user, {
         displayName: fullName,
       });
 
-      // Persist user profile locally in SQLite
       await userService.upsert(userCredential.user.uid, fullName, email);
 
       return userCredential;
@@ -37,7 +34,6 @@ export const authService = {
     }
   },
 
-  // Sign in with email and password
   async signIn({ email, password }: SignInData): Promise<UserCredential> {
     try {
       const { getAuthInstance } = await import('./firebase');
@@ -47,7 +43,6 @@ export const authService = {
       const auth = await getAuthInstance();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-      // Update last login locally
       await userService.upsert(userCredential.user.uid, userCredential.user.displayName || null, email);
 
       return userCredential;
@@ -57,7 +52,6 @@ export const authService = {
     }
   },
 
-  // Send a password reset email using Firebase Auth
   async sendPasswordReset(email: string): Promise<void> {
     try {
       console.debug('authService.sendPasswordReset: sending reset for', email);
@@ -72,7 +66,6 @@ export const authService = {
     }
   },
 
-  // Get current user data from local SQLite
   async getUserData(userId: string) {
     try {
       const { userService } = await import('./dataService');

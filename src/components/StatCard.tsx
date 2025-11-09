@@ -27,7 +27,6 @@ export default function StatCard({ value, label, subtitle, variant = 'white', st
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   card: {
     borderRadius: radii.md,

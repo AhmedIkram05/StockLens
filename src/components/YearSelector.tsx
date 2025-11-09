@@ -7,7 +7,6 @@ import { useTheme } from '../contexts/ThemeContext';
 type Props<T extends number> = {
   options: T[];
   value: T;
-  // accept either a simple callback or a React setState dispatcher (common caller pattern)
   onChange: ((v: T) => void) | Dispatch<SetStateAction<T>>;
   compact?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -81,9 +80,7 @@ export default function YearSelector<T extends number = number>({ options, value
         <TouchableOpacity
           key={o}
           onPress={() => {
-            // call either dispatcher or callback
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore - call signature can be a dispatcher or callback
+            // @ts-ignore
             onChange(o);
           }}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: segPadVert, marginHorizontal: spacing.xs / 2 }}

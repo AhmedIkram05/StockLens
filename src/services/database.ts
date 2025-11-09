@@ -1,9 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
-// Open the database
 const db = SQLite.openDatabaseSync('stocklens.db');
 
-// Database table schemas
 export const DB_SCHEMAS = {
   users: `
     CREATE TABLE IF NOT EXISTS users (
@@ -55,7 +53,6 @@ export const DB_SCHEMAS = {
   `,
 };
 
-// Helpful indexes for reducing table scan costs on common queries
 const DB_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_receipts_user_id_synced ON receipts (user_id, synced);`,
   `CREATE INDEX IF NOT EXISTS idx_receipts_date_scanned ON receipts (date_scanned DESC);`,
@@ -63,22 +60,17 @@ const DB_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_alpha_cache_symbol_interval ON alpha_cache (symbol, interval);`,
 ];
 
-// Initialize database tables
 export const initDatabase = async (): Promise<void> => {
   try {
-    // Enforce declared foreign-key relationships for this SQLite connection
     await db.execAsync('PRAGMA foreign_keys = ON;');
 
-    // Execute all schema creation queries
     for (const schema of Object.values(DB_SCHEMAS)) {
       await db.execAsync(schema);
     }
 
-    // Create supporting indexes after tables exist
     for (const index of DB_INDEXES) {
       await db.execAsync(index);
     }
-    // Ensure receipts table has an ocr_data column; if missing, add it.
     try {
       const cols: any[] = await db.getAllAsync("PRAGMA table_info('receipts')");
       const hasOcr = cols.some(c => c.name === 'ocr_data');
@@ -100,9 +92,7 @@ export const initDatabase = async (): Promise<void> => {
   }
 };
 
-// Generic database operations
 export const databaseService = {
-  // Execute a query with parameters
   executeQuery: async (query: string, params: any[] = []): Promise<any[]> => {
     try {
       const result = await db.getAllAsync(query, params);
@@ -113,7 +103,6 @@ export const databaseService = {
     }
   },
 
-  // Execute a non-query operation (INSERT, UPDATE, DELETE)
   executeNonQuery: async (query: string, params: any[] = []): Promise<number> => {
     try {
       const result = await db.runAsync(query, params);
@@ -124,7 +113,6 @@ export const databaseService = {
     }
   },
   
-  // Prune alpha_cache entries older than `days` days (based on fetched_at)
   pruneAlphaCacheOlderThan: async (days: number) => {
     try {
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();

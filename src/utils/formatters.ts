@@ -6,7 +6,6 @@ export function formatCurrencyGBP(amount: number) {
       minimumFractionDigits: 2,
     }).format(amount || 0);
   } catch (e) {
-    // fallback simple formatting
     return `£${(amount || 0).toFixed(2)}`;
   }
 }

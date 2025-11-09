@@ -23,11 +23,9 @@ export default function ReceiptsSorter({ sortBy, sortDirection, onSortChange }: 
 
   const handleSortByChange = (newSortBy: SortBy) => {
     if (newSortBy === sortBy) {
-      // Toggle direction
       const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
       onSortChange(newSortBy, newDirection);
     } else {
-      // New sort by, default to desc for date, asc for others
       const defaultDirection = newSortBy === 'date' ? 'desc' : 'asc';
       onSortChange(newSortBy, defaultDirection);
     }

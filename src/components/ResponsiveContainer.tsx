@@ -13,10 +13,6 @@ export default function ResponsiveContainer({ children, maxWidth = 960, style }:
   const insets = useSafeAreaInsets();
   const { width, contentHorizontalPadding } = useBreakpoint();
 
-  // Compute available content width by subtracting the left/right
-  // content horizontal padding (from breakpoints) and the device safe-area insets.
-  // This ensures centering respects both our layout tokens and device insets on iPad
-  // (fixes cases where content appears clipped at the left edge).
   const horizontalReserved = (contentHorizontalPadding || 0) * 2 + (insets.left || 0) + (insets.right || 0);
   const available = Math.max(0, width - horizontalReserved);
   const contentWidth = Math.min(available, maxWidth);
