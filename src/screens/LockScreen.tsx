@@ -50,10 +50,10 @@ export default function LockScreen() {
   const handleForgotFromLock = async () => {
     if (forgotDisabled) return;
     if (!accountEmail) {
-      Alert.alert('No account', 'No account email available. Please sign in again from the Sign In screen.');
+      Alert.alert('No Account', 'No account email available. Please sign in again from the Sign In screen.');
       return;
     }
-    Alert.alert('Send reset link?', `Send a password reset link to ${accountEmail}?`, [
+    Alert.alert('Send Reset Link?', `Send a password reset link to ${accountEmail}?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Send', onPress: async () => {
         setForgotDisabled(true);
@@ -63,7 +63,7 @@ export default function LockScreen() {
             throw new Error('authService.sendPasswordReset is not available');
           }
           await mod.authService.sendPasswordReset(accountEmail);
-          Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
+          Alert.alert('Password Reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
         } catch (err: any) {
           console.warn('Password reset failed', err);
           Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
@@ -78,10 +78,12 @@ export default function LockScreen() {
     setLoading(true);
     try {
       const ok = await unlockWithBiometrics();
-      if (!ok) Alert.alert('Unlock failed', 'Could not unlock using biometrics');
+      if (!ok) {
+        Alert.alert('Unlock Failed', 'Could not unlock using biometrics. Please try again or use your password.');
+      }
     } catch (err) {
       console.warn(err);
-      Alert.alert('Error', 'Biometric unlock failed');
+      Alert.alert('Error', 'Biometric unlock failed. Please use your password.');
     } finally {
       setLoading(false);
     }
@@ -90,16 +92,18 @@ export default function LockScreen() {
   const handleManual = async () => {
     const emailAddr = user?.email || userProfile?.email;
     if (!emailAddr) {
-      Alert.alert('No account', 'No account email available. Please sign in again from the Sign In screen.');
+      Alert.alert('No Account', 'No account email available. Please sign in again from the Sign In screen.');
       return;
     }
     if (!password) {
-      Alert.alert('Missing password', 'Please enter your account password');
+      Alert.alert('Missing Password', 'Please enter your account password');
       return;
     }
     setLoading(true);
     const ok = await unlockWithCredentials(emailAddr, password);
-    if (!ok) Alert.alert('Unlock failed', 'Invalid password');
+    if (!ok) {
+      Alert.alert('Unlock Failed', 'Invalid password. Please try again.');
+    }
     setLoading(false);
   };
 
@@ -123,11 +127,11 @@ export default function LockScreen() {
         <SecondaryButton
           onPress={handleBiometric}
           disabled={loading}
-          accessibilityLabel="Unlock with biometrics"
+          accessibilityLabel="Unlock with Face ID or Touch ID"
           style={styles.bioButton}
           textStyle={{ color: palette.white }}
         >
-          {loading ? 'Unlocking…' : 'Unlock with Biometrics / Passcode'}
+          {loading ? 'Unlocking…' : 'Unlock with Face ID / Touch ID'}
         </SecondaryButton>
 
         <Text style={[styles.or, { color: theme.textSecondary }]}>Or enter your account password</Text>
