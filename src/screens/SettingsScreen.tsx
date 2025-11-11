@@ -18,6 +18,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, Switch, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import SettingRow from '../components/SettingRow';
@@ -188,7 +189,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Security</Text>
 
           <SettingRow
-            iconEmoji="🔐"
+            icon="finger-print"
             iconBgColor={theme.secondary}
             title="Face ID / Touch ID"
             subtitle="Secure login with biometrics"
@@ -196,7 +197,7 @@ export default function SettingsScreen() {
           />
 
           <SettingRow
-            iconEmoji="🛡️"
+            icon="shield-checkmark"
             iconBgColor={theme.border}
             title="Local Data Storage"
             subtitle="All processing kept on device (No cloud Storage)"
@@ -207,7 +208,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</Text>
 
           <SettingRow
-            iconEmoji="🌙"
+            icon="moon"
             iconBgColor={theme.secondary}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"
@@ -219,7 +220,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Account</Text>
 
           <SettingRow
-            iconEmoji="🚪"
+            icon="log-out"
             iconBgColor={theme.error}
             title="Log Out"
             subtitle="Return to login screen"
@@ -233,7 +234,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Data Management</Text>
 
           <SettingRow
-            iconEmoji="🗑️"
+            icon="trash"
             iconBgColor={theme.error}
             title="Clear All Data"
             subtitle="Delete all scanned receipts"
