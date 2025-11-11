@@ -43,7 +43,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 export default function LoginScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, isSmallPhone, sectionVerticalSpacing, isTablet, orientation } = useBreakpoint();
-  const { markSignedIn } = useAuth();
+  const { startLockGrace } = useAuth();
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,10 +57,13 @@ export default function LoginScreen() {
     try {
       const signInData: SignInData = { email, password };
       await authService.signIn(signInData);
-        try { markSignedIn(); } catch {}
+      
+      startLockGrace();
+      
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
+        console.log('Biometric prompt dismissed or failed:', e);
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign in';
@@ -75,7 +78,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = () => { 
     navigation.navigate('SignUp' as never);
   };
 
