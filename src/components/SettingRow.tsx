@@ -2,7 +2,7 @@
  * SettingRow Component
  * 
  * A reusable row component for Settings screens with icon, title, subtitle, and right accessory.
- * Supports emoji icons with custom background colors and optional destructive styling (e.g., "Sign Out").
+ * Supports Ionicons vector icons with custom background colors and optional destructive styling (e.g., "Sign Out").
  * 
  * Used extensively in SettingsScreen for displaying user preferences, app info, and account actions.
  * Can be made pressable by providing an onPress callback, or static by omitting it.
@@ -10,12 +10,13 @@
 
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
-  /** Emoji or image string to display as icon (e.g., "⚙️", "🔔") */
-  iconEmoji?: string;
+  /** Ionicons icon name to display (e.g., "settings-outline", "notifications") */
+  icon?: keyof typeof Ionicons.glyphMap;
   /** Background color for icon container */
   iconBgColor?: string;
   /** Main text displayed in the row */
@@ -36,7 +37,7 @@ type Props = {
  * Renders a settings row with optional icon, title, subtitle, and right accessory.
  * Destructive prop applies error color to title for dangerous actions (e.g., "Delete Account").
  */
-export default function SettingRow({ iconEmoji, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
+export default function SettingRow({ icon, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
   const { theme } = useTheme();
 
   const Title = (
@@ -45,9 +46,9 @@ export default function SettingRow({ iconEmoji, iconBgColor, title, subtitle, ri
 
   return (
     <TouchableOpacity activeOpacity={onPress ? 0.85 : 1} onPress={onPress} style={[styles.row, { backgroundColor: theme.surface }, style]}>
-      {iconEmoji ? (
+      {icon ? (
         <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}> 
-          <Text style={styles.iconEmoji}>{iconEmoji}</Text>
+          <Ionicons name={icon} size={24} color={theme.text} />
         </View>
       ) : null}
 
@@ -79,9 +80,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
-  },
-  iconEmoji: {
-    fontSize: 28, // smaller than sizes.avatarSm for a more compact look
   },
   content: {
     flex: 1,
