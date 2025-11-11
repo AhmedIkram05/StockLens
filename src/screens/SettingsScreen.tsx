@@ -30,12 +30,12 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 
 /**
  * Renders the settings screen with user preferences and account actions.
- * Loads biometric enabled state on mount and syncs with secure storage on changes.
+ * Handles sign out, data clearing, and biometric toggle with appropriate prompts.
  */
 export default function SettingsScreen() {
   const { signOutUser, userProfile } = useAuth();
   const { mode, setMode, isDark, theme } = useTheme();
-  const [faceIdEnabled, setFaceIdEnabled] = useState(true);
+  const [faceIdEnabled, setFaceIdEnabled] = useState(false);
   const { isSmallPhone, isTablet } = useBreakpoint();
 
   const handleSignOut = async () => {
@@ -73,15 +73,77 @@ export default function SettingsScreen() {
   }, []);
 
   const handleToggleFaceId = async (val: boolean) => {
-    setFaceIdEnabled(val);
-    try {
-      if (!val) {
+    if (!val) {
+      // Disabling biometrics - just clear credentials
+      setFaceIdEnabled(val);
+      try {
         await biometric.clearBiometricCredentials();
-      } else {
-        await biometric.setBiometricEnabled(true);
+      } catch (err) {
+        console.warn('Failed to clear biometric credentials', err);
       }
+      return;
+    }
+
+    try {
+      const existingCreds = await biometric.getBiometricCredentials();
+      if (existingCreds) {
+        setFaceIdEnabled(true);
+        await biometric.setBiometricEnabled(true);
+        Alert.alert('Enabled', 'Biometric login enabled');
+        return;
+      }
+
+      Alert.alert(
+        'Enable Biometrics?',
+        'To enable Face ID / Touch ID, please enter your password to securely store your credentials.',
+        [
+          { 
+            text: 'Cancel', 
+            style: 'cancel',
+            onPress: () => setFaceIdEnabled(false)
+          },
+          {
+            text: 'Continue',
+            onPress: () => {
+              Alert.prompt(
+                'Enter Password',
+                'Enter your account password to enable biometric login:',
+                [
+                  { 
+                    text: 'Cancel', 
+                    style: 'cancel',
+                    onPress: () => setFaceIdEnabled(false)
+                  },
+                  {
+                    text: 'Save',
+                    onPress: async (password?: string) => {
+                      if (!password || !userProfile?.email) {
+                        Alert.alert('Error', 'Password is required');
+                        setFaceIdEnabled(false);
+                        return;
+                      }
+                      
+                      try {
+                        await biometric.saveBiometricCredentials(userProfile.email, password);
+                        setFaceIdEnabled(true);
+                        Alert.alert('Enabled', 'Biometric login enabled');
+                      } catch (err) {
+                        console.warn('Failed to save biometric credentials', err);
+                        Alert.alert('Error', 'Failed to enable biometric login');
+                        setFaceIdEnabled(false);
+                      }
+                    },
+                  },
+                ],
+                'secure-text'
+              );
+            },
+          },
+        ]
+      );
     } catch (err) {
       console.warn('Failed to update biometric setting', err);
+      setFaceIdEnabled(false);
     }
   };
 

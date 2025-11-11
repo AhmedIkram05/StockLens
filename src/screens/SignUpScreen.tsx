@@ -34,6 +34,7 @@ import { useNavigation } from '@react-navigation/native';
 import IconButton from '../components/IconButton';
 import { authService, SignUpData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
+import { useAuth } from '../contexts/AuthContext';
 import { palette, alpha } from '../styles/palette';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -46,6 +47,7 @@ import { useTheme } from '../contexts/ThemeContext';
 export default function SignUpScreen() {
   const navigation = useNavigation();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
+  const { startLockGrace } = useAuth();
   const { theme } = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -79,9 +81,13 @@ export default function SignUpScreen() {
     try {
       const signUpData: SignUpData = { fullName, email, password };
       await authService.signUp(signUpData);
+      
+      startLockGrace();
+      
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
+        console.log('Biometric prompt dismissed or failed:', e);
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign up';

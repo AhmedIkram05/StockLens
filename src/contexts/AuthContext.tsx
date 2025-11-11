@@ -21,12 +21,11 @@
  * - signOutUser: Signs out from Firebase and clears local state
  * - unlockWithBiometrics: Attempts Face ID/Touch ID unlock
  * - unlockWithCredentials: Validates email/password from secure storage
- * - markSignedIn: Flags recent sign-in to prevent immediate lock
  * 
  * Auto-lock behavior:
  * - When app goes to background, sets locked=true (if DISABLE_LOCK=false)
  * - On foreground return, user must unlock with biometrics or password
- * - Recently signed in users skip lock for smooth onboarding
+ * - Grace period: 10-second window after sign-in where lock is disabled
  */
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
@@ -58,8 +57,8 @@ interface AuthContextType {
   unlockWithBiometrics: () => Promise<boolean>;
   /** Unlocks using email/password credentials from secure storage */
   unlockWithCredentials: (email: string, password: string) => Promise<boolean>;
-  /** Marks user as recently signed in to prevent immediate lock */
-  markSignedIn: () => void;
+  /** Starts 10-second grace period to prevent immediate locking after sign-in */
+  startLockGrace: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -70,7 +69,7 @@ const AuthContext = createContext<AuthContextType>({
   locked: false,
   unlockWithBiometrics: async () => false,
   unlockWithCredentials: async () => false,
-  markSignedIn: () => {},
+  startLockGrace: () => {},
 });
 
 /**
@@ -108,9 +107,8 @@ interface AuthProviderProps {
  * 5. On unmount: Cleans up Firebase listener and AppState subscription
  * 
  * Lock Logic:
- * - DISABLE_LOCK flag controls whether lock feature is active
- * - recentlySignedIn ref prevents lock immediately after sign-in
- * - Lock timeout (5min) clears recentlySignedIn flag
+ * - LOCK_ENABLED flag controls whether lock feature is active
+ * - lockGraceActive ref prevents immediate lock for 10s after sign-in
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -118,8 +116,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const appState = useRef<AppStateStatus | null>(null);
   const [locked, setLocked] = useState(false);
-  const DISABLE_LOCK = true;
-  const recentlySignedIn = useRef(false);
+  const LOCK_ENABLED = true;
+  const lockGraceActive = useRef(false);
+  const lockGraceTimer = useRef<NodeJS.Timeout | null>(null);
   const { setMode } = useTheme();
 
   useEffect(() => {
@@ -146,13 +145,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               } else {
                 setUserProfile(profile);
               }
-            if (usr && !recentlySignedIn.current) {
-              if (!DISABLE_LOCK) {
-                setLocked(true);
-              } else {
-                setLocked(false);
-              }
-            }
             } catch (err) {
               console.error('Error loading local user profile:', err);
             }
@@ -180,23 +172,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     appState.current = AppState.currentState;
     const handle = (nextAppState: AppStateStatus) => {
       if (appState.current && appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        if (!DISABLE_LOCK) {
+        // Only lock if lock is enabled, user exists, and grace period is not active
+        if (LOCK_ENABLED && user && !lockGraceActive.current) {
           setLocked(true);
-        } else {
-          setLocked(false);
         }
-        recentlySignedIn.current = false;
       }
       appState.current = nextAppState;
     };
 
     const sub = AppState.addEventListener('change', handle);
     return () => sub.remove();
-  }, []);
+  }, [user]);
 
   const unlockWithBiometrics = async (): Promise<boolean> => {
     try {
-      if (DISABLE_LOCK) {
+      if (!LOCK_ENABLED) {
         setLocked(false);
         return true;
       }
@@ -207,7 +197,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { authenticateBiometric } = biometric;
       const { success } = await authenticateBiometric('Unlock StockLens');
       if (success) {
-        setLocked(false);
+        // Start grace period to prevent immediate re-locking
+        startLockGrace();
         return true;
       }
       return false;
@@ -219,42 +210,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const unlockWithCredentials = async (email: string, password: string): Promise<boolean> => {
     try {
-      if (DISABLE_LOCK) {
+      if (!LOCK_ENABLED) {
         setLocked(false);
         return true;
       }
-      const authService = await import('../services/authService');
-      await authService.authService.signIn({ email, password });
-      setLocked(false);
+      
+      // Validate credentials without triggering full sign-in
+      const { getAuthInstance } = await import('../services/firebase');
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const auth = await getAuthInstance();
+      
+      // Just verify credentials are correct
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // If we get here, credentials are valid - start grace period
+      startLockGrace();
       return true;
     } catch (err) {
-      console.warn('Manual unlock failed', err);
+      console.warn('Credential unlock failed', err);
       return false;
     }
   };
 
   const signOutUser = async () => {
     try {
+      // Clear grace period timer if active
+      if (lockGraceTimer.current) {
+        clearTimeout(lockGraceTimer.current);
+        lockGraceTimer.current = null;
+      }
+      lockGraceActive.current = false;
+      
       const { getAuthInstance } = await import('../services/firebase');
       const { signOut } = await import('firebase/auth');
       
       const auth = await getAuthInstance();
       await signOut(auth);
       setUserProfile(null);
-      try {
-        setMode('light');
-      } catch (err) {
-      }
+      setLocked(false);
+      
+      // Reset theme to light mode on sign out
+      setMode('light');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
     }
   };
 
-  const markSignedIn = () => {
-    recentlySignedIn.current = true;
+  /**
+   * Starts a 10-second grace period where the lock screen will not trigger.
+   * This prevents immediate locking after sign-in/unlock, allowing smooth onboarding.
+   * Should be called after successful login, signup, or unlock.
+   */
+  const startLockGrace = () => {
+    // Clear any existing timer
+    if (lockGraceTimer.current) {
+      clearTimeout(lockGraceTimer.current);
+    }
+    
+    // Set grace period active and unlock
+    lockGraceActive.current = true;
     setLocked(false);
-    setTimeout(() => { recentlySignedIn.current = false; }, 2000);
+    
+    // Clear grace period after 10 seconds
+    lockGraceTimer.current = setTimeout(() => {
+      lockGraceActive.current = false;
+      lockGraceTimer.current = null;
+    }, 10000);
   };
 
   const value = {
@@ -265,7 +287,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     locked,
     unlockWithBiometrics,
     unlockWithCredentials,
-    markSignedIn,
+    startLockGrace,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
