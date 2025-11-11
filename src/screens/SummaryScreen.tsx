@@ -398,7 +398,7 @@ export default function SummaryScreen() {
         />
 
         {/* Two cards from Dashboard */}
-        <View style={styles.statsContainer}>
+        <View style={[styles.cardsGrid, cardsGridStyle, styles.statsRow]}>
           <StatCard
             value={
               <IconValue
@@ -412,6 +412,7 @@ export default function SummaryScreen() {
             label="Total Money Spent"
             subtitle="Across all scanned receipts"
             variant="green"
+            style={cardLayoutStyle}
           />
           <StatCard
             value={
@@ -425,6 +426,7 @@ export default function SummaryScreen() {
             }
             label="Receipts Scanned"
             variant="blue"
+            style={cardLayoutStyle}
           />
         </View>
 
@@ -586,7 +588,6 @@ const styles = StyleSheet.create({
   },
   projectionValue: {
     ...typography.metric,
-    fontWeight: '700',
     textAlign: 'center',
   },
   bulletPoint: {
@@ -615,9 +616,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     marginBottom: spacing.sm,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  statsRow: {
     marginBottom: spacing.md,
   },
   

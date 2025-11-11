@@ -116,7 +116,7 @@ export default function HomeScreen() {
                     iconSize={28}
                     iconColor={theme.surface}
                     value={formatAmount(totalMoneySpentDerived)}
-                    valueStyle={{ color: theme.textOnColor, fontSize: 28 }}
+                    valueStyle={{ color: theme.textOnColor, fontSize: 28, fontWeight: '700' }}
                   />
                 }
                 label="Total Money Spent"
@@ -130,7 +130,7 @@ export default function HomeScreen() {
                     iconSize={28}
                     iconColor={theme.surface}
                     value={allScans.length}
-                    valueStyle={{ color: theme.textOnColor, fontSize: 28 }}
+                    valueStyle={{ color: theme.textOnColor, fontSize: 28, fontWeight: '700' }}
                   />
                 }
                 label="Receipts Scanned"
