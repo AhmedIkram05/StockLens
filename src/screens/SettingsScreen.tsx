@@ -75,75 +75,40 @@ export default function SettingsScreen() {
 
   const handleToggleFaceId = async (val: boolean) => {
     if (!val) {
-      // Disabling biometrics - just clear credentials
-      setFaceIdEnabled(val);
+      // Disabling biometrics - clear flag only (don't clear credentials if they exist)
+      setFaceIdEnabled(false);
       try {
-        await biometric.clearBiometricCredentials();
+        await biometric.setBiometricEnabled(false);
       } catch (err) {
-        console.warn('Failed to clear biometric credentials', err);
+        console.warn('Failed to disable biometric setting', err);
       }
       return;
     }
 
+    // Enabling biometrics - use native prompt only, no password needed
     try {
-      const existingCreds = await biometric.getBiometricCredentials();
-      if (existingCreds) {
-        setFaceIdEnabled(true);
-        await biometric.setBiometricEnabled(true);
-        Alert.alert('Enabled', 'Biometric login enabled');
+      const available = await biometric.isBiometricAvailable();
+      if (!available) {
+        Alert.alert('Not Available', 'Biometric authentication is not available on this device or not enrolled.');
+        setFaceIdEnabled(false);
         return;
       }
 
-      Alert.alert(
-        'Enable Biometrics?',
-        'To enable Face ID / Touch ID, please enter your password to securely store your credentials.',
-        [
-          { 
-            text: 'Cancel', 
-            style: 'cancel',
-            onPress: () => setFaceIdEnabled(false)
-          },
-          {
-            text: 'Continue',
-            onPress: () => {
-              Alert.prompt(
-                'Enter Password',
-                'Enter your account password to enable biometric login:',
-                [
-                  { 
-                    text: 'Cancel', 
-                    style: 'cancel',
-                    onPress: () => setFaceIdEnabled(false)
-                  },
-                  {
-                    text: 'Save',
-                    onPress: async (password?: string) => {
-                      if (!password || !userProfile?.email) {
-                        Alert.alert('Error', 'Password is required');
-                        setFaceIdEnabled(false);
-                        return;
-                      }
-                      
-                      try {
-                        await biometric.saveBiometricCredentials(userProfile.email, password);
-                        setFaceIdEnabled(true);
-                        Alert.alert('Enabled', 'Biometric login enabled');
-                      } catch (err) {
-                        console.warn('Failed to save biometric credentials', err);
-                        Alert.alert('Error', 'Failed to enable biometric login');
-                        setFaceIdEnabled(false);
-                      }
-                    },
-                  },
-                ],
-                'secure-text'
-              );
-            },
-          },
-        ]
-      );
+      // Verify with native biometric prompt
+      const { success } = await biometric.authenticateBiometric('Authenticate to enable biometric login');
+      if (!success) {
+        Alert.alert('Authentication Failed', 'Could not verify your identity with biometrics');
+        setFaceIdEnabled(false);
+        return;
+      }
+
+      // Successfully authenticated - enable biometric login
+      await biometric.setBiometricEnabled(true);
+      setFaceIdEnabled(true);
+      Alert.alert('Enabled', 'Biometric login enabled successfully');
     } catch (err) {
       console.warn('Failed to update biometric setting', err);
+      Alert.alert('Error', 'Failed to enable biometric login');
       setFaceIdEnabled(false);
     }
   };

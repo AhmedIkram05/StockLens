@@ -51,7 +51,19 @@ export async function promptEnableBiometrics(email: string, password: string) {
         'Enable Biometrics?',
         'Would you like to use Face ID / Touch ID for future logins?',
         [
-          { text: 'No', style: 'cancel', onPress: () => resolve(false) },
+          { 
+            text: 'No', 
+            style: 'cancel', 
+            onPress: async () => {
+              // Explicitly clear any existing biometric credentials when user declines
+              try {
+                await biometric.clearBiometricCredentials();
+              } catch (err) {
+                console.warn('Failed to clear biometric credentials', err);
+              }
+              resolve(false);
+            }
+          },
           {
             text: 'Yes',
             onPress: async () => {
