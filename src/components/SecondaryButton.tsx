@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
@@ -31,19 +31,24 @@ type Props = {
 /**
  * Renders a transparent button with green border and text.
  * Used for secondary actions alongside PrimaryButton.
+ * Uses Pressable with platform-specific press feedback for native feel.
  */
 export default function SecondaryButton({ onPress, children, style, textStyle, disabled, accessibilityLabel }: Props) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={onPress}
-      style={[styles.button, disabled && styles.disabled, style]}
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.disabled,
+        pressed && { opacity: 0.6 },
+        style
+      ]}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
       <Text style={[styles.text, textStyle]}>{children}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
