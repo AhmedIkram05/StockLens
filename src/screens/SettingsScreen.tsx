@@ -64,10 +64,22 @@ export default function SettingsScreen() {
     let mounted = true;
     (async () => {
       try {
+        // First check if biometrics are available on device
+        const available = await biometric.isBiometricAvailable();
+        
+        if (!available) {
+          // If biometrics not available, ensure toggle is OFF and disable the setting
+          if (mounted) setFaceIdEnabled(false);
+          await biometric.setBiometricEnabled(false);
+          return;
+        }
+        
+        // If available, load the saved preference
         const enabled = await biometric.isBiometricEnabled();
         if (mounted) setFaceIdEnabled(enabled);
       } catch (err) {
         console.warn('Failed to read biometric state', err);
+        if (mounted) setFaceIdEnabled(false);
       }
     })();
     return () => { mounted = false; };
@@ -75,29 +87,38 @@ export default function SettingsScreen() {
 
   const handleToggleFaceId = async (val: boolean) => {
     if (!val) {
-      // Disabling biometrics - clear flag only (don't clear credentials if they exist)
+      // Disabling biometrics - clear flag and credentials
       setFaceIdEnabled(false);
       try {
         await biometric.setBiometricEnabled(false);
+        await biometric.clearBiometricCredentials();
       } catch (err) {
         console.warn('Failed to disable biometric setting', err);
       }
       return;
     }
 
-    // Enabling biometrics - use native prompt only, no password needed
+    // Enabling biometrics - check availability first
     try {
       const available = await biometric.isBiometricAvailable();
       if (!available) {
-        Alert.alert('Not Available', 'Biometric authentication is not available on this device or not enrolled.');
+        Alert.alert(
+          'Not Available', 
+          'Biometric authentication is not available on this device. Please ensure Face ID or Touch ID is set up in your device settings.',
+          [{ text: 'OK', onPress: () => setFaceIdEnabled(false) }]
+        );
         setFaceIdEnabled(false);
         return;
       }
 
       // Verify with native biometric prompt
-      const { success } = await biometric.authenticateBiometric('Authenticate to enable biometric login');
+      const { success, error } = await biometric.authenticateBiometric('Authenticate to enable biometric login');
       if (!success) {
-        Alert.alert('Authentication Failed', 'Could not verify your identity with biometrics');
+        Alert.alert(
+          'Authentication Failed', 
+          error || 'Could not verify your identity with biometrics',
+          [{ text: 'OK', onPress: () => setFaceIdEnabled(false) }]
+        );
         setFaceIdEnabled(false);
         return;
       }
@@ -105,10 +126,10 @@ export default function SettingsScreen() {
       // Successfully authenticated - enable biometric login
       await biometric.setBiometricEnabled(true);
       setFaceIdEnabled(true);
-      Alert.alert('Enabled', 'Biometric login enabled successfully');
+      Alert.alert('Enabled', 'Biometric login enabled successfully. You can now use Face ID or Touch ID to unlock the app.');
     } catch (err) {
       console.warn('Failed to update biometric setting', err);
-      Alert.alert('Error', 'Failed to enable biometric login');
+      Alert.alert('Error', 'Failed to enable biometric login. Please try again.');
       setFaceIdEnabled(false);
     }
   };
