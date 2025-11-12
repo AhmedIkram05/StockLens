@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, View, Text, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
@@ -36,16 +36,30 @@ type Props = {
 /**
  * Renders a settings row with optional icon, title, subtitle, and right accessory.
  * Destructive prop applies error color to title for dangerous actions (e.g., "Delete Account").
+ * Uses Pressable with platform-specific press feedback for native feel.
+ * Card backgrounds follow iOS design: white in light mode, #1C1C1E in dark mode.
  */
 export default function SettingRow({ icon, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+
+  // iOS-style card backgrounds: white in light mode, elevated gray (#1C1C1E) in dark mode
+  const cardBackgroundColor = isDark ? '#1C1C1E' : '#ffffff';
 
   const Title = (
     <Text style={[styles.title, { color: theme.text }, destructive && { color: theme.error }]}>{title}</Text>
   );
 
   return (
-    <TouchableOpacity activeOpacity={onPress ? 0.85 : 1} onPress={onPress} style={[styles.row, { backgroundColor: theme.surface }, style]}>
+    <Pressable 
+      onPress={onPress} 
+      style={({ pressed }) => [
+        styles.row, 
+        { backgroundColor: cardBackgroundColor },
+        pressed && onPress && { opacity: 0.6 },
+        style
+      ]}
+      disabled={!onPress}
+    >
       {icon ? (
         <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}> 
           <Ionicons name={icon} size={24} color={theme.text} />
@@ -58,7 +72,7 @@ export default function SettingRow({ icon, iconBgColor, title, subtitle, right, 
       </View>
 
       <View style={styles.right}>{right}</View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

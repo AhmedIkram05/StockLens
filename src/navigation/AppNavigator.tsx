@@ -37,6 +37,7 @@ import React from 'react';
 import { View, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -94,25 +95,59 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
  * 
  * Bottom tab bar with 4 tabs: Dashboard, Scan, Summary, Settings.
  * Uses Ionicons for tab icons (filled when active, outlined when inactive).
- * Tab bar is theme-aware and positioned absolutely with SafeAreaView for notches.
+ * Features:
+ * - iOS: Native blur effect with translucent background
+ * - Android: Material Design elevation and shadows
+ * - Native haptic feedback on tab press (light impact)
+ * - Theme-aware styling with platform-specific adjustments
  */
 function MainTabNavigator() {
   const { theme, isDark } = useTheme();
 
+  // Haptic feedback on tab press (iOS & Android)
+  const handleTabPress = () => {
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   return (
     <Tab.Navigator
       screenOptions={{
-  tabBarActiveTintColor: theme.primary,
-  tabBarInactiveTintColor: theme.text,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
         tabBarShowLabel: true,
         tabBarStyle: {
           position: 'absolute',
           borderTopWidth: 0,
-          elevation: 0,
+          elevation: Platform.OS === 'android' ? 8 : 0,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : theme.surface,
+          ...(Platform.OS === 'android' && {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+          }),
         },
-        tabBarBackground: () => (
-            <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: theme.background }} />
-          )
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={isDark ? 80 : 95}
+              tint={isDark ? 'dark' : 'light'}
+              style={{ flex: 1 }}
+            >
+              <SafeAreaView edges={['bottom']} style={{ flex: 1 }} />
+            </BlurView>
+          ) : (
+            <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: theme.surface }} />
+          ),
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+      }}
+      screenListeners={{
+        tabPress: handleTabPress,
       }}
     >
       <Tab.Screen

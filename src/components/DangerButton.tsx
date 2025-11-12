@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
@@ -28,18 +28,22 @@ type Props = {
 /**
  * Renders a solid red button for destructive actions.
  * Always displays white text on red background for maximum contrast and visibility.
+ * Uses Pressable with platform-specific press feedback for native feel.
  */
 export default function DangerButton({ onPress, children, style, textStyle, accessibilityLabel }: Props) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={onPress}
-      style={[styles.button, style]}
+      style={({ pressed }) => [
+        styles.button,
+        pressed && { opacity: 0.6 },
+        style
+      ]}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
       <Text style={[styles.text, textStyle]}>{children}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

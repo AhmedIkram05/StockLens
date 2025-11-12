@@ -31,7 +31,7 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
 import { palette } from '../styles/palette';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
@@ -54,21 +54,26 @@ type Props = {
 /**
  * Renders a styled primary action button with theme-aware text color.
  * Text color automatically switches between white (light mode) and black (dark mode).
+ * Uses Pressable with platform-specific press feedback for native feel.
  */
 export default function PrimaryButton({ onPress, children, style, textStyle, disabled, accessibilityLabel }: Props) {
   const { theme, isDark } = useTheme();
   
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={onPress}
-      style={[styles.button, disabled && styles.disabled, style]}
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.disabled,
+        pressed && { opacity: 0.6 },
+        style
+      ]}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
       <Text style={[styles.text, { color: isDark ? palette.black : palette.white }, textStyle]}>{children}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

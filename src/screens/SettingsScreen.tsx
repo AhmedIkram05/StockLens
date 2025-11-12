@@ -158,7 +158,7 @@ export default function SettingsScreen() {
             iconBgColor={theme.secondary}
             title="Face ID / Touch ID"
             subtitle="Secure login with biometrics"
-            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: theme.border, true: theme.primary }} thumbColor={theme.surface} />}
+            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: theme.border, true: theme.primary }} thumbColor="#ffffff" />}
           />
 
           <SettingRow
@@ -177,7 +177,7 @@ export default function SettingsScreen() {
             iconBgColor={theme.secondary}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"
-            right={<Switch value={isDark} onValueChange={handleToggleDarkMode} trackColor={{ false: theme.border, true: theme.primary }} thumbColor={theme.surface} />}
+            right={<Switch value={isDark} onValueChange={handleToggleDarkMode} trackColor={{ false: theme.border, true: theme.primary }} thumbColor="#ffffff" />}
           />
         </View>
 
