@@ -73,6 +73,7 @@ export default function ScanScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing, width } = useBreakpoint();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
 
   const captureButtonSize = isSmallPhone ? 60 : isTablet ? 80 : 70;
 
@@ -99,14 +100,14 @@ export default function ScanScreen() {
             },
           ]}
         >
-          <Text style={styles.permissionText}>
+          <Text style={[styles.permissionText, { color: theme.text }]}>
             Camera permission is required to scan receipts
           </Text>
           <TouchableOpacity
-            style={styles.permissionButton}
+            style={[styles.permissionButton, { backgroundColor: theme.primary }]}
             onPress={requestPermission}
           >
-            <Text style={styles.permissionButtonText}>Grant Permission</Text>
+            <Text style={[styles.permissionButtonText, { color: brandColors.white }]}>Grant Permission</Text>
           </TouchableOpacity>
         </View>
       </ScreenContainer>
@@ -368,22 +369,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: brandColors.gray,
   },
   permissionText: {
     ...typography.body,
     textAlign: 'center',
-    color: brandColors.black,
     opacity: 0.7,
+    marginBottom: spacing.lg,
   },
   permissionButton: {
-    backgroundColor: brandColors.green,
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
     borderRadius: radii.md,
   },
   permissionButtonText: {
-    color: brandColors.white,
     ...typography.button,
   },
   cameraContainer: {

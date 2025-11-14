@@ -160,6 +160,7 @@ export default function SignUpScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
+            showPasswordToggle
           />
 
           <FormInput
@@ -169,6 +170,7 @@ export default function SignUpScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
+            showPasswordToggle
           />
 
           <PrimaryButton
