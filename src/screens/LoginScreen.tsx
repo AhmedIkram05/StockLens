@@ -135,7 +135,7 @@ export default function LoginScreen() {
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scan your spending{'\n'}See your missed investing</Text>
         </PageHeader>
 
-  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact, isTablet && orientation === 'landscape' && styles.formContainerLandscapeTablet]}>
+  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
           <FormInput
             placeholder="Email"
             value={email}
@@ -152,6 +152,7 @@ export default function LoginScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
+            showPasswordToggle
           />
 
           <PrimaryButton onPress={handleLogin} style={styles.loginButton} textStyle={styles.loginButtonText} accessibilityLabel="Login">
@@ -200,14 +201,11 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.pageSubtitle,
     textAlign: 'center',
+    paddingBottom: spacing.xl,
   },
   formContainer: {
     flex: 1,
     justifyContent: 'center',
-  },
-  formContainerLandscapeTablet: {
-    // add extra space between subtitle and form on horizontal/tablet layouts
-    marginTop: spacing.xl,
   },
   loginButton: {
     backgroundColor: brandColors.green,

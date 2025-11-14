@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "stocklens-app",
-    "slug": "stocklens-app",
+    "name": "StockLens",
+    "slug": "StockLens",
     "version": "1.0.0",
     "orientation": "portrait",
   "icon": "./assets/StockLens_Logo_T.png",

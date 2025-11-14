@@ -28,7 +28,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { brandColors } from '../contexts/ThemeContext';
+import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -49,11 +49,12 @@ type Props = {
  * Conditionally renders subtitle and button based on provided props.
  */
 export default function EmptyState({ iconName = 'checkmark-circle', title, subtitle, primaryText, onPrimaryPress }: Props) {
+  const { theme } = useTheme();
   return (
     <View style={styles.container}>
       <Ionicons name={iconName as any} size={96} color={brandColors.green} />
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</Text> : null}
       {primaryText ? (
         <TouchableOpacity style={styles.button} onPress={onPrimaryPress} accessibilityRole="button">
           <Text style={styles.buttonText}>{primaryText}</Text>
@@ -70,14 +71,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.pageTitle,
-    color: brandColors.black,
     marginTop: spacing.md,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.caption,
-    color: brandColors.black,
-    opacity: 0.8,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
