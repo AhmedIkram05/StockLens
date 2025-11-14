@@ -16,7 +16,7 @@ import EmptyState from './EmptyState';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { typography, spacing, radii, shadows, sizes } from '../styles/theme';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 
 interface EmptyStateWithOnboardingProps {
   /** Optional icon name for the empty state */
@@ -64,7 +64,7 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: palette.white }]}>1</Text>
+            <Text style={[styles.numberText, { color: brandColors.white }]}>1</Text>
           </View>
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>Scan Your Receipts</Text>
@@ -79,7 +79,7 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: palette.white }]}>2</Text>
+            <Text style={[styles.numberText, { color: brandColors.white }]}>2</Text>
           </View>
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>See Investment Potential</Text>
@@ -94,7 +94,7 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: palette.white }]}>3</Text>
+            <Text style={[styles.numberText, { color: brandColors.white }]}>3</Text>
           </View>
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</Text>

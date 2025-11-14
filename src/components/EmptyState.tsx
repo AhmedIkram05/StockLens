@@ -28,7 +28,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -51,7 +51,7 @@ type Props = {
 export default function EmptyState({ iconName = 'checkmark-circle', title, subtitle, primaryText, onPrimaryPress }: Props) {
   return (
     <View style={styles.container}>
-      <Ionicons name={iconName as any} size={96} color={palette.green} />
+      <Ionicons name={iconName as any} size={96} color={brandColors.green} />
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       {primaryText ? (
@@ -70,13 +70,13 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.pageTitle,
-    color: palette.black,
+    color: brandColors.black,
     marginTop: spacing.md,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.caption,
-    color: palette.black,
+    color: brandColors.black,
     opacity: 0.8,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -84,14 +84,14 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: radii.md,
     ...shadows.level2,
   },
   buttonText: {
-    color: palette.white,
+    color: brandColors.white,
     ...typography.button,
   },
 });

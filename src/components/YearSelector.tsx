@@ -13,7 +13,7 @@
 import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { View, TouchableOpacity, Text, Animated, ViewStyle, StyleProp } from 'react-native';
 import { spacing, typography, radii, shadows } from '../styles/theme';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 type Props<T extends number> = {
@@ -87,8 +87,8 @@ export default function YearSelector<T extends number = number>({ options, value
           width: segmentWidth,
           height,
           borderRadius: radii.pill,
-          backgroundColor: palette.green,
-          shadowColor: palette.green,
+          backgroundColor: brandColors.green,
+          shadowColor: brandColors.green,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.15,
           shadowRadius: 6,
@@ -107,7 +107,7 @@ export default function YearSelector<T extends number = number>({ options, value
           }}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: segPadVert, marginHorizontal: spacing.xs / 2 }}
         >
-          <Text style={[typography.captionStrong, { color: o === value ? palette.white : theme.text, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
+          <Text style={[typography.captionStrong, { color: o === value ? brandColors.white : theme.text, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
         </TouchableOpacity>
       ))}
     </View>

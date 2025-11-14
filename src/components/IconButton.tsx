@@ -11,7 +11,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, sizes } from '../styles/theme';
 
 type Props = {
@@ -33,7 +33,7 @@ type Props = {
  * Renders a circular button with an icon centered inside.
  * Button size is theme.sizes.controlMd (44px) with hitSlop for easier pressing.
  */
-export default function IconButton({ name, size = 20, color = palette.white, onPress, style, accessibilityLabel }: Props) {
+export default function IconButton({ name, size = 20, color = brandColors.white, onPress, style, accessibilityLabel }: Props) {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     width: sizes.controlMd,
     height: sizes.controlMd,
     borderRadius: radii.pill,
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.level2,

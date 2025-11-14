@@ -38,7 +38,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../components/ScreenContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { palette, alpha } from '../styles/palette';
+import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Constants from 'expo-constants';
@@ -166,7 +166,7 @@ export default function ScanScreen() {
 
   if (photo) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: brandColors.black }}>
         <View style={styles.previewContainer}>
           <Image source={{ uri: photo }} style={styles.previewImage} />
           <Modal visible={manualModalVisible} transparent animationType="fade" onRequestClose={() => setManualModalVisible(false)}>
@@ -299,7 +299,7 @@ export default function ScanScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.black }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: brandColors.black }}>
       <View style={styles.cameraContainer}>
         {isCameraActive && (
           <CameraView
@@ -368,27 +368,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: palette.lightGray,
+    backgroundColor: brandColors.gray,
   },
   permissionText: {
     ...typography.body,
     textAlign: 'center',
-    color: palette.black,
+    color: brandColors.black,
     opacity: 0.7,
   },
   permissionButton: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
     borderRadius: radii.md,
   },
   permissionButtonText: {
-    color: palette.white,
+    color: brandColors.white,
     ...typography.button,
   },
   cameraContainer: {
     flex: 1,
-    backgroundColor: palette.black,
+    backgroundColor: brandColors.black,
   },
   camera: {
     flex: 1,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   
   previewContainer: {
     flex: 1,
-    backgroundColor: palette.black,
+    backgroundColor: brandColors.black,
   },
   previewImage: {
     flex: 1,
@@ -410,36 +410,39 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#00000080',
+    backgroundColor: brandColors.black + 'CC',
   },
   processingText: {
-    color: palette.white,
+    color: brandColors.white,
     ...typography.sectionTitle,
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: alpha.overlayBlack,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCard: {
-    width: '86%',
-    backgroundColor: palette.white,
-    borderRadius: radii.md,
+    width: '80%',
+    borderRadius: radii.lg,
     padding: spacing.lg,
-    ...shadows.level2,
+    shadowColor: brandColors.black,
+    shadowOffset: { width: 0, height: spacing.xs },
+    shadowOpacity: 0.25,
+    shadowRadius: spacing.md,
+    elevation: 5,
   },
   modalTitle: {
-    ...typography.bodyStrong,
-    marginBottom: spacing.xs,
+    ...typography.sectionTitle,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
   },
   modalSubtitle: {
-    ...typography.caption,
-    color: alpha.subtleBlack,
-    marginBottom: spacing.md,
+    ...typography.body,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
   },
   modalInput: {
-    backgroundColor: palette.lightGray,
+    backgroundColor: brandColors.gray,
     borderRadius: radii.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -455,16 +458,16 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   modalCancel: {
-    backgroundColor: palette.lightGray,
+    backgroundColor: brandColors.gray,
   },
   modalConfirm: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
   },
   modalCancelText: {
-    color: palette.black,
+    color: brandColors.black,
   },
   modalConfirmText: {
-    color: palette.white,
+    color: brandColors.white,
   },
   cameraControls: {
     position: 'absolute',
@@ -475,8 +478,8 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   captureButton: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     borderWidth: 1,
-    borderColor: palette.white,
+    borderColor: brandColors.white,
   },
 });

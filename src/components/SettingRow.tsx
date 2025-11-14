@@ -37,13 +37,10 @@ type Props = {
  * Renders a settings row with optional icon, title, subtitle, and right accessory.
  * Destructive prop applies error color to title for dangerous actions (e.g., "Delete Account").
  * Uses Pressable with platform-specific press feedback for native feel.
- * Card backgrounds follow iOS design: white in light mode, #1C1C1E in dark mode.
+ * Card backgrounds use theme.surface for automatic light/dark adaptation.
  */
 export default function SettingRow({ icon, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
-  const { theme, isDark } = useTheme();
-
-  // iOS-style card backgrounds: white in light mode, elevated gray (#1C1C1E) in dark mode
-  const cardBackgroundColor = isDark ? '#1C1C1E' : '#ffffff';
+  const { theme } = useTheme();
 
   const Title = (
     <Text style={[styles.title, { color: theme.text }, destructive && { color: theme.error }]}>{title}</Text>
@@ -54,7 +51,7 @@ export default function SettingRow({ icon, iconBgColor, title, subtitle, right, 
       onPress={onPress} 
       style={({ pressed }) => [
         styles.row, 
-        { backgroundColor: cardBackgroundColor },
+        { backgroundColor: theme.surface },
         pressed && onPress && { opacity: 0.6 },
         style
       ]}

@@ -1,91 +1,94 @@
 /**
- * ThemeContext
+ * ThemeContext - Unified color system and theme management
  * 
- * Global theme management with light/dark mode support.
- * Theme preference is persisted using expo-secure-store for cross-session consistency.
+ * Handles all color definitions and light/dark mode switching.
+ * Replaces the old brandColors.ts file for a single source of truth.
  * 
  * Features:
- * - Two theme modes: 'light' and 'dark'
- * - Predefined color palettes for each mode
- * - Persistent theme storage (survives app restarts)
- * - Automatic loading of saved theme on app launch
+ * - Semantic color naming (background, surface, text, etc.)
+ * - Lean palette focused on high-impact tokens
+ * - Proper dark mode support with thoughtful contrast
+ * - Persistent theme storage across app restarts
  * 
- * Color Palette (Light Mode):
- * - Primary: #10b981 (green) - Used for CTAs, branding
- * - Secondary: #007AFF (blue) - Accent color
- * - Error: #FF3B30 (red) - Destructive actions
- * - Background: #f5f5f5 (light gray) - Page backgrounds
- * - Surface: #ffffff (white) - Cards, modals
- * - Text: #000000 (black) - Primary text
- * 
- * Color Palette (Dark Mode):
- * - Primary: #10b981 (green) - Consistent brand color
- * - Background: #000000 (black) - Page backgrounds
- * - Surface: #1a1a1a (dark gray) - Cards, modals
- * - Text: #ffffff (white) - Primary text
- * - Text on colored backgrounds inverts for contrast
+ * Color Philosophy:
+ * - Brand colors stay consistent (green, blue, red)
+ * - Semantic tokens adapt per mode (background, surface, text)
+ * - Surfaces stay simple to keep UI consistent and predictable
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
 export type ThemeMode = 'light' | 'dark';
 
+/**
+ * Base brand colors - consistent across light and dark modes
+ * Export these for components that need static color values
+ */
+export const brandColors = {
+  green: '#10b981',
+  blue: '#007AFF',
+  red: '#FF3B30',
+  white: '#ffffff',
+  black: '#000000',
+  gray: '#f5f5f5',
+} as const;
+
+/**
+ * ThemeColors interface - semantic color tokens for the app
+ */
 export interface ThemeColors {
-  /** Primary brand color (green) */
-  primary: string;
-  /** Secondary accent color (blue) */
-  secondary: string;
-  /** Error/destructive action color (red) */
-  error: string;
-  /** Page background color */
-  background: string;
-  /** Card/modal surface color */
-  surface: string;
-  /** Primary text color */
-  text: string;
-  /** Secondary/muted text color */
-  textSecondary: string;
-  /** Text color on colored backgrounds (inverts for contrast) */
-  textOnColor: string;
-  /** Border/divider color */
-  border: string;
+  // Brand colors (consistent across modes)
+  primary: string;           // Green - primary actions, branding
+  secondary: string;         // Blue - accents, links
+  error: string;             // Red - errors, destructive actions
+  
+  // Backgrounds (mode-specific)
+  background: string;        // Page/screen background
+  surface: string;           // Cards, modals, default elevation
+  
+  // Text (mode-specific)
+  text: string;              // Primary text
+  textSecondary: string;     // Secondary/muted text
+  
+  // Borders (mode-specific)
+  border: string;            // Default borders, dividers
 }
 
-/** Light mode color palette following design system */
-export const lightTheme: ThemeColors = {
-  primary: '#10b981', // green
-  secondary: '#007AFF', // blue
-  error: '#FF3B30', // red
-  background: '#f5f5f5', // lightGray
-  surface: '#ffffff', // white
-  text: '#000000', // black
-  textSecondary: 'rgba(0, 0, 0, 0.6)', // subtleBlack
-  textOnColor: '#ffffff', // white text on colored backgrounds
-  border: '#0000001a', // faintBlack
-};
+const THEMES: Record<ThemeMode, ThemeColors> = {
+  light: {
+    primary: brandColors.green,
+    secondary: brandColors.blue,
+    error: brandColors.red,
+    background: brandColors.gray,
+    surface: brandColors.white,
+    text: brandColors.black,
+    textSecondary: '#00000099',
+    border: '#00000026',
+  },
+  dark: {
+    primary: brandColors.green,
+    secondary: brandColors.blue,
+    error: brandColors.red,
+    background: brandColors.black,
+    surface: '#1C1C1E',
+    text: brandColors.white,
+    textSecondary: '#ffffff99',
+    border: '#ffffff26',
+  },
+} as const;
 
-/** Dark mode color palette following design system */
-export const darkTheme: ThemeColors = {
-  primary: '#10b981', // keep green
-  secondary: '#007AFF', // keep blue
-  error: '#FF3B30', // keep red
-  background: '#000000ff', // black
-  surface: '#1a1a1a', // dark gray
-  text: '#ffffff', // white
-  textSecondary: '#ffffff99', // muted white
-  textOnColor: '#000000', // black text on colored backgrounds
-  border: '#ffffff1a', // faint white
-};
+export const lightTheme = THEMES.light;
+export const darkTheme = THEMES.dark;
 
 interface ThemeContextType {
-  /** Current theme colors object (light or dark) */
+  /** Current theme colors */
   theme: ThemeColors;
-  /** Current theme mode ('light' or 'dark') */
+  /** Current theme mode */
   mode: ThemeMode;
-  /** Function to change theme mode and persist preference */
+  /** Change theme mode and persist */
   setMode: (mode: ThemeMode) => void;
-  /** Boolean flag for convenience (true if dark mode active) */
+  /** Convenience flag for dark mode checks */
   isDark: boolean;
 }
 
@@ -94,26 +97,18 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = 'theme_mode';
 
 /**
- * ThemeProvider Component
- * 
- * Wraps the app to provide theme context to all components.
- * Loads saved theme preference from secure storage on mount.
- * Persists theme changes to secure storage for cross-session consistency.
- * 
- * @example
- * <ThemeProvider>
- *   <App />
- * </ThemeProvider>
+ * ThemeProvider - Wraps app to provide theme context
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('light');
 
+  // Load saved theme preference on mount
   useEffect(() => {
     const loadTheme = async () => {
       try {
         const savedMode = await SecureStore.getItemAsync(THEME_STORAGE_KEY);
-        if (savedMode && ['light', 'dark'].includes(savedMode)) {
-          setModeState(savedMode as ThemeMode);
+        if (savedMode === 'light' || savedMode === 'dark') {
+          setModeState(savedMode);
         }
       } catch (error) {
         console.warn('Failed to load theme preference:', error);
@@ -122,6 +117,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     loadTheme();
   }, []);
 
+  // Save theme preference when changed
   const setMode = async (newMode: ThemeMode) => {
     setModeState(newMode);
     try {
@@ -131,12 +127,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getCurrentTheme = (): ThemeColors => {
-    return mode === 'dark' ? darkTheme : lightTheme;
-  };
-
-  const theme = getCurrentTheme();
-  const isDark = theme === darkTheme;
+  const theme = useMemo(() => THEMES[mode], [mode]);
+  const isDark = mode === 'dark';
 
   return (
     <ThemeContext.Provider value={{ theme, mode, setMode, isDark }}>
@@ -146,22 +138,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * useTheme Hook
- * 
- * Custom hook to access theme context from any component.
- * Provides current theme colors, mode, setMode function, and isDark flag.
- * Throws error if used outside ThemeProvider.
- * 
- * @returns Theme context with colors, mode, setMode, and isDark
+ * useTheme Hook - Access theme from any component
  * 
  * @example
  * const { theme, isDark, setMode } = useTheme();
- * return (
- *   <View style={{ backgroundColor: theme.background }}>
- *     <Text style={{ color: theme.text }}>Hello</Text>
- *     <Switch value={isDark} onValueChange={(val) => setMode(val ? 'dark' : 'light')} />
- *   </View>
- * );
+ * <View style={{ backgroundColor: theme.background }}>
+ *   <Text style={{ color: theme.text }}>Hello</Text>
+ * </View>
  */
 export function useTheme() {
   const context = useContext(ThemeContext);

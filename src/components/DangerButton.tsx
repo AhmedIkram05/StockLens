@@ -2,14 +2,14 @@
  * DangerButton Component
  * 
  * A solid red button used for destructive or dangerous actions (e.g., "Delete", "Sign Out", "Cancel").
- * Uses palette.red to visually communicate potential consequences of the action.
+ * Uses brandColors.red to visually communicate potential consequences of the action.
  * 
  * Provides clear visual distinction from primary and secondary buttons to prevent accidental clicks.
  */
 
 import React from 'react';
 import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -49,7 +49,7 @@ export default function DangerButton({ onPress, children, style, textStyle, acce
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: palette.red,
+    backgroundColor: brandColors.red,
     borderRadius: radii.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     ...shadows.level2,
   },
   text: {
-    color: palette.white,
+    color: brandColors.white,
     ...typography.button,
   },
 });

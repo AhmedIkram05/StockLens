@@ -13,7 +13,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
 
 export type SortBy = 'date' | 'amount';
@@ -67,13 +67,13 @@ export default function ReceiptsSorter({ sortBy, sortDirection, onSortChange }: 
             <Text
               style={[
                 styles.optionText,
-                { color: sortBy === option.key ? palette.white : theme.text },
+                { color: sortBy === option.key ? brandColors.white : theme.text },
               ]}
             >
               {option.label}
             </Text>
             {sortBy === option.key && (
-              <Text style={[styles.directionText, { color: palette.white }]}>
+              <Text style={[styles.directionText, { color: brandColors.white }]}>
                 {sortDirection === 'asc' ? '↑' : '↓'}
               </Text>
             )}
@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   optionButtonActive: {
-    backgroundColor: palette.green,
-    borderColor: palette.green,
+    backgroundColor: brandColors.green,
+    borderColor: brandColors.green,
   },
   optionText: {
     ...typography.bodyStrong,

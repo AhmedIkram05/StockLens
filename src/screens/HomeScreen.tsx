@@ -21,7 +21,7 @@ import { useNavigation, CompositeNavigationProp } from '@react-navigation/native
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-import { useTheme } from '../contexts/ThemeContext';
+import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
 import ScreenContainer from '../components/ScreenContainer';
 import ResponsiveContainer from '../components/ResponsiveContainer';
@@ -114,9 +114,9 @@ export default function HomeScreen() {
                   <IconValue
                     iconName="cash-outline"
                     iconSize={28}
-                    iconColor={theme.surface}
+                    iconColor={brandColors.white}
                     value={formatAmount(totalMoneySpentDerived)}
-                    valueStyle={{ color: theme.textOnColor, fontSize: 28, fontWeight: '700' }}
+                    valueStyle={{ color: brandColors.white, fontSize: 28, fontWeight: '700' }}
                   />
                 }
                 label="Total Money Spent"
@@ -128,9 +128,9 @@ export default function HomeScreen() {
                   <IconValue
                     iconName="document-text-outline"
                     iconSize={28}
-                    iconColor={theme.surface}
+                    iconColor={brandColors.white}
                     value={allScans.length}
-                    valueStyle={{ color: theme.textOnColor, fontSize: 28, fontWeight: '700' }}
+                    valueStyle={{ color: brandColors.white, fontSize: 28, fontWeight: '700' }}
                   />
                 }
                 label="Receipts Scanned"

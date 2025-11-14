@@ -31,7 +31,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import PageHeader from '../components/PageHeader';
 import Logo from '../components/Logo';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -129,7 +129,7 @@ export default function LockScreen() {
           disabled={loading}
           accessibilityLabel="Unlock with Face ID or Touch ID"
           style={styles.bioButton}
-          textStyle={{ color: palette.white }}
+          textStyle={{ color: brandColors.white }}
         >
           {loading ? 'Unlocking…' : 'Unlock with Face ID / Touch ID'}
         </SecondaryButton>
@@ -158,10 +158,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  bioButton: { backgroundColor: palette.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
+  bioButton: { backgroundColor: brandColors.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
   or: { textAlign: 'center', marginVertical: spacing.md },
-  unlockButton: { backgroundColor: palette.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
+  unlockButton: { backgroundColor: brandColors.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
   forgotContainer: { alignItems: 'center', marginTop: spacing.sm, marginBottom: spacing.md },
-  forgotText: { ...typography.body, color: palette.blue },
+  forgotText: { ...typography.body, color: brandColors.blue },
   accountEmail: { ...typography.body, marginTop: spacing.xs, textAlign: 'center' },
 });

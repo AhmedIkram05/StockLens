@@ -35,7 +35,7 @@ import IconButton from '../components/IconButton';
 import { authService, SignUpData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { useAuth } from '../contexts/AuthContext';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTheme } from '../contexts/ThemeContext';
@@ -173,7 +173,7 @@ export default function SignUpScreen() {
 
           <PrimaryButton
             onPress={handleSignUp}
-            style={[styles.createAccountButton, !isFormValid && styles.disabledButton]}
+            style={[styles.createAccountButton, !isFormValid && { backgroundColor: theme.border }]}
             disabled={!isFormValid}
             accessibilityLabel="Create account"
           >
@@ -228,15 +228,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   createAccountButton: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     borderRadius: radii.md,
     padding: spacing.md,
     alignItems: 'center',
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
-  },
-  disabledButton: {
-    backgroundColor: alpha.faintBlack,
   },
   loginContainer: {
     alignItems: 'center',
