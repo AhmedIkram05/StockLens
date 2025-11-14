@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -34,7 +34,7 @@ export default function AuthFooter({ prompt = '', actionText, onPress, style }: 
   return (
     <View style={[styles.container, style]}>
       {prompt ? <Text style={[styles.prompt, { color: theme.textSecondary }]}>{prompt}</Text> : null}
-      <TouchableOpacity style={[styles.button, { backgroundColor: theme.surface, borderColor: palette.green }]} onPress={onPress} accessibilityRole="button">
+      <TouchableOpacity style={[styles.button, { backgroundColor: theme.surface, borderColor: brandColors.green }]} onPress={onPress} accessibilityRole="button">
         <Text style={styles.buttonText}>{actionText}</Text>
       </TouchableOpacity>
     </View>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   buttonText: {
-    color: palette.green,
+    color: brandColors.green,
     ...typography.button,
   },
 });

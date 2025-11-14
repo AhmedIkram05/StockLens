@@ -1,49 +1,26 @@
 /**
- * Theme System - Design tokens for spacing, typography, shadows, and surfaces
+ * Theme System - Design tokens for spacing, typography, shadows, and layout
+ * 
+ * Non-color design tokens that remain consistent across light/dark modes.
+ * For colors, see ThemeContext.tsx which handles light/dark theme switching.
  * 
  * Features:
  * - spacing: Consistent spacing scale (xs to xxl)
- * - sizes: Control and avatar dimensions
+ * - sizes: Control and avatar dimensions  
  * - radii: Border radius scale (sm to pill)
- * - typography: Text styles (display, pageTitle, body, caption, etc.)
+ * - typography: Text styles (display, pageTitle, body, etc.)
  * - shadows: Elevation system (level1, level2)
- * - surface: Predefined card and surface styles
  * - breakpoints: Device width breakpoints
  * 
- * Responsive Design:
- * - All dimensions use scale() or moderateScale() for device adaptation
- * - Typography scales moderately to prevent oversized text on large devices
- * - Spacing and sizes scale proportionally based on device width
- * 
- * Integration:
- * - Used throughout components for consistent styling
- * - Import specific tokens: import { spacing, typography } from '@/styles/theme'
- * - Combine with palette for complete theme system
- * 
- * Note:
- * All values are computed once on module load based on device dimensions.
- * Does not react to orientation changes (reload required).
+ * All values use responsive scaling based on device dimensions.
  */
 
 import { TextStyle, ViewStyle } from 'react-native';
-import { palette } from './palette';
 import { scale, moderateScale } from '../utils/responsive';
 
 /**
  * spacing - Consistent spacing scale
- * 
- * Values scale proportionally based on device width using scale()
- * 
- * Scale:
- * - xs (4px): Tight spacing, inline elements
- * - sm (8px): Component internal padding
- * - md (12px): Default spacing between elements
- * - lg (16px): Section spacing, card padding
- * - xl (24px): Large gaps, screen padding
- * - xxl (32px): Major section separators
- * 
- * Usage:
- * padding: spacing.lg, marginBottom: spacing.md
+ * Values scale proportionally based on device width
  */
 export const spacing = {
   xs: scale(4),
@@ -203,64 +180,21 @@ export const typography = {
 
 /**
  * shadows - Elevation system for depth
- * 
- * Platform-aware shadows (iOS: shadowColor/shadowOffset, Android: elevation)
- * 
- * Levels:
- * - level1: Subtle elevation (buttons, inputs)
- * - level2: Moderate elevation (cards, modals)
- * 
- * Properties:
- * - shadowColor: black
- * - shadowOffset: vertical offset (1px or 2px)
- * - shadowOpacity: 0.05 (level1) or 0.08 (level2)
- * - shadowRadius: blur radius (4px or 6px)
- * - elevation: Android elevation (1 or 2)
- * 
- * Usage:
- * ...shadows.level2 (spreads all shadow properties)
+ * Platform-aware shadows (iOS uses shadow properties, Android uses elevation)
  */
 export const shadows = {
   level1: {
-    shadowColor: palette.black,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 1,
   },
   level2: {
-    shadowColor: palette.black,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
-  },
-} satisfies Record<string, ViewStyle>;
-
-/**
- * surface - Predefined surface styles for cards and containers
- * 
- * Combines background color, border radius, and shadows
- * 
- * Surfaces:
- * - card: White background, large radius, moderate elevation
- *   Usage: Main content cards, feature sections
- * 
- * - cardMuted: Light gray background, large radius, subtle elevation
- *   Usage: Secondary cards, background sections
- * 
- * Usage:
- * ...surface.card (spreads backgroundColor, borderRadius, shadow properties)
- */
-export const surface = {
-  card: {
-    backgroundColor: palette.white,
-    borderRadius: radii.lg,
-    ...shadows.level2,
-  },
-  cardMuted: {
-    backgroundColor: palette.lightGray,
-    borderRadius: radii.lg,
-    ...shadows.level1,
   },
 } satisfies Record<string, ViewStyle>;

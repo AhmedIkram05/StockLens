@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { View, TextInput, StyleSheet, TextInputProps, TextStyle, ViewStyle } from 'react-native';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 

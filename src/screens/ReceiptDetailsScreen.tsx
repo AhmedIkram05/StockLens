@@ -37,7 +37,7 @@ import IconButton from '../components/IconButton';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import DangerButton from '../components/DangerButton';
@@ -236,7 +236,7 @@ export default function ReceiptDetailsScreen() {
   const percentDisplay = `${computedPercentReturn.toFixed(1)}%`;
 
   // color: green for positive or zero, red for negative
-  const valueColor = computedPercentReturn >= 0 ? palette.green : palette.red;
+  const valueColor = computedPercentReturn >= 0 ? brandColors.green : brandColors.red;
 
     // determine badge: show Over/Underperformer for the current mode (past/future)
     let badgeTextToShow: string | undefined = undefined;
@@ -248,7 +248,7 @@ export default function ReceiptDetailsScreen() {
       else if (investmentValue.ticker === worstFutureTicker) badgeTextToShow = 'Underperformer';
     }
 
-    const badgeColorToShow = badgeTextToShow === 'Overperformer' ? palette.green : badgeTextToShow === 'Underperformer' ? palette.red : undefined;
+    const badgeColorToShow = badgeTextToShow === 'Overperformer' ? brandColors.green : badgeTextToShow === 'Underperformer' ? brandColors.red : undefined;
 
     return (
       <StockCard
@@ -431,13 +431,13 @@ export default function ReceiptDetailsScreen() {
           }
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="trash-outline" size={18} color={palette.white} style={{ marginRight: 10 }} />
-            <Text style={{ color: palette.white, ...typography.button }}>Delete Receipt</Text>
+            <Ionicons name="trash-outline" size={18} color={brandColors.white} style={{ marginRight: 10 }} />
+            <Text style={{ color: brandColors.white, ...typography.button }}>Delete Receipt</Text>
           </View>
         </DangerButton>
 
         <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact, { backgroundColor: theme.surface }]}>
-          <Ionicons name="warning" size={28} color={palette.red} style={styles.warningIcon} />
+          <Ionicons name="warning" size={28} color={brandColors.red} style={styles.warningIcon} />
           <Text style={[styles.warningText, { color: theme.text }]}>
             Projections are hypothetical. Past performance does not guarantee future results.
           </Text>
@@ -547,7 +547,7 @@ const styles = StyleSheet.create<Styles>({
   },
   stockTicker: {
     ...typography.captionStrong,
-    color: palette.blue,
+    color: brandColors.blue,
   },
   stockValueContainer: {
     alignItems: 'flex-start',
@@ -562,7 +562,6 @@ const styles = StyleSheet.create<Styles>({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: alpha.faintBlack,
     marginBottom: spacing.md,
   },
   stockFooter: {
@@ -579,11 +578,10 @@ const styles = StyleSheet.create<Styles>({
   },
   footerValue: {
     ...typography.metricSm,
-    color: palette.green,
+    color: brandColors.green,
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: alpha.faintBlack,
     marginHorizontal: spacing.md,
   },
   warningBox: {

@@ -5,7 +5,7 @@
  * Features theme-aware styling with automatic text color adjustment for light/dark modes.
  * 
  * Supports disabled states, custom styling, and accessibility labels.
- * Uses palette.green as the primary action color per design system.
+ * Uses brandColors.green as the primary action color per design system.
  * 
  * @example
  * // Standard primary button
@@ -32,7 +32,7 @@
 
 import React from 'react';
 import { Pressable, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -72,14 +72,14 @@ export default function PrimaryButton({ onPress, children, style, textStyle, dis
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={[styles.text, { color: isDark ? palette.black : palette.white }, textStyle]}>{children}</Text>
+      <Text style={[styles.text, { color: isDark ? brandColors.black : brandColors.white }, textStyle]}>{children}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     borderRadius: radii.xl,
     paddingVertical: spacing.lg,
     alignItems: 'center',
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     ...shadows.level2,
   },
   text: {
-    color: palette.white,
+    color: brandColors.white,
     ...typography.button,
   },
   disabled: {

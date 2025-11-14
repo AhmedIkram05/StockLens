@@ -5,12 +5,12 @@
  * Provides visual hierarchy by contrast with the solid PrimaryButton.
  * 
  * Supports disabled states and custom styling. Follows the app's design system
- * with palette.green for brand consistency.
+ * with brandColors.green for brand consistency.
  */
 
 import React from 'react';
 import { Pressable, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: palette.green,
+    borderColor: brandColors.green,
     borderRadius: radii.md,
     paddingVertical: spacing.md - 2,
     paddingHorizontal: spacing.lg,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   text: {
-    color: palette.green,
+    color: brandColors.green,
     ...typography.button,
   },
   disabled: {

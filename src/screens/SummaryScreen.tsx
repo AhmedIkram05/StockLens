@@ -25,7 +25,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
-import { useTheme } from '../contexts/ThemeContext';
+import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, shadows, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEffect, useState } from 'react';
@@ -404,9 +404,9 @@ export default function SummaryScreen() {
               <IconValue
                 iconName="cash-outline"
                 iconSize={28}
-                iconColor={theme.surface}
+                iconColor={brandColors.white}
                 value={formatCurrency(totalMoneySpent)}
-                valueStyle={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}
+                valueStyle={[styles.projectionValue, { color: brandColors.white, fontSize: 28 }]}
               />
             }
             label="Total Money Spent"
@@ -419,9 +419,9 @@ export default function SummaryScreen() {
               <IconValue
                 iconName="document-text-outline"
                 iconSize={28}
-                iconColor={theme.surface}
+                iconColor={brandColors.white}
                 value={receiptsScanned}
-                valueStyle={[styles.projectionValue, { color: theme.textOnColor, fontSize: 28 }]}
+                valueStyle={[styles.projectionValue, { color: brandColors.white, fontSize: 28 }]}
               />
             }
             label="Receipts Scanned"
@@ -436,9 +436,9 @@ export default function SummaryScreen() {
               <IconValue
                 iconName="receipt-outline"
                 iconSize={22}
-                iconColor={theme.surface}
+                iconColor={brandColors.white}
                 value={highestImpactReceipt?.amount ? formatCurrency(highestImpactReceipt.amount) : '—'}
-                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+                valueStyle={[styles.cardValueText, { color: brandColors.white }]}
               />
             }
             label="Highest value receipt"
@@ -452,9 +452,9 @@ export default function SummaryScreen() {
               <IconValue
                 iconName="calculator-outline"
                 iconSize={22}
-                iconColor={theme.surface}
+                iconColor={brandColors.white}
                 value={formatCurrency(avgPerReceipt || 0)}
-                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+                valueStyle={[styles.cardValueText, { color: brandColors.white }]}
               />
             }
             label="Average per receipt"
@@ -467,9 +467,9 @@ export default function SummaryScreen() {
               <IconValue
                 iconName="calendar-outline"
                 iconSize={22}
-                iconColor={theme.surface}
+                iconColor={brandColors.white}
                 value={mostActiveMonth ?? '—'}
-                valueStyle={[styles.cardValueText, { color: theme.textOnColor }]}
+                valueStyle={[styles.cardValueText, { color: brandColors.white }]}
               />
             }
             label="Most active month"

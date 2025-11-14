@@ -32,7 +32,7 @@ import { authService, SignInData } from '../services/authService';
 import { promptEnableBiometrics } from '../utils/biometricPrompt';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { palette, alpha } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   loginButton: {
-    backgroundColor: palette.green,
+    backgroundColor: brandColors.green,
     borderRadius: radii.md,
     padding: spacing.md,
     alignItems: 'center',
@@ -230,6 +230,6 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     ...typography.body,
-    color: palette.blue,
+    color: brandColors.blue,
   },
 });

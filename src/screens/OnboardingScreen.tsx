@@ -28,7 +28,7 @@ import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
 import PrimaryButton from '../components/PrimaryButton';
 import { radii, spacing, typography } from '../styles/theme';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -134,7 +134,7 @@ export default function OnboardingScreen() {
     <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <PageHeader>
         <Text style={[typography.display, { color: theme.text, fontWeight: '800', marginBottom: spacing.md }]}>Stock
-          <Text style={{ color: palette.green }}>Lens</Text>
+          <Text style={{ color: brandColors.green }}>Lens</Text>
         </Text>
         <>
           <Text style={[typography.pageSubtitle, { color: theme.textSecondary }]}>Scan your Spending</Text>
@@ -155,7 +155,7 @@ export default function OnboardingScreen() {
             const yLow = valueToY(d.low);
 
             const isUp = d.close >= d.open;
-            const fill = isUp ? palette.green : palette.red;
+            const fill = isUp ? brandColors.green : brandColors.red;
             const stroke = isDark ? '#ffffff6e' : '#00000014';
 
             const bodyY = Math.min(yOpen, yClose);
@@ -184,7 +184,7 @@ export default function OnboardingScreen() {
                   width={bodyWidth}
                   height={animH}
                   fill={fill}
-                  stroke={palette.black}
+                  stroke={brandColors.black}
                   strokeOpacity={0.06}
                   rx={2}
                 />

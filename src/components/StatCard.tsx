@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
+import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
@@ -36,7 +36,7 @@ export default function StatCard({ value, label, subtitle, variant = 'white', st
   const { theme } = useTheme();
   
   const bg = variant === 'green' ? theme.primary : variant === 'blue' ? theme.secondary : theme.surface;
-  const textColor = variant === 'white' ? theme.text : theme.textOnColor;
+  const textColor = variant === 'white' ? theme.text : brandColors.white;
 
   return (
     <View style={[styles.card, { backgroundColor: bg }, style]}>

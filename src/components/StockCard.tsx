@@ -14,7 +14,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { palette } from '../styles/palette';
+import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTheme } from '../contexts/ThemeContext';
@@ -51,7 +51,7 @@ type Props = {
  * Card width is responsive: 82% of screen width on phones, 40% on tablets.
  * Badge is positioned absolutely at top-right when provided.
  */
-export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = palette.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
+export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = brandColors.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
   const { isTablet, width } = useBreakpoint();
   const { theme } = useTheme();
   const pixelWidth = cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82));
@@ -72,7 +72,7 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
       ) : null}
       <View style={styles.header}>
         <Text style={[styles.name, { color: theme.text }]}>{name}</Text>
-        {ticker ? <Text style={[styles.ticker, { color: palette.blue }]}>{ticker}</Text> : null}
+        {ticker ? <Text style={[styles.ticker, { color: brandColors.blue }]}>{ticker}</Text> : null}
       </View>
 
           <View style={styles.valueContainer}>
@@ -125,7 +125,7 @@ const styles = StyleSheet.create<any>({
   },
   badgeText: {
     ...typography.captionStrong,
-    color: palette.white,
+    color: brandColors.white,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create<any>({
   },
   ticker: {
     ...typography.captionStrong,
-    color: palette.blue,
+    color: brandColors.blue,
   },
   valueContainer: {
     alignItems: 'flex-start',
@@ -171,7 +171,7 @@ const styles = StyleSheet.create<any>({
   },
   footerValue: {
     ...typography.metricSm,
-    color: palette.green,
+    color: brandColors.green,
   },
   verticalDivider: {
     width: 1,
