@@ -8,6 +8,7 @@
  * - Decimal inference for amounts without decimal points (e.g., 1250 → 12.50)
  * - Currency symbol detection and scoring
  * - Footer line filtering (thank you, barcode, payment method, etc.)
+ * - Amount validation (realistic values between 0 and 1,000,000)
  * 
  * Strategies (in order):
  * 1. High-confidence: Extract rightmost number from lines containing 'total' keyword
@@ -26,6 +27,41 @@
  * - Handles common OCR misreads (O/0, l/I/1 confusion)
  * - Returns null if no valid amount found
  */
+
+/**
+ * Validate extracted amount for realistic values
+ * 
+ * @param amount - Extracted amount to validate
+ * @returns true if amount is valid, false otherwise
+ * 
+ * Validation Rules:
+ * - Must be greater than 0 (no negative or zero amounts)
+ * - Must be less than 1,000,000 (prevents unrealistic OCR extractions)
+ * - Must be a finite number (not NaN or Infinity)
+ * 
+ * Common Invalid Cases:
+ * - OCR extracts barcode numbers as amounts (e.g., 123456789)
+ * - Date stamps interpreted as amounts (e.g., 20250115)
+ * - Phone numbers mistaken for amounts (e.g., 4471234567890)
+ * - Zero amounts from failed OCR
+ * - Negative amounts from accounting notation
+ * 
+ * Usage:
+ * const amount = parseAmountFromOcrText(ocrText);
+ * if (amount && validateAmount(amount)) {
+ *   // Use the amount
+ * } else {
+ *   // Show manual entry prompt
+ * }
+ */
+export function validateAmount(amount: number | null | undefined): boolean {
+  if (amount == null) return false;
+  if (typeof amount !== 'number') return false;
+  if (!Number.isFinite(amount)) return false;
+  if (amount <= 0) return false;
+  if (amount >= 1000000) return false;
+  return true;
+}
 
 /**
  * Parse amount from OCR text with intelligent extraction and error correction
