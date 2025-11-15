@@ -27,7 +27,7 @@ describe('useReceipts', () => {
     jest.useFakeTimers();
     const unsubSpy = jest.fn();
     const handlers: ReceiptsChangedHandler[] = [];
-    mockedSubscribe.mockImplementation((_event, handler) => {
+    mockedSubscribe.mockImplementation((_event: string, handler: ReceiptsChangedHandler) => {
       handlers.push(handler);
       return unsubSpy;
     });

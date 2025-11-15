@@ -3,7 +3,7 @@ import { Alert, Platform } from 'react-native';
 import { useReceiptCapture } from '@/hooks/useReceiptCapture';
 import { receiptService } from '@/services/dataService';
 import { performOcrWithFallback } from '@/services/ocrService';
-import { parseAmountFromOcrText } from '@/services/receiptParser';
+import { parseAmountFromOcrText, validateAmount } from '@/services/receiptParser';
 import showConfirmationPrompt from '@/components/ConfirmationPrompt';
 
 jest.mock('@/services/dataService', () => ({
@@ -20,14 +20,16 @@ jest.mock('@/services/ocrService', () => ({
 
 jest.mock('@/services/receiptParser', () => ({
   parseAmountFromOcrText: jest.fn(),
+  validateAmount: jest.fn(),
 }));
 
 jest.mock('@/components/ConfirmationPrompt', () => jest.fn());
 
 const mockedReceiptService = receiptService as jest.Mocked<typeof receiptService>;
-const mockedOcr = performOcrWithFallback as jest.MockedFunction<typeof performOcrWithFallback>;
-const mockedParser = parseAmountFromOcrText as jest.MockedFunction<typeof parseAmountFromOcrText>;
-const promptMock = showConfirmationPrompt as jest.MockedFunction<typeof showConfirmationPrompt>;
+const mockedPerformOcr = performOcrWithFallback as jest.MockedFunction<typeof performOcrWithFallback>;
+const mockedParseAmount = parseAmountFromOcrText as jest.MockedFunction<typeof parseAmountFromOcrText>;
+const mockedValidateAmount = validateAmount as jest.MockedFunction<typeof validateAmount>;
+const mockedPrompt = showConfirmationPrompt as jest.MockedFunction<typeof showConfirmationPrompt>;
 const alertSpy = jest.spyOn(Alert, 'alert');
 const Constants = require('expo-constants');
 
@@ -45,9 +47,10 @@ describe('useReceiptCapture', () => {
     jest.clearAllMocks();
     alertSpy.mockClear();
     Constants.manifest.extra = { OCR_SPACE_API_KEY: 'test-key' };
-    mockedOcr.mockResolvedValue({ text: 'Total 12.34' } as any);
-    mockedParser.mockReturnValue(12.34);
-    promptMock.mockImplementation(() => {});
+    mockedPerformOcr.mockResolvedValue({ text: 'Total 12.34' } as any);
+    mockedParseAmount.mockReturnValue(12.34);
+    mockedValidateAmount.mockReturnValue(true);
+    mockedPrompt.mockImplementation(() => {});
   });
 
   it('shows confirmation prompt and saves when OCR succeeds', async () => {
@@ -63,8 +66,8 @@ describe('useReceiptCapture', () => {
       });
     });
 
-    expect(promptMock).toHaveBeenCalledWith('£12.34', expect.any(Object));
-    const options = promptMock.mock.calls[0][1];
+    expect(mockedPrompt).toHaveBeenCalledWith('£12.34', expect.any(Object));
+    const options = mockedPrompt.mock.calls[0][1];
 
     await act(async () => {
       await options.onConfirm?.();
@@ -76,7 +79,7 @@ describe('useReceiptCapture', () => {
   });
 
   it('opens manual entry flow when OCR returns empty text', async () => {
-    mockedOcr.mockResolvedValue({ text: '' } as any);
+    mockedPerformOcr.mockResolvedValue({ text: '' } as any);
     const { result } = createHook();
     const platform = Platform as any;
     const originalOS = platform.OS;
@@ -85,7 +88,7 @@ describe('useReceiptCapture', () => {
       await result.current.actions.processReceipt({ photoUri: 'file://receipt.jpg', photoBase64: 'abc' });
     });
 
-    const options = promptMock.mock.calls[0][1];
+    const options = mockedPrompt.mock.calls[0][1];
     await act(async () => {
       platform.OS = 'android';
       options.onEnterManually?.();
