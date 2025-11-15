@@ -13,7 +13,7 @@
  * 
  * Data transformation:
  * - Converts Firestore receipt documents to simplified ReceiptShape format
- * - Formats merchant names with fallback to date
+ * - Formats scan dates for display
  * - Ensures image URIs are properly typed
  * 
  * @param userId - Firebase user ID to fetch receipts for. If undefined, returns empty array.
@@ -34,8 +34,8 @@ import { formatRelativeDate } from '../utils/formatters';
 export type ReceiptShape = {
   /** Unique receipt identifier (string representation of Firestore document ID) */
   id: string;
-  /** Merchant or store name (falls back to formatted date) */
-  merchant: string;
+  /** Formatted label for display (relative date like "2 days ago" or "Yesterday") */
+  label: string;
   /** Total purchase amount in currency */
   amount: number;
   /** ISO date string of when receipt was scanned */
@@ -69,7 +69,7 @@ export default function useReceipts(userId?: string) {
       if (!mountedRef.current) return;
       const mapped = data.map((r: any) => ({
         id: String(r.id),
-        merchant: r.merchant || formatRelativeDate(r.date_scanned) || 'Receipt',
+        label: formatRelativeDate(r.date_scanned) || 'Receipt',
         amount: r.total_amount || 0,
         date: r.date_scanned || '',
         time: '',

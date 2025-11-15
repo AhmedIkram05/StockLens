@@ -169,7 +169,7 @@ export default function HomeScreen() {
                           <ReceiptCard
                             image={scan.image}
                             amount={formatAmount(scan.amount)}
-                            merchant={scan.merchant ?? formatReceiptLabel(scan.date)}
+                            label={scan.label}
                             time={scan.time}
                             onPress={() =>
                               navigation.navigate('ReceiptDetails', {

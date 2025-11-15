@@ -81,7 +81,7 @@ const THEMES: Record<ThemeMode, ThemeColors> = {
 export const lightTheme = THEMES.light;
 export const darkTheme = THEMES.dark;
 
-interface ThemeContextType {
+export interface ThemeContextType {
   /** Current theme colors */
   theme: ThemeColors;
   /** Current theme mode */
@@ -92,7 +92,7 @@ interface ThemeContextType {
   isDark: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = 'theme_mode';
 

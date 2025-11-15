@@ -3,7 +3,7 @@
  * 
  * Individual receipt view with investment projection calculator.
  * Features:
- * - Receipt amount, merchant, date, timestamp display
+ * - Receipt amount, date, timestamp display
  * - Delete receipt functionality
  * - Year selector (1Y, 3Y, 5Y, 10Y, 20Y)
  * - Horizontal carousel of stock projection cards
@@ -56,7 +56,7 @@ import { STOCK_PRESETS } from '../services/stockPresets';
 
 import { subscribe, emit } from '../services/eventBus';
 import { getHistoricalCAGRFromToday } from '../services/projectionService';
-import { formatCurrencyGBP } from '../utils/formatters';
+import { formatCurrencyGBP, formatRelativeDate } from '../utils/formatters';
 import YearSelector from '../components/YearSelector';
 import StockCard from '../components/StockCard';
 import ReceiptCard from '../components/ReceiptCard';
@@ -328,7 +328,7 @@ export default function ReceiptDetailsScreen() {
               <ReceiptCard
                 image={image}
                 amount={formattedEditableAmount}
-                merchant={''}
+                label={formatRelativeDate(date)}
                 time={new Date(date).toLocaleString()}
                 onPress={() => {}}
               />
