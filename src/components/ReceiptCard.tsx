@@ -1,7 +1,7 @@
 /**
  * ReceiptCard Component
  * 
- * Displays a receipt preview in a card format with thumbnail image, amount, merchant, and timestamp.
+ * Displays a receipt preview in a card format with thumbnail image, amount, and timestamp.
  * Used in lists/scrollviews to show receipt summaries before navigating to detail view.
  * 
  * Shows a placeholder if no image is available. Includes a chevron indicator for navigation.
@@ -20,8 +20,8 @@ type Props = {
   image?: string | undefined;
   /** Receipt amount (can be number, string, or formatted React element) */
   amount?: number | string | React.ReactNode;
-  /** Merchant or store name */
-  merchant?: string;
+  /** Display label (e.g., "2 hours ago", "Yesterday") */
+  label?: string;
   /** Timestamp or date string (e.g., "2 hours ago", "Nov 9, 2025") */
   time?: string;
   /** Callback triggered when the card is pressed */
@@ -34,15 +34,24 @@ type Props = {
  * Renders a pressable receipt card with image, transaction details, and navigation chevron.
  * If no image is provided, displays a gray placeholder.
  */
-export default function ReceiptCard({ image, amount, merchant, time, onPress, style }: Props) {
+export default function ReceiptCard({ image, amount, label, time, onPress, style }: Props) {
   const { theme } = useTheme();
 
   return (
-    <TouchableOpacity style={[styles.card, { backgroundColor: theme.surface }, style]} onPress={onPress} activeOpacity={0.85}>
-      {image ? <Image source={{ uri: image }} style={styles.image} /> : <View style={styles.placeholder} />}
+    <TouchableOpacity
+      testID="receipt-card"
+      style={[styles.card, { backgroundColor: theme.surface }, style]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      {image ? (
+        <Image testID="receipt-card-image" source={{ uri: image }} style={styles.image} />
+      ) : (
+        <View testID="receipt-card-placeholder" style={styles.placeholder} />
+      )}
       <View style={styles.info}>
         <Text style={[styles.amount, { color: theme.text }]}>{amount}</Text>
-        <Text style={[styles.merchant, { color: theme.textSecondary }]}>{merchant}</Text>
+        <Text style={[styles.label, { color: theme.textSecondary }]}>{label}</Text>
         <Text style={[styles.time, { color: theme.textSecondary }]}>{time}</Text>
       </View>
       <Text style={[styles.chevron, { color: theme.textSecondary }]}>›</Text>
@@ -80,7 +89,7 @@ const styles = StyleSheet.create({
   amount: {
     ...typography.bodyStrong,
   },
-  merchant: {
+  label: {
     ...typography.caption,
   },
   time: {

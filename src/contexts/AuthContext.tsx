@@ -32,8 +32,12 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { AppState, AppStateStatus } from 'react-native';
 import { useTheme } from './ThemeContext';
 import type { User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuthInstance } from '@/services/firebase';
+import { userService } from '@/services/dataService';
+import { authenticateBiometric, isBiometricAvailable, isBiometricEnabled } from '@/hooks/useBiometricAuth';
 
-interface UserProfile {
+export interface UserProfile {
   id?: number;
   uid: string;
   full_name?: string | null;
@@ -42,7 +46,7 @@ interface UserProfile {
   last_login?: string;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   /** Firebase Auth user object (null if not authenticated) */
   user: User | null;
   /** User profile data from Firestore */
@@ -61,16 +65,7 @@ interface AuthContextType {
   startLockGrace: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  userProfile: null,
-  loading: true,
-  signOutUser: async () => {},
-  locked: false,
-  unlockWithBiometrics: async () => false,
-  unlockWithCredentials: async () => false,
-  startLockGrace: () => {},
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * useAuth Hook
@@ -127,12 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = async () => {
       try {
         await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const { getAuthInstance } = await import('../services/firebase');
-        const { onAuthStateChanged } = await import('firebase/auth');
-        
         const auth = await getAuthInstance();
-        const { userService } = await import('../services/dataService');
 
         unsubscribe = onAuthStateChanged(auth, async (usr) => {
           setUser(usr);
@@ -190,11 +180,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLocked(false);
         return true;
       }
-      const biometric = await import('../hooks/useBiometricAuth');
-      const available = await biometric.isBiometricAvailable();
-      const enabled = await biometric.isBiometricEnabled();
+      const available = await isBiometricAvailable();
+      const enabled = await isBiometricEnabled();
       if (!available || !enabled) return false;
-      const { authenticateBiometric } = biometric;
       const { success } = await authenticateBiometric('Unlock StockLens');
       if (success) {
         // Start grace period to prevent immediate re-locking
@@ -216,8 +204,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Validate credentials without triggering full sign-in
-      const { getAuthInstance } = await import('../services/firebase');
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
       const auth = await getAuthInstance();
       
       // Just verify credentials are correct
@@ -240,9 +226,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         lockGraceTimer.current = null;
       }
       lockGraceActive.current = false;
-      
-      const { getAuthInstance } = await import('../services/firebase');
-      const { signOut } = await import('firebase/auth');
       
       const auth = await getAuthInstance();
       await signOut(auth);
@@ -279,7 +262,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 10000);
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     userProfile,
     loading,

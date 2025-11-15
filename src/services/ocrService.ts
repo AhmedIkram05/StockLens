@@ -126,6 +126,12 @@ export async function recognizeImageWithOCRSpace(imageUri: string, apiKey: strin
   return doOcrForm(formData, apiKey);
 }
 
+export const ocrHelpers = {
+  preprocessImageToBase64,
+  recognizeBase64WithOCRSpace,
+  recognizeImageWithOCRSpace,
+};
+
 /**
  * Recognize text from a base64-encoded image string using OCR.Space
  * 
@@ -217,12 +223,12 @@ export async function performOcrWithFallback(imageUri: string, base64Data: strin
 
   try {
     if (!b64) {
-      b64 = await preprocessImageToBase64(imageUri, 1400);
+      b64 = await ocrHelpers.preprocessImageToBase64(imageUri, 1400);
     }
 
     if (b64) {
       try {
-        ocrResult = await recognizeBase64WithOCRSpace(b64, apiKey);
+        ocrResult = await ocrHelpers.recognizeBase64WithOCRSpace(b64, apiKey);
       } catch (e) {
         ocrResult = { text: '', raw: null, success: false, errorMessage: String(e) } as OcrResult;
       }
@@ -230,7 +236,7 @@ export async function performOcrWithFallback(imageUri: string, base64Data: strin
 
     if ((!ocrResult || !ocrResult.text || !ocrResult.text.trim()) && imageUri) {
       try {
-        const fileTry = await recognizeImageWithOCRSpace(imageUri, apiKey);
+        const fileTry = await ocrHelpers.recognizeImageWithOCRSpace(imageUri, apiKey);
         if (fileTry && fileTry.text && fileTry.text.trim().length > 0) {
           ocrResult = fileTry;
         }
@@ -239,9 +245,9 @@ export async function performOcrWithFallback(imageUri: string, base64Data: strin
 
     if ((!ocrResult || !ocrResult.text || !ocrResult.text.trim()) && imageUri) {
       try {
-        const bigger = await preprocessImageToBase64(imageUri, 2000);
+        const bigger = await ocrHelpers.preprocessImageToBase64(imageUri, 2000);
         if (bigger) {
-          const tryB = await recognizeBase64WithOCRSpace(bigger, apiKey);
+          const tryB = await ocrHelpers.recognizeBase64WithOCRSpace(bigger, apiKey);
           if (tryB && tryB.text && tryB.text.trim().length > 0) {
             ocrResult = tryB;
           }

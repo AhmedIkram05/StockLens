@@ -30,7 +30,6 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  Platform,
   Modal,
   TextInput,
 } from 'react-native';
@@ -41,15 +40,11 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import Constants from 'expo-constants';
-import { performOcrWithFallback } from '../services/ocrService';
-import { parseAmountFromOcrText } from '../services/receiptParser';
 import { receiptService } from '../services/dataService';
 import { emit } from '../services/eventBus';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { formatCurrencyGBP } from '../utils/formatters';
-import showConfirmationPrompt from '../components/ConfirmationPrompt';
+import { useReceiptCapture } from '../hooks/useReceiptCapture';
 
 /**
  * Renders the camera view with capture controls and photo preview.
@@ -62,14 +57,20 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [draftReceiptId, setDraftReceiptId] = useState<number | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const [ocrRaw, setOcrRaw] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(true);
-  
-  const [manualModalVisible, setManualModalVisible] = useState(false);
-  const [manualEntryText, setManualEntryText] = useState<string>('');
-  const pendingRef = useRef<{ draftId: number | null; ocrText: string | null; photoUri: string | null; amount: number | null }>({ draftId: null, ocrText: null, photoUri: null, amount: null });
+  const clearPhotoPreview = useCallback(() => {
+    setPhoto(null);
+    setPhotoBase64(null);
+  }, []);
+  const capture = useReceiptCapture({ navigation, userUid: userProfile?.uid, onResetCamera: clearPhotoPreview });
+  const { processing, ocrRaw, draftReceiptId, manualModalVisible, manualEntryText } = capture.state;
+  const {
+    setDraftReceiptId,
+    setManualEntryText,
+    setManualModalVisible,
+    processReceipt,
+    saveAndNavigate,
+  } = capture.actions;
   const cameraRef = useRef<CameraView>(null);
   const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing, width } = useBreakpoint();
   const insets = useSafeAreaInsets();
@@ -100,7 +101,7 @@ export default function ScanScreen() {
             },
           ]}
         >
-          <Text style={[styles.permissionText, { color: theme.text }]}>
+          <Text testID="camera-permission-text" style={[styles.permissionText, { color: theme.text }]}> 
             Camera permission is required to scan receipts
           </Text>
           <TouchableOpacity
@@ -141,41 +142,28 @@ export default function ScanScreen() {
           console.warn('Failed to create draft receipt', e);
         }
 
-        await processReceiptHandler(photo.uri, (photo as any).base64, createdDraftId);
+        await processReceipt({
+          photoUri: photo.uri,
+          photoBase64: (photo as any).base64 ?? null,
+          draftIdArg: createdDraftId,
+        });
       } catch (error) {
         Alert.alert('Error', 'Failed to capture image');
       }
     }
   };
-
-  const resetCamera = () => {
-    setPhoto(null);
-    setPhotoBase64(null);
-    setDraftReceiptId(null);
-    setProcessing(false);
-    pendingRef.current = { draftId: null, ocrText: null, photoUri: null, amount: null };
-  };
-
-  const discardDraft = async (draftId?: number | null) => {
-    const id = draftId ?? draftReceiptId;
-    if (!id) return;
-    try {
-      await receiptService.delete(Number(id));
-      try { emit('receipts-changed', { id }); } catch (e) {}
-    } catch (e) {}
-  };
-
   if (photo) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: brandColors.black }}>
         <View style={styles.previewContainer}>
-          <Image source={{ uri: photo }} style={styles.previewImage} />
+          <Image testID="scan-preview-image" source={{ uri: photo }} style={styles.previewImage} />
           <Modal visible={manualModalVisible} transparent animationType="fade" onRequestClose={() => setManualModalVisible(false)}>
             <View style={styles.modalBackdrop}>
               <View style={styles.modalCard}>
                 <Text style={styles.modalTitle}>Manual entry</Text>
                 <Text style={styles.modalSubtitle}>Enter the total amount</Text>
                 <TextInput
+                  testID="manual-entry-input"
                   style={styles.modalInput}
                   keyboardType="decimal-pad"
                   value={manualEntryText}
@@ -187,6 +175,7 @@ export default function ScanScreen() {
                     <Text style={styles.modalCancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    testID="manual-confirm-button"
                     style={[styles.modalBtn, styles.modalConfirm]}
                     onPress={async () => {
                       const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
@@ -213,91 +202,7 @@ export default function ScanScreen() {
       );
   }
 
-  async function processReceiptHandler(
-    overrideUri?: string | null,
-    overrideBase64?: string | null,
-    draftIdArg?: number | null,
-    onSuggestion?: (amount: number | null, ocrText: string | null) => void,
-    skipOverlay = false
-  ) {
-    const photoUri = overrideUri ?? photo;
-    const photoB64 = overrideBase64 ?? photoBase64;
-    if (!photoUri) return;
-    if (!skipOverlay) setProcessing(true);
-    try {
-      const extras = (Constants as any).manifest?.extra || (Constants as any).expoConfig?.extra || {};
-      const apiKey = extras?.OCR_SPACE_API_KEY || process.env.OCR_SPACE_API_KEY || '';
-      if (!apiKey) {
-        if (!skipOverlay) setProcessing(false);
-        Alert.alert('Missing API Key', 'Set OCR_SPACE_API_KEY in app config (app.json) or process.env');
-        return;
-      }
-
-      const result = await performOcrWithFallback(photoUri, photoB64 || null, apiKey);
-      const ocrText = result?.text || '';
-      setOcrRaw(ocrText || null);
-
-      if (!ocrText || !ocrText.trim()) {
-        if (onSuggestion) try { onSuggestion(null, ocrText || null); } catch (e) {}
-        if (!skipOverlay) {
-          const draft = draftIdArg ?? draftReceiptId ?? null;
-          pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri ?? null, amount: null };
-          const displayAmount = 'No amount detected';
-          showConfirmationPrompt(displayAmount, {
-            onConfirm: async () => { await saveAndNavigate(0, draft, ocrText || null, photoUri || null); },
-            onEnterManually: () => {
-              if (Platform.OS === 'ios' && (Alert as any).prompt) {
-                (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
-                  const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-                  const parsed = Number(cleaned);
-                  if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-                  await saveAndNavigate(parsed, draft, ocrText || null, photoUri || null);
-                }, 'plain-text', '');
-              } else {
-                setManualEntryText('');
-                setManualModalVisible(true);
-              }
-            },
-            onRescan: async () => { try { await discardDraft(draft); } catch (e) {} resetCamera(); },
-          });
-        }
-        return;
-      }
-
-      const parsed = parseAmountFromOcrText(ocrText);
-      const amount = parsed != null && parsed > 0 ? parsed : null;
-      if (onSuggestion) try { onSuggestion(amount, ocrText); } catch (e) {}
-
-      const draft = draftIdArg ?? draftReceiptId ?? null;
-      pendingRef.current = { draftId: draft, ocrText, photoUri: photoUri ?? null, amount: amount };
-      const displayAmount = amount != null ? formatCurrencyGBP(amount) : 'No amount detected';
-      showConfirmationPrompt(displayAmount, {
-        onConfirm: async () => { await saveAndNavigate(amount ?? 0, draft, ocrText || null, photoUri || null); },
-        onEnterManually: () => {
-          if (Platform.OS === 'ios' && (Alert as any).prompt) {
-            (Alert as any).prompt('Enter total', '', async (value: string | undefined) => {
-              const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-              const parsed2 = Number(cleaned);
-              if (!Number.isFinite(parsed2) || parsed2 <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-              await saveAndNavigate(parsed2, draft, ocrText || null, photoUri || null);
-            }, 'plain-text', amount != null ? String(amount) : '');
-          } else {
-            setManualEntryText(amount != null ? String(amount) : '');
-            setManualModalVisible(true);
-          }
-        },
-        onRescan: async () => { try { await discardDraft(draft); } catch (e) {} resetCamera(); },
-      });
-      return;
-  } catch (err: any) {
-      console.error('OCR process error', err);
-      if (!skipOverlay) Alert.alert('OCR Error', err?.message || 'Failed to process receipt');
-      if (onSuggestion) try { onSuggestion(null, null); } catch (e) {}
-      
-    } finally {
-      if (!skipOverlay) setProcessing(false);
-    }
-  }
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: brandColors.black }}>
@@ -325,6 +230,7 @@ export default function ScanScreen() {
           ]}
         >
           <TouchableOpacity
+            testID="capture-button"
             activeOpacity={0.85}
             onPress={takePicture}
             style={[
@@ -340,26 +246,6 @@ export default function ScanScreen() {
       </View>
     </SafeAreaView>
   );
-
-  async function saveAndNavigate(amount: number, draftId: number | null, ocrText: string | null, photoUri: string | null) {
-    try {
-      if (draftId) {
-        await receiptService.update(Number(draftId), { total_amount: amount, ocr_data: ocrText || '', date_scanned: new Date().toISOString(), synced: 0 });
-        try { emit('receipts-changed', { id: draftId }); } catch (e) {}
-        resetCamera();
-        navigation.navigate('ReceiptDetails' as any, { receiptId: String(draftId), totalAmount: amount, date: new Date().toISOString(), image: photoUri ?? undefined });
-      } else {
-        const created = await receiptService.create({ user_id: userProfile?.uid || 'anon', image_uri: photoUri ?? undefined, total_amount: amount, ocr_data: ocrText || '', synced: 0 });
-        if (created && Number(created) > 0) {
-          try { emit('receipts-changed', { id: created }); } catch (e) {}
-          resetCamera();
-          navigation.navigate('ReceiptDetails' as any, { receiptId: String(created), totalAmount: amount, date: new Date().toISOString(), image: photoUri ?? undefined });
-        }
-      }
-    } catch (e: any) {
-      Alert.alert('Save error', e?.message || 'Failed to save receipt');
-    }
-  }
 
 }
 
