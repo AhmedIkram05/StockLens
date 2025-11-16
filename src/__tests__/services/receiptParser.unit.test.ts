@@ -1,9 +1,21 @@
 /**
  * receiptParser Unit Tests
- *
- * Purpose: Ensure OCR text parsing reliably extracts monetary totals and
- * validation rejects unrealistic values. Important to prevent saving
- * incorrect receipt totals.
+ * 
+ * Purpose: Validates text parsing logic that extracts receipt totals
+ * from raw OCR output.
+ * 
+ * What it tests:
+ * - Total amount extraction from keyword lines ("TOTAL", "AMOUNT DUE")
+ * - Decimal point inference for ambiguous numbers (1250 → £12.50)
+ * - Fallback to bottom-of-receipt scanning
+ * - Amount validation (reject £0, £999999, negative values)
+ * - Multiple currency symbol handling (£, $, GBP)
+ * 
+ * Why it's important: OCR text is messy and inconsistent. The parser
+ * must reliably find the correct total among many numbers on a receipt.
+ * Tests ensure the heuristics (keyword matching, decimal inference)
+ * work across different receipt formats and prevent obviously wrong
+ * amounts from being saved.
  */
 import { parseAmountFromOcrText } from '@/services/receiptParser';
 

@@ -1,9 +1,20 @@
 /**
  * alphaVantageService Unit Tests
- *
- * Purpose: Validate stock data retrieval, caching, and parsing logic from
- * the Alpha Vantage API. Tests ensure cache usage, API fetching, and
- * conversion to internal OHLCV structures.
+ * 
+ * Purpose: Validates stock market data fetching from Alpha Vantage API
+ * with caching and error handling.
+ * 
+ * What it tests:
+ * - Historical stock price data fetching (monthly OHLCV)
+ * - In-memory caching to reduce API calls
+ * - Network error handling and retries
+ * - Response parsing and validation
+ * - Cache expiration and refresh logic
+ * 
+ * Why it's important: Stock data drives the investment projections.
+ * The service must handle API rate limits (caching), network failures
+ * gracefully, and ensure data quality. Tests verify caching works to
+ * avoid hitting API limits and that errors don't crash the app.
  */
 
 import { alphaVantageService, OHLCV } from '@/services/alphaVantageService';

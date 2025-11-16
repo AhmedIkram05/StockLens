@@ -1,9 +1,20 @@
 /**
  * projectionService Unit Tests
- *
- * Purpose: Validate calculation of CAGRs and projection of future values
- * using historical series or preset fallback rates. Ensures numerical
- * correctness for financial projections displayed in the app.
+ * 
+ * Purpose: Validates financial projection calculations that show users
+ * what their spending could have become if invested in stocks.
+ * 
+ * What it tests:
+ * - CAGR (Compound Annual Growth Rate) calculations from price series
+ * - Historical stock data fetching and processing
+ * - Fallback to preset rates when data is unavailable
+ * - Future value projections using compound interest formula
+ * - Edge cases (empty series, single data point)
+ * 
+ * Why it's important: These projections are the core value proposition
+ * of the app. Accuracy is critical - users need to trust the numbers.
+ * Tests ensure the compound interest math is correct and that the app
+ * gracefully handles missing stock data.
  */
 
 jest.mock('@/services/dataService', () => ({

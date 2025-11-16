@@ -9,17 +9,29 @@ jest.mock('@/services/eventBus', () => ({
   emit: jest.fn(),
 }));
 
-/**
- * dataService Unit Tests
- *
- * Purpose: Verify local persistence layer behavior (SQLite wrappers) for
- * receipts and user data. Tests CRUD operations and error handling.
- */
-
 import { databaseService } from '@/services/database';
 import { emit } from '@/services/eventBus';
 import { receiptService, settingsService, userService } from '@/services/dataService';
 import { createReceipt, createUserProfile } from '../fixtures';
+
+/**
+ * dataService Unit Tests
+ * 
+ * Purpose: Validates SQLite database operations for receipts, users,
+ * and settings through the service layer.
+ * 
+ * What it tests:
+ * - Receipt CRUD operations (create, update, delete, getByUserId)
+ * - User profile upserts and UNIQUE constraint handling
+ * - Settings persistence with default values
+ * - Event bus emissions on data changes
+ * - Proper SQL parameter binding
+ * 
+ * Why it's important: The dataService is the single source of truth
+ * for local data persistence. These tests ensure data integrity,
+ * proper constraint handling (unique emails), and that the event
+ * bus notifies other parts of the app when data changes.
+ */
 
 const mockedDb = databaseService as jest.Mocked<typeof databaseService>;
 const mockedEmit = emit as jest.MockedFunction<typeof emit>;
