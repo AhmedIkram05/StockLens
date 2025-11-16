@@ -22,6 +22,7 @@ Scan Your Spending, See Your Missed Investing
 ## Testing
 
 To run the test suite for StockLens, follow these steps:
+
 1. Ensure all dependencies are installed by running:
 
     ```bash
