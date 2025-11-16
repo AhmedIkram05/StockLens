@@ -45,14 +45,6 @@
  * - Phone numbers mistaken for amounts (e.g., 4471234567890)
  * - Zero amounts from failed OCR
  * - Negative amounts from accounting notation
- * 
- * Usage:
- * const amount = parseAmountFromOcrText(ocrText);
- * if (amount && validateAmount(amount)) {
- *   // Use the amount
- * } else {
- *   // Show manual entry prompt
- * }
  */
 export function validateAmount(amount: number | null | undefined): boolean {
   if (amount == null) return false;

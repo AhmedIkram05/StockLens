@@ -20,12 +20,6 @@
  * - Theme-aware tab bar with SafeAreaView edges
  * - Smooth horizontal slide transitions (200ms)
  * - Loading state with ActivityIndicator during auth check
- * 
- * Tab Structure:
- * 1. Dashboard - Receipt history and spending overview
- * 2. Scan - Camera for capturing receipts
- * 3. Summary - Analytics and insights
- * 4. Settings - User preferences and account
  */
 
 import { NavigationContainer } from '@react-navigation/native';

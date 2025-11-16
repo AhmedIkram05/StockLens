@@ -6,28 +6,6 @@
  * 
  * Supports disabled states, custom styling, and accessibility labels.
  * Uses brandColors.green as the primary action color per design system.
- * 
- * @example
- * // Standard primary button
- * <PrimaryButton onPress={handleSubmit}>
- *   Submit Form
- * </PrimaryButton>
- * 
- * @example
- * // Disabled state
- * <PrimaryButton disabled={!isValid} onPress={handleSave}>
- *   Save Changes
- * </PrimaryButton>
- * 
- * @example
- * // Custom styling with accessibility label
- * <PrimaryButton
- *   onPress={handleCheckout}
- *   style={{ marginTop: 20 }}
- *   accessibilityLabel="Proceed to checkout"
- * >
- *   Checkout
- * </PrimaryButton>
  */
 
 import React from 'react';

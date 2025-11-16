@@ -6,29 +6,6 @@
  * 
  * Created to eliminate repetitive expandable card patterns in SummaryScreen.
  * Provides a consistent, accessible pattern for showing/hiding additional information.
- * 
- * @example
- * // Basic usage with expandable content
- * <ExpandableCard
- *   icon="bulb-outline"
- *   iconColor={theme.primary}
- *   title="Investment Insight"
- *   description="Your spending patterns reveal opportunities"
- *   isExpanded={isInsightExpanded}
- *   onToggle={() => setIsInsightExpanded(!isInsightExpanded)}
- *   expandedContent={<Text>Detailed insight information here</Text>}
- * />
- * 
- * @example
- * // Without expandable content (acts as an info card)
- * <ExpandableCard
- *   icon="information-circle"
- *   iconColor={theme.accent}
- *   title="Note"
- *   description="This is a static informational card"
- *   isExpanded={false}
- *   onToggle={() => {}}
- * />
  */
 
 import React from 'react';
