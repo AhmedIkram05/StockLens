@@ -92,9 +92,9 @@ describe('userService', () => {
   it('upserts user profiles via executeNonQuery', async () => {
     mockedDb.executeNonQuery.mockResolvedValueOnce(1);
 
-    const user = createUserProfile({ uid: 'uid', full_name: 'Alice', email: 'alice@example.com' });
+    const user = createUserProfile({ uid: 'uid', first_name: 'Alice', email: 'alice@example.com' });
 
-    const result = await userService.upsert(user.uid, user.full_name!, user.email!);
+    const result = await userService.upsert(user.uid, user.first_name!, user.email!);
 
     expect(result).toBe(1);
     expect(mockedDb.executeNonQuery).toHaveBeenCalledTimes(1);
@@ -105,9 +105,9 @@ describe('userService', () => {
     mockedDb.executeNonQuery.mockRejectedValueOnce(new Error('UNIQUE constraint failed: users.email'));
     mockedDb.executeNonQuery.mockResolvedValueOnce(2);
 
-    const user = createUserProfile({ uid: 'uid-new', full_name: 'Bob', email: 'duplicate@example.com' });
+    const user = createUserProfile({ uid: 'uid-new', first_name: 'Bob', email: 'duplicate@example.com' });
 
-    const result = await userService.upsert(user.uid, user.full_name!, user.email!);
+    const result = await userService.upsert(user.uid, user.first_name!, user.email!);
 
     expect(result).toBe(2);
     expect(mockedDb.executeNonQuery.mock.calls[1][0]).toContain('UPDATE users');

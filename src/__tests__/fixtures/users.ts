@@ -30,7 +30,7 @@ export const createUserProfile = (overrides: Partial<UserProfile> = {}): UserPro
   const base: UserProfile = {
     id: overrides.id ?? userSequence++,
     uid: overrides.uid ?? `test-uid-${userSequence}`,
-    full_name: overrides.full_name ?? 'Test User',
+    first_name: overrides.first_name ?? 'TestUser',
     email: overrides.email ?? 'user@example.com',
     created_at: overrides.created_at ?? now,
     last_login: overrides.last_login ?? now,

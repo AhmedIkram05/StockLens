@@ -61,7 +61,6 @@ export async function authenticateBiometric(promptMessage = 'Authenticate'): Pro
   try {
     try {
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      console.debug('Supported auth types:', types);
     } catch (e) {}
 
     const res = await LocalAuthentication.authenticateAsync({ promptMessage });
