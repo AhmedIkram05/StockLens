@@ -5,6 +5,7 @@ This folder contains unit and integration tests for StockLens, organized by file
 ## Test Types
 
 ### Unit Tests (`.unit.test.ts/tsx`)
+
 Tests for isolated business logic, pure functions, and individual components without external dependencies.
 
 - **`services/`** - Business logic (projections, data operations, API calls, OCR parsing)
@@ -12,11 +13,13 @@ Tests for isolated business logic, pure functions, and individual components wit
 - **`hooks/`** - Custom React hooks tested in isolation
 
 **Run only unit tests:**
+
 ```bash
 npm run test:unit
 ```
 
 ### Integration Tests (`.integration.test.tsx`)
+
 Tests for full user workflows, screen interactions, and component integration with contexts/providers.
 
 - **`screens/`** - Full screen rendering with navigation, auth, and user interactions
@@ -24,6 +27,7 @@ Tests for full user workflows, screen interactions, and component integration wi
 - **`hooks/`** - Hooks that integrate with external APIs (camera, OCR)
 
 **Run only integration tests:**
+
 ```bash
 npm run test:integration
 ```
@@ -31,6 +35,7 @@ npm run test:integration
 ## Test File Breakdown
 
 ### Unit Tests (10 files, ~30 tests)
+
 | File | Description |
 |------|-------------|
 | `services/alphaVantageService.unit.test.ts` | Stock API integration with caching |
@@ -45,6 +50,7 @@ npm run test:integration
 | `hooks/useReceipts.unit.test.ts` | Receipt data fetching hook |
 
 ### Integration Tests (11 files, ~36 tests)
+
 | File | Description |
 |------|-------------|
 | `contexts/AuthContext.integration.test.tsx` | User authentication provider |
@@ -82,6 +88,7 @@ npm run test:coverage
 ```
 
 ## Test Statistics
+
 - **Total:** 66 tests across 21 files
 - **Unit Tests:** ~30 tests (business logic, utilities)
 - **Integration Tests:** ~36 tests (screens, contexts, workflows)
@@ -90,6 +97,7 @@ npm run test:coverage
 ## Test Principles
 
 ### What We Test
+
 ✅ Business logic and calculations  
 ✅ User workflows and screen interactions  
 ✅ Data persistence and API integration  
@@ -97,6 +105,7 @@ npm run test:coverage
 ✅ Error handling for critical paths  
 
 ### What We Don't Test
+
 ❌ Pure math calculations (visually obvious when broken)  
 ❌ Static configuration data  
 ❌ Simple form validation  
@@ -106,6 +115,7 @@ npm run test:coverage
 ## Adding New Tests
 
 ### Unit Test Template
+
 ```typescript
 // filename.unit.test.ts
 import { functionToTest } from '@/path/to/module';
@@ -119,6 +129,7 @@ describe('functionToTest', () => {
 ```
 
 ### Integration Test Template
+
 ```tsx
 // ScreenName.integration.test.tsx
 import React from 'react';
