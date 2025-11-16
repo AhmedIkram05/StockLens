@@ -1,9 +1,21 @@
 /**
  * HomeScreen Integration Tests
- *
- * Purpose: Verify the main dashboard behaviour including empty state,
- * displaying spending stats, toggling history, and navigating to the
- * Scan and ReceiptDetails screens.
+ * 
+ * Purpose: Validates the main dashboard screen that displays spending
+ * overview and quick access to scanning.
+ * 
+ * What it tests:
+ * - Empty state with onboarding message when no receipts exist
+ * - Spending stats display (total, average, receipt count)
+ * - History list expansion/collapse toggle
+ * - Navigation to Scan screen from CTA button
+ * - Navigation to ReceiptDetails when tapping a receipt
+ * - Receipt data transformation and display format
+ * 
+ * Why it's important: HomeScreen is the first screen users see after
+ * login. It must gracefully handle empty state to guide new users,
+ * accurately display spending statistics, and provide quick access
+ * to key features (scanning, viewing receipt details).
  */
 
 import React from 'react';

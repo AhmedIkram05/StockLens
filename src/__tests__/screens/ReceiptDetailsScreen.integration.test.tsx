@@ -1,9 +1,24 @@
 /**
  * ReceiptDetailsScreen Integration Tests
- *
- * Purpose: Verify receipt detail rendering, deletion flow, and projection
- * card display. Tests ensure the screen shows the correct amount and
- * interacts with projection services as expected.
+ * 
+ * Purpose: Validates receipt detail view with investment projections
+ * and deletion functionality.
+ * 
+ * What it tests:
+ * - Receipt amount and date display
+ * - Historical projection calculations ("could have been" value)
+ * - Future projection calculations ("invest today for X years")
+ * - Year selector interaction (3Y, 5Y, 10Y toggles)
+ * - Projection header updates when year changes
+ * - Delete receipt confirmation prompt
+ * - Receipt deletion and navigation back
+ * - Event bus emission after deletion
+ * 
+ * Why it's important: ReceiptDetailsScreen shows the investment
+ * opportunity for each receipt. Tests ensure projections update
+ * when users change timeframes, deletion requires confirmation
+ * to prevent accidents, and the event bus notifies other screens
+ * to refresh their receipt lists.
  */
 
 import React from 'react';

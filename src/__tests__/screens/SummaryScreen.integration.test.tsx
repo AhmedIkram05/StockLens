@@ -1,8 +1,21 @@
 /**
  * SummaryScreen Integration Tests
- *
- * Purpose: Validate spending summaries, missed investing calculations,
- * and chart rendering. Ensures totals and derived metrics display correctly.
+ * 
+ * Purpose: Validates the spending insights screen that shows detailed
+ * analytics and investment opportunity missed.
+ * 
+ * What it tests:
+ * - Empty state with onboarding CTA to scan first receipt
+ * - Spending statistics calculation (total, average per receipt)
+ * - Dynamic insights content expansion (tap to read more)
+ * - Date-based receipt grouping and display
+ * - Navigation to Scan screen from empty state
+ * - Stock data prefetching for projections
+ * 
+ * Why it's important: SummaryScreen provides the "aha moment" showing
+ * users what their spending could have been worth if invested. Tests
+ * ensure statistics are accurate, insights load correctly, and the
+ * empty state guides new users to start scanning.
  */
 
 import React from 'react';

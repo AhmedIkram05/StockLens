@@ -1,8 +1,21 @@
 /**
  * SignUpScreen Integration Tests
- *
- * Purpose: Verify account creation flow, form validation, and navigation
- * to the login screen upon successful registration.
+ * 
+ * Purpose: Validates new account creation flow with form validation
+ * and biometric setup prompt.
+ * 
+ * What it tests:
+ * - Email format validation before submission
+ * - Password matching validation (password vs confirm password)
+ * - Account creation via authService.signUp
+ * - Lock grace period start after registration
+ * - Biometric enrollment prompt after signup
+ * - Navigation to Login screen from footer link
+ * 
+ * Why it's important: SignUpScreen is the entry point for new users.
+ * Tests ensure form validation catches errors early (invalid email,
+ * mismatched passwords), accounts are created correctly, and users
+ * are offered biometric login immediately after registration.
  */
 
 import React from 'react';

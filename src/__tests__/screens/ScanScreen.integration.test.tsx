@@ -1,9 +1,21 @@
 /**
  * ScanScreen Integration Tests
- *
- * Purpose: Test camera permission handling, photo capture flow, OCR
- * invocation, and manual entry fallback. Ensures users can scan receipts
- * and handle error or permission scenarios.
+ * 
+ * Purpose: Validates the receipt scanning screen with camera integration
+ * and OCR processing workflow.
+ * 
+ * What it tests:
+ * - Camera permission handling (granted/denied states)
+ * - Photo capture flow and preview display
+ * - Draft receipt creation before OCR processing
+ * - OCR workflow invocation with photo data
+ * - Manual entry modal for OCR failures
+ * - Amount submission via useReceiptCapture hook
+ * 
+ * Why it's important: ScanScreen is the core feature of the app.
+ * Tests ensure camera permissions are properly requested, photos
+ * are captured correctly, and the multi-step workflow (capture →
+ * OCR → confirm/manual) works reliably without data loss.
  */
 
 import React from 'react';
