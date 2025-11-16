@@ -139,7 +139,6 @@ export default function ScanScreen() {
             try { emit('receipts-changed', { id: createdId, userId: userProfile?.uid }); } catch (e) {}
           }
         } catch (e) {
-          console.warn('Failed to create draft receipt', e);
         }
 
         await processReceipt({

@@ -15,12 +15,11 @@ function AppContent() {
       try {
         await initDatabase();
       } catch (e) {
-        console.error(e);
       }
       // Kick off the one-time historical prefetch (best-effort)
-      ensureHistoricalPrefetch().catch(err => console.warn('historical prefetch failed', err));
+      ensureHistoricalPrefetch();
   // Prune old alpha_cache entries older than 180 days on startup (best-effort)
-  databaseService.pruneAlphaCacheOlderThan(180).catch(err => console.warn('Alpha cache prune failed', err));
+  databaseService.pruneAlphaCacheOlderThan(180);
     })();
   }, []);
 

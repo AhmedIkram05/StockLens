@@ -65,7 +65,6 @@ export default function LockScreen() {
           await mod.authService.sendPasswordReset(accountEmail);
           Alert.alert('Password Reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
         } catch (err: any) {
-          console.warn('Password reset failed', err);
           Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
         } finally {
           setTimeout(() => setForgotDisabled(false), 30000);
@@ -82,7 +81,6 @@ export default function LockScreen() {
         Alert.alert('Unlock Failed', 'Could not unlock using biometrics. Please try again or use your password.');
       }
     } catch (err) {
-      console.warn(err);
       Alert.alert('Error', 'Biometric unlock failed. Please use your password.');
     } finally {
       setLoading(false);

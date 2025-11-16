@@ -63,7 +63,6 @@ export default function LoginScreen() {
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
-        console.log('Biometric prompt dismissed or failed:', e);
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign in';
@@ -99,7 +98,6 @@ export default function LoginScreen() {
   await mod.authService.sendPasswordReset(target);
   Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
     } catch (err: any) {
-      console.warn('Password reset failed', err);
       Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
     } finally {
       setTimeout(() => setForgotDisabled(false), 30000);

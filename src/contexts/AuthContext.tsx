@@ -136,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUserProfile(profile);
               }
             } catch (err) {
-              console.error('Error loading local user profile:', err);
             }
           } else {
             setUserProfile(null);
@@ -144,7 +143,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setLoading(false);
         });
       } catch (error) {
-        console.error('Error initializing auth:', error);
         setLoading(false);
       }
     };
@@ -191,7 +189,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return false;
     } catch (err) {
-      console.warn('Biometric unlock failed', err);
       return false;
     }
   };
@@ -213,7 +210,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       startLockGrace();
       return true;
     } catch (err) {
-      console.warn('Credential unlock failed', err);
       return false;
     }
   };
@@ -235,7 +231,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Reset theme to light mode on sign out
       setMode('light');
     } catch (error) {
-      console.error('Error signing out:', error);
       throw error;
     }
   };

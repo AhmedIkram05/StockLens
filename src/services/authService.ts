@@ -86,7 +86,6 @@ export const authService = {
 
       return userCredential;
     } catch (error) {
-      console.error('Error signing up:', error);
       throw error;
     }
   },
@@ -119,7 +118,6 @@ export const authService = {
 
       return userCredential;
     } catch (error) {
-      console.error('Error signing in:', error);
       throw error;
     }
   },
@@ -140,14 +138,11 @@ export const authService = {
    */
   async sendPasswordReset(email: string): Promise<void> {
     try {
-      console.debug('authService.sendPasswordReset: sending reset for', email);
       const { getAuthInstance } = await import('./firebase');
       const { sendPasswordResetEmail } = await import('firebase/auth');
       const auth = await getAuthInstance();
       await sendPasswordResetEmail(auth, email);
-      console.debug('authService.sendPasswordReset: sendPasswordResetEmail returned successfully for', email);
     } catch (error) {
-      console.error('Error sending password reset email:', error);
       throw error;
     }
   },
@@ -167,7 +162,6 @@ export const authService = {
       const { userService } = await import('./dataService');
       return await userService.getByUid(userId);
     } catch (error) {
-      console.error('Error getting user data:', error);
       throw error;
     }
   },

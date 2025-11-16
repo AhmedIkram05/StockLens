@@ -59,7 +59,6 @@ export async function promptEnableBiometrics(email: string, password: string) {
               try {
                 await biometric.clearBiometricCredentials();
               } catch (err) {
-                console.warn('Failed to clear biometric credentials', err);
               }
               resolve(false);
             }
@@ -72,7 +71,6 @@ export async function promptEnableBiometrics(email: string, password: string) {
                 Alert.alert('Enabled', 'Biometric login enabled');
                 resolve(true);
               } catch (err) {
-                console.warn('Failed to save biometric credentials', err);
                 resolve(false);
               }
             },
@@ -82,7 +80,6 @@ export async function promptEnableBiometrics(email: string, password: string) {
       );
     });
   } catch (e) {
-    console.warn('Biometric prompt failed', e);
     return false;
   }
 }

@@ -78,7 +78,6 @@ export default function SettingsScreen() {
         const enabled = await biometric.isBiometricEnabled();
         if (mounted) setFaceIdEnabled(enabled);
       } catch (err) {
-        console.warn('Failed to read biometric state', err);
         if (mounted) setFaceIdEnabled(false);
       }
     })();
@@ -93,7 +92,6 @@ export default function SettingsScreen() {
         await biometric.setBiometricEnabled(false);
         await biometric.clearBiometricCredentials();
       } catch (err) {
-        console.warn('Failed to disable biometric setting', err);
       }
       return;
     }
@@ -128,7 +126,6 @@ export default function SettingsScreen() {
       setFaceIdEnabled(true);
       Alert.alert('Enabled', 'Biometric login enabled successfully. You can now use Face ID or Touch ID to unlock the app.');
     } catch (err) {
-      console.warn('Failed to update biometric setting', err);
       Alert.alert('Error', 'Failed to enable biometric login. Please try again.');
       setFaceIdEnabled(false);
     }
@@ -153,7 +150,6 @@ export default function SettingsScreen() {
               await receiptService.deleteAll(uid);
               Alert.alert('Data Cleared', 'All scanned data has been cleared locally.');
             } catch (err: any) {
-              console.error('Failed to clear receipts', err);
               Alert.alert('Error', err?.message || 'Failed to clear scanned data');
             }
           },

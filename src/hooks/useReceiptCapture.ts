@@ -227,7 +227,6 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
         },
       });
     } catch (err: any) {
-      console.error('OCR process error', err);
       if (!skipOverlay) Alert.alert('OCR Error', err?.message || 'Failed to process receipt');
       if (onSuggestion) onSuggestion(null, null);
     } finally {

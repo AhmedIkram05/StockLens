@@ -421,7 +421,6 @@ export default function ReceiptDetailsScreen() {
                       Alert.alert('Deleted', 'Receipt deleted');
                       navigation.navigate('MainTabs' as any);
                     } catch (e: any) {
-                      console.error('Delete error', e);
                       Alert.alert('Delete failed', e?.message || 'Failed to delete receipt');
                     }
                   }

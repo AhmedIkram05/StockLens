@@ -87,7 +87,6 @@ export default function SignUpScreen() {
       try {
         await promptEnableBiometrics(email, password);
       } catch (e) {
-        console.log('Biometric prompt dismissed or failed:', e);
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign up';
