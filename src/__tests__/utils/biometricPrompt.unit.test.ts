@@ -1,9 +1,20 @@
 /**
  * biometricPrompt Unit Tests
- *
- * Purpose: Test the user-facing prompt that asks to enable biometrics.
- * These tests simulate availability checks and user responses to ensure
- * the prompt triggers secure credential storage when accepted.
+ * 
+ * Purpose: Validates the biometric enrollment prompt shown after
+ * successful sign-up or login.
+ * 
+ * What it tests:
+ * - Hardware availability checks before showing prompt
+ * - User acceptance flow (saves credentials to secure storage)
+ * - User rejection flow (returns false, no credentials saved)
+ * - Alert dialog presentation with correct messaging
+ * - Secure credential storage integration
+ * 
+ * Why it's important: This prompt is the entry point for enabling
+ * biometric login. Tests ensure it only appears on capable devices,
+ * correctly saves credentials when users opt-in, and respects user
+ * choice when they decline.
  */
 
 import { Alert } from 'react-native';

@@ -1,3 +1,24 @@
+/**
+ * Receipt Test Fixtures
+ * 
+ * Purpose: Factory functions for generating consistent receipt test data
+ * across all test files.
+ * 
+ * What it provides:
+ * - createReceipt(): Factory function with partial overrides pattern
+ * - buildReceiptList(): Generate multiple receipts with custom logic
+ * - sampleReceipts: Pre-built array of 5 receipts with varied data
+ * - Auto-incrementing ID sequence for unique receipts
+ * 
+ * Why it's important: Eliminates inline mock data duplication across
+ * tests. Changes to Receipt type are centralized here. Tests become
+ * more readable and maintainable with consistent factory-generated data.
+ * 
+ * Usage:
+ * createReceipt({ total_amount: 50 }) → Full receipt with £50 total
+ * buildReceiptList(3) → Array of 3 receipts with sequential data
+ */
+
 import { Receipt } from '@/services/dataService';
 
 let receiptCounter = 1;
