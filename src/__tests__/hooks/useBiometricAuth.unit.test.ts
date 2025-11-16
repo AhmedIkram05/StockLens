@@ -1,13 +1,20 @@
 /**
  * useBiometricAuth Unit Tests
- *
- * Purpose: Verify biometric-related helper functions used by the app.
- * These tests validate hardware checks, authentication flows, secure
- * credential storage, and the enabled flag handling.
- *
- * Why: Biometric features interact with device APIs and secure storage;
- * unit tests ensure logic behaves as expected without touching real
- * hardware or keychains.
+ * 
+ * Purpose: Validates biometric authentication helpers that enable Face ID
+ * and Touch ID functionality for secure app unlocking.
+ * 
+ * What it tests:
+ * - Hardware availability checks (Face ID, Touch ID, fingerprint)
+ * - Biometric authentication prompts and user responses
+ * - Secure credential storage and retrieval (email/password)
+ * - Enable/disable biometric flag persistence
+ * - Credential deletion on sign-out
+ * 
+ * Why it's important: Biometric auth is a security feature that requires
+ * careful testing. These tests ensure the app correctly detects device
+ * capabilities, securely stores credentials in the keychain, and handles
+ * user cancellation or hardware unavailability gracefully.
  */
 
 import { renderHook } from '@testing-library/react-native';

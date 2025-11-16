@@ -1,10 +1,21 @@
 /**
  * useReceiptCapture Integration Tests
- *
- * Purpose: Validate the full capture -> OCR -> confirm -> save workflow used
- * by the app when scanning receipts. These tests exercise interactions with
- * the OCR service, amount parsing/validation, confirmation prompt, and
- * persistence layer (receiptService).
+ * 
+ * Purpose: Validates the complete receipt scanning workflow from photo
+ * capture through OCR processing to database persistence.
+ * 
+ * What it tests:
+ * - Full capture → OCR → confirm → save workflow
+ * - OCR success path with confirmation prompt
+ * - Manual entry fallback when OCR returns empty text
+ * - Error handling for missing API keys
+ * - Draft receipt creation before OCR processing
+ * - Amount parsing and validation from OCR text
+ * 
+ * Why it's important: This hook orchestrates the core feature of the app
+ * (scanning receipts). Tests ensure the multi-step async workflow handles
+ * success and failure cases gracefully, provides fallbacks when OCR fails,
+ * and doesn't lose data during the process.
  */
 
 import { act, renderHook } from '@testing-library/react-native';

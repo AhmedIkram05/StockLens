@@ -1,9 +1,20 @@
 /**
  * useReceipts Unit Tests
- *
- * Purpose: Validate the hook which fetches and manages receipt lists for a user.
- * This includes initial data load, responding to event bus updates, periodic
- * refreshes, and cleanup on unmount.
+ * 
+ * Purpose: Validates the receipt management hook that fetches and transforms
+ * receipt data for display in the UI.
+ * 
+ * What it tests:
+ * - Initial data fetching for authenticated users
+ * - Event bus subscription for real-time updates
+ * - Periodic refresh intervals (30 seconds)
+ * - Data normalization (converting DB receipts to display format)
+ * - Error handling and cleanup on unmount
+ * 
+ * Why it's important: This hook powers the receipt list display across
+ * multiple screens (Home, Summary). Ensures receipts stay synchronized
+ * across the app when users add/delete receipts, and properly cleans up
+ * subscriptions to prevent memory leaks.
  */
 
 import { act, renderHook, waitFor } from '@testing-library/react-native';
