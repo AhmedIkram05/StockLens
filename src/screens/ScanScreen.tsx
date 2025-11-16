@@ -222,9 +222,9 @@ export default function ScanScreen() {
               paddingHorizontal: contentHorizontalPadding,
               bottom: (() => {
                 const base = insets.bottom;
-                if (isSmallPhone) return base + spacing.lg;
+                if (isSmallPhone) return base + spacing.xl;
                 if (isTablet) return base + spacing.xxl + spacing.xl;
-                return base + spacing.xl;
+                return base + spacing.xxl + spacing.sm;
               })(),
             },
           ]}
