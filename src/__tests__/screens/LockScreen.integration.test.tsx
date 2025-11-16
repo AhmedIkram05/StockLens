@@ -1,3 +1,10 @@
+/**
+ * LockScreen Integration Tests
+ *
+ * Purpose: Ensure lock screen behavior (biometric unlock, PIN fallback)
+ * works correctly and that the app gates access until authentication.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';

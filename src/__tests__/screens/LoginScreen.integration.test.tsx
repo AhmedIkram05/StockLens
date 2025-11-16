@@ -1,3 +1,10 @@
+/**
+ * LoginScreen Integration Tests
+ *
+ * Purpose: Validate email/password authentication flows, form validation,
+ * and optional biometric opt-in after successful login.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';

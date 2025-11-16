@@ -1,3 +1,11 @@
+/**
+ * HomeScreen Integration Tests
+ *
+ * Purpose: Verify the main dashboard behaviour including empty state,
+ * displaying spending stats, toggling history, and navigating to the
+ * Scan and ReceiptDetails screens.
+ */
+
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import HomeScreen from '@/screens/HomeScreen';

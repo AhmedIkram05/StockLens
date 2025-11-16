@@ -1,3 +1,11 @@
+/**
+ * ReceiptDetailsScreen Integration Tests
+ *
+ * Purpose: Verify receipt detail rendering, deletion flow, and projection
+ * card display. Tests ensure the screen shows the correct amount and
+ * interacts with projection services as expected.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { act, fireEvent, waitFor } from '@testing-library/react-native';

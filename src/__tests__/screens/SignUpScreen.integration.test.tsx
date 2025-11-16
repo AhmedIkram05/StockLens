@@ -1,3 +1,10 @@
+/**
+ * SignUpScreen Integration Tests
+ *
+ * Purpose: Verify account creation flow, form validation, and navigation
+ * to the login screen upon successful registration.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';

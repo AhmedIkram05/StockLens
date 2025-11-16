@@ -1,3 +1,10 @@
+/**
+ * SummaryScreen Integration Tests
+ *
+ * Purpose: Validate spending summaries, missed investing calculations,
+ * and chart rendering. Ensures totals and derived metrics display correctly.
+ */
+
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import SummaryScreen from '@/screens/SummaryScreen';

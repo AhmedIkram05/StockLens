@@ -1,3 +1,11 @@
+/**
+ * SettingsScreen Integration Tests
+ *
+ * Purpose: Test settings options such as theme toggling, biometric
+ * enable/disable, and sign out behaviour to ensure user preferences are
+ * applied correctly.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { act, fireEvent, waitFor } from '@testing-library/react-native';

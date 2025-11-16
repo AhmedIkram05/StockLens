@@ -1,3 +1,11 @@
+/**
+ * ScanScreen Integration Tests
+ *
+ * Purpose: Test camera permission handling, photo capture flow, OCR
+ * invocation, and manual entry fallback. Ensures users can scan receipts
+ * and handle error or permission scenarios.
+ */
+
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import ScanScreen from '@/screens/ScanScreen';
