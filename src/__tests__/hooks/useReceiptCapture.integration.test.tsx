@@ -1,3 +1,12 @@
+/**
+ * useReceiptCapture Integration Tests
+ *
+ * Purpose: Validate the full capture -> OCR -> confirm -> save workflow used
+ * by the app when scanning receipts. These tests exercise interactions with
+ * the OCR service, amount parsing/validation, confirmation prompt, and
+ * persistence layer (receiptService).
+ */
+
 import { act, renderHook } from '@testing-library/react-native';
 import { Alert, Platform } from 'react-native';
 import { useReceiptCapture } from '@/hooks/useReceiptCapture';
@@ -33,6 +42,7 @@ const mockedPrompt = showConfirmationPrompt as jest.MockedFunction<typeof showCo
 const alertSpy = jest.spyOn(Alert, 'alert');
 const Constants = require('expo-constants');
 
+// Helper: create a hook instance with basic mocks for navigation and callbacks
 const createHook = () =>
   renderHook(() =>
     useReceiptCapture({
@@ -44,15 +54,26 @@ const createHook = () =>
 
 describe('useReceiptCapture', () => {
   beforeEach(() => {
+    // Reset mocks and set up sensible defaults for OCR and parsing
     jest.clearAllMocks();
     alertSpy.mockClear();
+    // Ensure tests behave as if OCR API key exists
     Constants.manifest.extra = { OCR_SPACE_API_KEY: 'test-key' };
+    // Mock OCR returning a simple total
     mockedPerformOcr.mockResolvedValue({ text: 'Total 12.34' } as any);
+    // Mock the parser to return a numeric amount
     mockedParseAmount.mockReturnValue(12.34);
+    // By default consider parsed amounts valid
     mockedValidateAmount.mockReturnValue(true);
+    // Confirmation prompt is replaced with a jest fn to capture options
     mockedPrompt.mockImplementation(() => {});
   });
 
+  /**
+   * Test: OCR success path
+   * - Simulates capturing a photo, OCR returning a valid amount,
+   *   showing a confirmation prompt, and saving the receipt on confirm.
+   */
   it('shows confirmation prompt and saves when OCR succeeds', async () => {
     const navigation = { navigate: jest.fn() };
     const onResetCamera = jest.fn();
@@ -66,9 +87,11 @@ describe('useReceiptCapture', () => {
       });
     });
 
+    // Verify confirmation prompt was displayed with formatted amount
     expect(mockedPrompt).toHaveBeenCalledWith('£12.34', expect.any(Object));
     const options = mockedPrompt.mock.calls[0][1];
 
+    // Simulate user confirming the prompt which should save the receipt
     await act(async () => {
       await options.onConfirm?.();
     });

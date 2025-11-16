@@ -1,10 +1,20 @@
+/**
+ * useReceipts Unit Tests
+ *
+ * Purpose: Validate the hook which fetches and manages receipt lists for a user.
+ * This includes initial data load, responding to event bus updates, periodic
+ * refreshes, and cleanup on unmount.
+ */
+
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import useReceipts from '@/hooks/useReceipts';
 import { receiptService } from '@/services/dataService';
 import { subscribe } from '@/services/eventBus';
 
+// Handler type used by the mocked event bus
 type ReceiptsChangedHandler = (payload?: { userId?: string }) => void;
 
+// Mock the data service and event bus to avoid network/DB calls
 jest.mock('@/services/dataService', () => ({
   receiptService: {
     getByUserId: jest.fn(),
@@ -20,9 +30,16 @@ const mockedSubscribe = subscribe as jest.MockedFunction<typeof subscribe>;
 
 describe('useReceipts', () => {
   beforeEach(() => {
+    // Reset mocks between tests
     jest.clearAllMocks();
   });
 
+  /**
+   * Test: Fetch, refresh, and cleanup
+   * - Verifies initial fetch for the provided user id
+   * - Ensures the hook responds to event bus notifications by re-fetching
+   * - Verifies periodic refresh via timers and cleanup/unsubscribe on unmount
+   */
   it('fetches receipts for the user, refreshes on events, and cleans up on unmount', async () => {
     jest.useFakeTimers();
     const unsubSpy = jest.fn();
@@ -32,14 +49,17 @@ describe('useReceipts', () => {
       return unsubSpy;
     });
 
+    // Initial response returned by mocked service
     mockedReceiptService.getByUserId.mockResolvedValueOnce([
       { id: 7, total_amount: 42.5, date_scanned: '2025-01-01T10:00:00Z', image_uri: 'uri://1' },
     ] as any);
 
     const { result, unmount } = renderHook(() => useReceipts('user-123'));
 
+    // Wait until loading completes
     await waitFor(() => expect(result.current.loading).toBe(false));
 
+    // Verify initial fetch and normalized data shape
     expect(mockedReceiptService.getByUserId).toHaveBeenCalledWith('user-123');
     expect(result.current.receipts).toEqual([
       {
@@ -52,6 +72,7 @@ describe('useReceipts', () => {
       },
     ]);
 
+    // Simulate event bus telling hook to refresh; mock next service response
     mockedReceiptService.getByUserId.mockResolvedValueOnce([
       { id: 8, total_amount: 99.99, date_scanned: '2025-01-05T12:00:00Z' },
     ] as any);
@@ -62,17 +83,23 @@ describe('useReceipts', () => {
 
     await waitFor(() => expect(result.current.receipts[0].id).toBe('8'));
 
+    // Advance timers for periodic refresh and verify calls
     act(() => {
       jest.advanceTimersByTime(30000);
     });
     expect(mockedReceiptService.getByUserId).toHaveBeenCalledTimes(3);
 
+    // Unmount should unsubscribe from event bus
     unmount();
     expect(unsubSpy).toHaveBeenCalled();
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
+  /**
+   * Test: Error handling on fetch
+   * - Ensures errors from the data service are captured and surfaced in hook state
+   */
   it('captures fetch errors', async () => {
     mockedReceiptService.getByUserId.mockRejectedValueOnce(new Error('boom'));
 

@@ -1,3 +1,15 @@
+/**
+ * useBiometricAuth Unit Tests
+ *
+ * Purpose: Verify biometric-related helper functions used by the app.
+ * These tests validate hardware checks, authentication flows, secure
+ * credential storage, and the enabled flag handling.
+ *
+ * Why: Biometric features interact with device APIs and secure storage;
+ * unit tests ensure logic behaves as expected without touching real
+ * hardware or keychains.
+ */
+
 import { renderHook } from '@testing-library/react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
@@ -29,10 +41,16 @@ const mockedLocalAuth = LocalAuthentication as jest.Mocked<typeof LocalAuthentic
 const mockedSecureStore = SecureStore as jest.Mocked<typeof SecureStore>;
 
 describe('useBiometricAuth', () => {
+  // Ensure a clean mock state before each test
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /**
+   * isBiometricAvailable
+   * - Verifies detection logic for biometric hardware and enrollment status.
+   * - Tests both positive and negative hardware/enrollment combinations.
+   */
   describe('isBiometricAvailable', () => {
     it('returns true when hardware exists and biometrics enrolled', async () => {
       mockedLocalAuth.hasHardwareAsync.mockResolvedValue(true);
@@ -53,6 +71,11 @@ describe('useBiometricAuth', () => {
     });
   });
 
+  /**
+   * authenticateBiometric
+   * - Simulates user biometric authentication and verifies returned results
+   *   and the arguments passed into the native API wrapper.
+   */
   describe('authenticateBiometric', () => {
     it('returns success when authentication succeeds', async () => {
       mockedLocalAuth.supportedAuthenticationTypesAsync.mockResolvedValue([]);
@@ -75,16 +98,23 @@ describe('useBiometricAuth', () => {
     });
   });
 
+  /**
+   * Credential storage helpers
+   * - Ensures credentials are securely saved/retrieved via SecureStore
+   * - Ensures clearing credentials also removes the enabled flag
+   */
   describe('credential storage', () => {
     it('saves and retrieves credentials securely', async () => {
       await saveBiometricCredentials('user@example.com', 'pass123');
 
+      // Verify SecureStore called with serialized credentials and proper options
       expect(mockedSecureStore.setItemAsync).toHaveBeenCalledWith(
         'biometric_credentials',
         JSON.stringify({ email: 'user@example.com', password: 'pass123' }),
         { keychainAccessible: SecureStore.ALWAYS_THIS_DEVICE_ONLY }
       );
 
+      // Simulate stored value and verify retrieval parsing
       mockedSecureStore.getItemAsync.mockResolvedValue(
         JSON.stringify({ email: 'user@example.com', password: 'pass123' })
       );
@@ -102,6 +132,10 @@ describe('useBiometricAuth', () => {
     });
   });
 
+  /**
+   * Enabled flag helpers
+   * - Tests saving and reading the biometric enabled flag
+   */
   describe('enabled state', () => {
     it('manages biometric enabled flag', async () => {
       await setBiometricEnabled(true);
