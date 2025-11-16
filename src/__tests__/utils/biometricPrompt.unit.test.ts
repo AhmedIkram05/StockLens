@@ -1,3 +1,11 @@
+/**
+ * biometricPrompt Unit Tests
+ *
+ * Purpose: Test the user-facing prompt that asks to enable biometrics.
+ * These tests simulate availability checks and user responses to ensure
+ * the prompt triggers secure credential storage when accepted.
+ */
+
 import { Alert } from 'react-native';
 import { promptEnableBiometrics } from '@/utils/biometricPrompt';
 import * as biometric from '@/hooks/useBiometricAuth';

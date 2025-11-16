@@ -1,5 +1,13 @@
 import { formatCurrencyGBP, formatCurrencyRounded, formatRelativeDate } from '@/utils/formatters';
 
+/**
+ * formatters Unit Tests
+ *
+ * Purpose: Ensure consistent currency and relative date formatting used
+ * throughout the UI. These small helpers are tested to avoid display bugs
+ * and to provide predictable output for snapshot/integration tests.
+ */
+
 describe('formatCurrency helpers', () => {
   it('formats amounts in GBP with thousands separator', () => {
     expect(formatCurrencyGBP(1234.56)).toBe('£1,234.56');
