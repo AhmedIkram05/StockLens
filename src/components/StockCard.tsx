@@ -70,28 +70,32 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
           </LinearGradient>
         </View>
       ) : null}
-      <View style={styles.header}>
-        <Text style={[styles.name, { color: theme.text }]}>{name}</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+        </View>
         {ticker ? <Text style={[styles.ticker, { color: brandColors.blue }]}>{ticker}</Text> : null}
       </View>
 
-          <View style={styles.valueContainer}>
-            <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
-          </View>
+      <View style={styles.valueContainerCentered}>
+        <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
+      </View>
 
       <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-      <View style={styles.footer}>
-        <View style={styles.footerItem}>
+      <View style={styles.footerChips}>
+        <View style={styles.chipItem}>
           <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Return</Text>
-          <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
+          <View style={[styles.chip, { backgroundColor: theme.surfaceVariant }]}> 
+            <Text style={[styles.chipValue, { color: valueColor }]}>{percentDisplay}</Text>
+          </View>
         </View>
 
-        <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
-
-        <View style={styles.footerItem}>
+        <View style={styles.chipItem}>
           <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Gained</Text>
-          <Text style={[styles.footerValue, { color: valueColor }]}>{gainDisplay}</Text>
+          <View style={[styles.chip, { backgroundColor: theme.surfaceVariant }]}> 
+            <Text style={[styles.chipValue, { color: valueColor }]}>{gainDisplay}</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -168,6 +172,8 @@ const styles = StyleSheet.create<any>({
   footerLabel: {
     ...typography.overline,
     marginBottom: spacing.sm,
+    textAlign: 'center',
+    width: '100%',
   },
   footerValue: {
     ...typography.metricSm,
@@ -176,5 +182,42 @@ const styles = StyleSheet.create<any>({
   verticalDivider: {
     width: 1,
     marginHorizontal: spacing.md,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  headerLeft: {
+    flex: 1,
+    paddingRight: spacing.sm,
+  },
+  ticker: {
+    ...typography.captionStrong,
+    color: brandColors.blue,
+  },
+  valueContainerCentered: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  footerChips: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  chipItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  chip: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+  },
+  chipValue: {
+    ...typography.metricSm,
+    fontWeight: '700',
   },
 });

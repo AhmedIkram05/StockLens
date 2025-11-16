@@ -22,12 +22,12 @@ import type { UserCredential } from 'firebase/auth';
 /**
  * SignUpData type - User registration data
  * 
- * @property fullName - User's full display name
+ * @property firstName - User's first name
  * @property email - Email address (used for login)
  * @property password - Password (min 6 chars per Firebase default)
  */
 export interface SignUpData {
-  fullName: string;
+  firstName: string;
   email: string;
   password: string;
 }
@@ -56,7 +56,7 @@ export const authService = {
   /**
    * Register a new user account
    * 
-   * @param fullName - User's display name
+   * @param firstName - User's first name
    * @param email - Email address for login
    * @param password - Password (Firebase enforces min 6 chars)
    * @returns UserCredential with user object and auth tokens
@@ -69,7 +69,7 @@ export const authService = {
    * 
    * @throws Firebase auth errors (e.g., email-already-in-use, weak-password)
    */
-  async signUp({ fullName, email, password }: SignUpData): Promise<UserCredential> {
+  async signUp({ firstName, email, password }: SignUpData): Promise<UserCredential> {
     try {
       const { getAuthInstance } = await import('./firebase');
       const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
@@ -79,10 +79,10 @@ export const authService = {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
       await updateProfile(userCredential.user, {
-        displayName: fullName,
+        displayName: firstName,
       });
 
-      await userService.upsert(userCredential.user.uid, fullName, email);
+      await userService.upsert(userCredential.user.uid, firstName, email);
 
       return userCredential;
     } catch (error) {

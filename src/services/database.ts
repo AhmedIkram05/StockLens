@@ -10,7 +10,7 @@
  * - Cache pruning for Alpha Vantage historical data
  * 
  * Tables:
- * - users: User profile records (uid, full_name, email, created_at, last_login)
+ * - users: User profile records (uid, first_name, email, created_at, last_login)
  * - receipts: Scanned receipts (user_id, image_uri, total_amount, ocr_data, synced)
  * - alpha_cache: Cached stock market data (symbol, interval, params, fetched_at, raw_json)
  * - user_settings: User preferences (user_id, theme, auto_backup)
@@ -24,7 +24,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
-const db = SQLite.openDatabaseSync('stocklens.db');
+const db = SQLite.openDatabaseSync('stocklens_v2.db');
 
 /**
  * DB_SCHEMAS - Table creation SQL statements
@@ -37,7 +37,7 @@ export const DB_SCHEMAS = {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uid TEXT NOT NULL UNIQUE,
-      full_name TEXT,
+      first_name TEXT,
       email TEXT NOT NULL UNIQUE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login DATETIME

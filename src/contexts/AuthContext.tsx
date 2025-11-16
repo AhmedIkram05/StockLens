@@ -40,7 +40,7 @@ import { authenticateBiometric, isBiometricAvailable, isBiometricEnabled } from 
 export interface UserProfile {
   id?: number;
   uid: string;
-  full_name?: string | null;
+  first_name?: string | null;
   email: string;
   created_at?: string;
   last_login?: string;

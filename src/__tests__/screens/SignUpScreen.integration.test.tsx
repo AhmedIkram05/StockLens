@@ -71,7 +71,7 @@ describe('SignUpScreen', () => {
   it('shows validation alert when email format is invalid', () => {
     const { getByPlaceholderText, getByText } = renderWithProviders(<SignUpScreen />, { providerOverrides: { withNavigation: false } });
 
-    fireEvent.changeText(getByPlaceholderText('Full Name'), 'Jane Doe');
+    fireEvent.changeText(getByPlaceholderText('First Name'), 'Jane');
     fireEvent.changeText(getByPlaceholderText('Email'), 'invalid-email');
     fireEvent.changeText(getByPlaceholderText('Password'), 'secret1');
     fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'secret1');
@@ -91,7 +91,7 @@ describe('SignUpScreen', () => {
       },
     });
 
-    fireEvent.changeText(getByPlaceholderText('Full Name'), 'Jane Doe');
+    fireEvent.changeText(getByPlaceholderText('First Name'), 'Jane');
     fireEvent.changeText(getByPlaceholderText('Email'), 'jane@example.com');
     fireEvent.changeText(getByPlaceholderText('Password'), 'secret1');
     fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'secret1');
@@ -99,7 +99,7 @@ describe('SignUpScreen', () => {
     fireEvent.press(getByText('Create Account'));
 
     await waitFor(() => {
-      expect(mockedSignUp).toHaveBeenCalledWith({ fullName: 'Jane Doe', email: 'jane@example.com', password: 'secret1' });
+      expect(mockedSignUp).toHaveBeenCalledWith({ firstName: 'Jane', email: 'jane@example.com', password: 'secret1' });
     });
 
     expect(startLockGrace).toHaveBeenCalled();

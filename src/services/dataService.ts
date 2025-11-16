@@ -258,7 +258,7 @@ export const userService = {
    * Insert or update user profile
    * 
    * @param uid - Firebase user UID
-   * @param fullName - User's full name (nullable)
+   * @param firstName - User's first name (nullable)
    * @param email - User's email address
    * @returns Number of rows affected or last insert ID
    * 
@@ -271,28 +271,28 @@ export const userService = {
    * - Handles user UID changes (e.g., account re-creation with same email)
    * - Maintains referential integrity with receipts and settings
    */
-  upsert: async (uid: string, fullName: string | null, email: string): Promise<number> => {
+  upsert: async (uid: string, firstName: string | null, email: string): Promise<number> => {
     const timestamp = new Date().toISOString();
 
     try {
       const query = `
-        INSERT INTO users (uid, full_name, email, last_login)
+        INSERT INTO users (uid, first_name, email, last_login)
         VALUES (?, ?, ?, ?)
         ON CONFLICT(uid) DO UPDATE SET
-          full_name = excluded.full_name,
+          first_name = excluded.first_name,
           email = excluded.email,
           last_login = excluded.last_login
       `;
-      const params = [uid, fullName, email, timestamp];
+      const params = [uid, firstName, email, timestamp];
       return await databaseService.executeNonQuery(query, params);
     } catch (error: any) {
       if (error?.message?.includes('UNIQUE constraint failed: users.email')) {
         const updateQuery = `
           UPDATE users
-          SET uid = ?, full_name = ?, last_login = ?
+          SET uid = ?, first_name = ?, last_login = ?
           WHERE email = ?
         `;
-        return await databaseService.executeNonQuery(updateQuery, [uid, fullName, timestamp, email]);
+        return await databaseService.executeNonQuery(updateQuery, [uid, firstName, timestamp, email]);
       }
 
       throw error;

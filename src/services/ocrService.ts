@@ -6,7 +6,7 @@
  * - Base64 image string upload to OCR.Space
  * - Image preprocessing (resize/compression) for better OCR quality
  * - Multi-strategy fallback approach (base64 → file → larger base64)
- * - 30-second timeout protection
+ * - 10-second timeout protection
  * - Automatic retry logic (3 attempts with exponential backoff)
  * 
  * Integration:
@@ -42,12 +42,12 @@ export type OcrResult = {
  * @returns OcrResult with extracted text or error
  * 
  * Features:
- * - 30-second timeout protection (AbortController)
+ * - 10-second timeout protection (AbortController)
  * - Error handling for API responses and network failures
  * - Validates ParsedText is non-empty
  */
 async function doOcrForm(formData: FormData, apiKey: string): Promise<OcrResult> {
-  const TIMEOUT_MS = 30000;
+  const TIMEOUT_MS = 10000;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
