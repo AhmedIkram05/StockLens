@@ -35,8 +35,9 @@ import { useTheme } from '../contexts/ThemeContext';
 type OHLC = { open: number; high: number; low: number; close: number };
 
 /**
- * Generates an array of OHLC candlestick data with realistic price movements.
- * Uses sine waves for major/micro trends plus random shocks for volatility.
+ * Generates an array of OHLC candlestick data with a guaranteed upward trend and reduced randomness for predictability.
+ * Uses sine waves for major/micro trends with minimal shocks, ensuring the final close is higher than the starting open.
+ * Red Dips are restricted to the middle section to avoid starting or ending the graph with a dip.
  * 
  * @param count - Number of candles to generate (default varies based on screen width)
  * @param start - Starting price value (default: 100)
@@ -48,20 +49,45 @@ const makeOHLCSeries = (count: number, start = 100) => {
   const majorSwings = Math.max(3, Math.round(count / 6));
   const phase = Math.random() * Math.PI * 2;
 
+  // Calculate total upward movement needed to ensure end > start
+  const totalUpwardTarget = start * (0.3 + Math.random() * 0.4); // 30-70% increase
+  const upwardPerStep = totalUpwardTarget / count;
+
   for (let i = 0; i < count; i++) {
     const open = prevClose;
     const progress = i / Math.max(1, count - 1);
-    const baselineUp = progress * (Math.random() * 8 + 6);
-    const major = Math.sin(progress * Math.PI * majorSwings + phase) * (8 + Math.random() * 10);
-    const micro = (Math.sin(progress * Math.PI * 2.3) + Math.sin(progress * Math.PI * 4.6) * 0.5) * (4 + Math.random() * 6);
-    const shock = Math.random() < 0.12 ? -(6 + Math.random() * 22) : 0;
-    const delta = baselineUp * 0.6 + major + micro + shock + (Math.random() - 0.5) * 4;
+    
+    // Stronger baseline uptrend to guarantee overall rise
+    const baselineUp = upwardPerStep + progress * (Math.random() * 4 + 2);
+    
+    // Reduced major swings for predictability
+    const major = Math.sin(progress * Math.PI * majorSwings + phase) * (4 + Math.random() * 4);
+    
+    // Minimal micro fluctuations
+    const micro = (Math.sin(progress * Math.PI * 2.3) + Math.sin(progress * Math.PI * 4.6) * 0.3) * (2 + Math.random() * 2);
+    
+    // Slightly more frequent and bigger shocks for added dips, but only in the middle (not first/last 3 candles)
+    const shock = (i >= 3 && i < count - 3 && Math.random() < 0.40) ? -(6 + Math.random() * 8) : 0;
+    
+    const delta = baselineUp * 0.8 + major * 0.5 + micro + shock + (Math.random() - 0.5) * 2;
     const close = Math.max(1, open + delta);
-    const high = Math.max(open, close) + Math.random() * (6 + Math.random() * 8);
-    const low = Math.min(open, close) - Math.random() * (6 + Math.random() * 8);
+    
+    // Ensure some volatility but keep highs/lows reasonable
+    const volatility = 3 + Math.random() * 4;
+    const high = Math.max(open, close) + Math.random() * volatility;
+    const low = Math.min(open, close) - Math.random() * volatility;
+    
     res.push({ open, high, low, close });
     prevClose = close;
   }
+
+  // Final adjustment: ensure last close > first open
+  if (res.length > 0 && res[res.length - 1].close <= start) {
+    const last = res[res.length - 1];
+    last.close = start + Math.random() * 10 + 5; // Boost by 5-15
+    last.high = Math.max(last.high, last.close + Math.random() * 3);
+  }
+
   return res;
 };
 
@@ -200,7 +226,7 @@ export default function OnboardingScreen() {
         maxWidth: buttonMaxWidth 
       }}>
         <PrimaryButton onPress={handleGetStarted} accessibilityLabel="Get started">
-          Let&apos;s Get Started
+          Let's Get Started
         </PrimaryButton>
       </View>
     </ScreenContainer>

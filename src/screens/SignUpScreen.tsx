@@ -3,7 +3,7 @@
  * 
  * User registration screen for new users.
  * Features:
- * - Full name, email, password, and confirm password inputs
+ * - First name, email, password, and confirm password inputs
  * - Real-time form validation (password length, matching passwords)
  * - Firebase Authentication account creation
  * - Firestore user profile creation
@@ -11,7 +11,7 @@
  * - Back navigation to Login screen
  * 
  * Validation rules:
- * - Full name: Cannot be empty
+ * - First name: Cannot be empty
  * - Email: Must be valid format (validated by Firebase)
  * - Password: Minimum 6 characters
  * - Confirm password: Must match password field
@@ -49,7 +49,7 @@ export default function SignUpScreen() {
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   const { startLockGrace } = useAuth();
   const { theme } = useTheme();
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,14 +57,14 @@ export default function SignUpScreen() {
 
   useEffect(() => {
     const isValid =
-      fullName.trim().length > 0 &&
+      firstName.trim().length > 0 &&
       email.trim().length > 0 &&
       password.length >= 6 &&
       confirmPassword.length >= 6 &&
       password === confirmPassword;
 
     setIsFormValid(isValid);
-  }, [fullName, email, password, confirmPassword]);
+  }, [firstName, email, password, confirmPassword]);
 
   const handleSignUp = async () => {
     if (!isFormValid) {
@@ -79,7 +79,7 @@ export default function SignUpScreen() {
     }
 
     try {
-      const signUpData: SignUpData = { fullName, email, password };
+      const signUpData: SignUpData = { firstName, email, password };
       await authService.signUp(signUpData);
       
       startLockGrace();
@@ -137,9 +137,9 @@ export default function SignUpScreen() {
 
   <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
           <FormInput
-            placeholder="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
+            placeholder="First Name"
+            value={firstName}
+            onChangeText={setFirstName}
             autoCapitalize="words"
             autoCorrect={false}
           />

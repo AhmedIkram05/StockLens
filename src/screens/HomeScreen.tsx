@@ -58,12 +58,8 @@ export default function HomeScreen() {
 
   const { userProfile } = useAuth();
   const firstName = useMemo(() => {
-    if (userProfile?.full_name) {
-      const nameParts = userProfile.full_name.trim().split(' ');
-      return nameParts[0];
-    }
-    return '';
-  }, [userProfile?.full_name]);
+    return userProfile?.first_name || '';
+  }, [userProfile?.first_name]);
 
   const hasScans = allScans.length > 0;
 
