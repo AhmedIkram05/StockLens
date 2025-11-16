@@ -1,3 +1,11 @@
+/**
+ * alphaVantageService Unit Tests
+ *
+ * Purpose: Validate stock data retrieval, caching, and parsing logic from
+ * the Alpha Vantage API. Tests ensure cache usage, API fetching, and
+ * conversion to internal OHLCV structures.
+ */
+
 import { alphaVantageService, OHLCV } from '@/services/alphaVantageService';
 import Constants from 'expo-constants';
 import { databaseService } from '@/services/database';

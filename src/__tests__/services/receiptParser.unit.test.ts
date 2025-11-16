@@ -1,3 +1,10 @@
+/**
+ * receiptParser Unit Tests
+ *
+ * Purpose: Ensure OCR text parsing reliably extracts monetary totals and
+ * validation rejects unrealistic values. Important to prevent saving
+ * incorrect receipt totals.
+ */
 import { parseAmountFromOcrText } from '@/services/receiptParser';
 
 describe('parseAmountFromOcrText', () => {

@@ -9,6 +9,13 @@ jest.mock('@/services/eventBus', () => ({
   emit: jest.fn(),
 }));
 
+/**
+ * dataService Unit Tests
+ *
+ * Purpose: Verify local persistence layer behavior (SQLite wrappers) for
+ * receipts and user data. Tests CRUD operations and error handling.
+ */
+
 import { databaseService } from '@/services/database';
 import { emit } from '@/services/eventBus';
 import { receiptService, settingsService, userService } from '@/services/dataService';

@@ -1,5 +1,13 @@
 import { ocrHelpers, performOcrWithFallback } from '@/services/ocrService';
 
+/**
+ * ocrService Unit Tests
+ *
+ * Purpose: Test OCR network calls and fallback behaviour. These tests
+ * simulate API responses and failures to ensure the service returns a
+ * consistent result shape for the rest of the app to consume.
+ */
+
 describe('performOcrWithFallback', () => {
   afterEach(() => {
     jest.restoreAllMocks();

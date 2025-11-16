@@ -1,3 +1,11 @@
+/**
+ * projectionService Unit Tests
+ *
+ * Purpose: Validate calculation of CAGRs and projection of future values
+ * using historical series or preset fallback rates. Ensures numerical
+ * correctness for financial projections displayed in the app.
+ */
+
 jest.mock('@/services/dataService', () => ({
   stockService: {
     getHistoricalForTicker: jest.fn(),

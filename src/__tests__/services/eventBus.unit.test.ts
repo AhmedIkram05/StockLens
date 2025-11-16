@@ -1,3 +1,11 @@
+/**
+ * eventBus Unit Tests
+ *
+ * Purpose: Ensure the simple publish/subscribe utility correctly
+ * registers listeners, delivers payloads, supports multiple listeners,
+ * unsubscribes, and isolates errors in listeners.
+ */
+
 import { subscribe, emit } from '@/services/eventBus';
 
 describe('eventBus', () => {
