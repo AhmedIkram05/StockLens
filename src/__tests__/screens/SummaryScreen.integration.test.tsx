@@ -1,3 +1,23 @@
+/**
+ * SummaryScreen Integration Tests
+ * 
+ * Purpose: Validates the spending insights screen that shows detailed
+ * analytics and investment opportunity missed.
+ * 
+ * What it tests:
+ * - Empty state with onboarding CTA to scan first receipt
+ * - Spending statistics calculation (total, average per receipt)
+ * - Dynamic insights content expansion (tap to read more)
+ * - Date-based receipt grouping and display
+ * - Navigation to Scan screen from empty state
+ * - Stock data prefetching for projections
+ * 
+ * Why it's important: SummaryScreen provides the "aha moment" showing
+ * users what their spending could have been worth if invested. Tests
+ * ensure statistics are accurate, insights load correctly, and the
+ * empty state guides new users to start scanning.
+ */
+
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import SummaryScreen from '@/screens/SummaryScreen';
@@ -6,6 +26,7 @@ import { renderWithProviders } from '../utils';
 import { ensureHistoricalPrefetch } from '@/services/dataService';
 import { subscribe } from '@/services/eventBus';
 import { useNavigation } from '@react-navigation/native';
+import { createReceipt } from '../fixtures';
 
 jest.mock('@/hooks/useReceipts');
 
@@ -65,9 +86,9 @@ describe('SummaryScreen', () => {
 
   it('renders spending stats and expands dynamic insight content', async () => {
     const receipts: ReceiptShape[] = [
-      { id: '1', label: '2 weeks ago', amount: 120, date: '2024-02-10T00:00:00.000Z', time: '' },
-      { id: '2', label: '10 days ago', amount: 45, date: '2024-02-14T00:00:00.000Z', time: '' },
-      { id: '3', label: '6 weeks ago', amount: 35, date: '2024-01-02T00:00:00.000Z', time: '' },
+      { id: '1', label: '2 weeks ago', amount: 120, date: createReceipt({ total_amount: 120, date_scanned: '2024-02-10T00:00:00.000Z' }).date_scanned!, time: '' },
+      { id: '2', label: '10 days ago', amount: 45, date: createReceipt({ total_amount: 45, date_scanned: '2024-02-14T00:00:00.000Z' }).date_scanned!, time: '' },
+      { id: '3', label: '6 weeks ago', amount: 35, date: createReceipt({ total_amount: 35, date_scanned: '2024-01-02T00:00:00.000Z' }).date_scanned!, time: '' },
     ];
     mockedUseReceipts.mockReturnValue({ receipts, loading: false, error: null } as any);
 

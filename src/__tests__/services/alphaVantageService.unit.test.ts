@@ -1,6 +1,26 @@
+/**
+ * alphaVantageService Unit Tests
+ * 
+ * Purpose: Validates stock market data fetching from Alpha Vantage API
+ * with caching and error handling.
+ * 
+ * What it tests:
+ * - Historical stock price data fetching (monthly OHLCV)
+ * - In-memory caching to reduce API calls
+ * - Network error handling and retries
+ * - Response parsing and validation
+ * - Cache expiration and refresh logic
+ * 
+ * Why it's important: Stock data drives the investment projections.
+ * The service must handle API rate limits (caching), network failures
+ * gracefully, and ensure data quality. Tests verify caching works to
+ * avoid hitting API limits and that errors don't crash the app.
+ */
+
 import { alphaVantageService, OHLCV } from '@/services/alphaVantageService';
 import Constants from 'expo-constants';
 import { databaseService } from '@/services/database';
+import { createOHLCV } from '../fixtures';
 
 jest.mock('expo-constants', () => ({
   expoConfig: {
@@ -69,13 +89,11 @@ describe('alphaVantageService', () => {
     });
 
     it('returns cached data when available and fresh', async () => {
-      const cachedData = [
-        { date: '2024-01-01', open: 100, high: 105, low: 99, close: 104, adjustedClose: 104, volume: 1000000 },
-      ];
+      const cachedOHLCV = createOHLCV({ date: '2024-01-01', open: 100, high: 105, low: 99, close: 104, adjustedClose: 104, volume: 1000000 });
 
       mockedDb.executeQuery.mockResolvedValue([
         {
-          data: JSON.stringify(cachedData),
+          data: JSON.stringify([cachedOHLCV]),
           expires_at: Date.now() + 100000,
         },
       ]);
@@ -83,7 +101,7 @@ describe('alphaVantageService', () => {
       const result = await alphaVantageService.getMonthlyAdjusted('AAPL');
 
       expect(mockedFetch).not.toHaveBeenCalled();
-      expect(result).toEqual(cachedData);
+      expect(result).toEqual([cachedOHLCV]);
     });
 
     it('handles API errors gracefully', async () => {

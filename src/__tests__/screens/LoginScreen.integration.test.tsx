@@ -1,3 +1,23 @@
+/**
+ * LoginScreen Integration Tests
+ * 
+ * Purpose: Validates email/password authentication flow and post-login
+ * biometric enrollment prompt.
+ * 
+ * What it tests:
+ * - Sign-in form submission with email and password
+ * - AuthContext integration for authentication state
+ * - Lock grace period start after successful login
+ * - Biometric enrollment prompt after login
+ * - Navigation to SignUp screen from footer link
+ * - Form validation and error handling
+ * 
+ * Why it's important: LoginScreen is the entry point for returning users.
+ * Tests ensure credentials are correctly passed to Firebase, auth state
+ * updates properly, and users are prompted to enable biometrics for
+ * faster future logins.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';

@@ -1,3 +1,23 @@
+/**
+ * LockScreen Integration Tests
+ * 
+ * Purpose: Validates app lock functionality requiring re-authentication
+ * after inactivity or app restart.
+ * 
+ * What it tests:
+ * - Locked screen UI with user email display
+ * - Biometric unlock flow (Face ID / Touch ID)
+ * - Password unlock fallback with credential validation
+ * - Error handling for failed biometric attempts
+ * - Error handling for incorrect passwords
+ * - Forgot password reset email flow
+ * 
+ * Why it's important: LockScreen protects user financial data when
+ * the app is reopened. Tests ensure biometric unlock works when
+ * available, password fallback functions correctly, and failed
+ * attempts show appropriate error messages.
+ */
+
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, waitFor } from '@testing-library/react-native';

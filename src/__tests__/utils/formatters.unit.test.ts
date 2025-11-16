@@ -1,5 +1,24 @@
 import { formatCurrencyGBP, formatCurrencyRounded, formatRelativeDate } from '@/utils/formatters';
 
+/**
+ * formatters Unit Tests
+ * 
+ * Purpose: Validates currency and date formatting utilities used
+ * throughout the app for consistent display.
+ * 
+ * What it tests:
+ * - GBP currency formatting with thousands separators
+ * - Decimal precision rounding (always 2 decimals)
+ * - Relative date formatting ("Just now", "Yesterday", "3 days ago")
+ * - Fallback to locale date strings for older dates
+ * - Edge cases (zero amounts, future dates, very small amounts)
+ * 
+ * Why it's important: Consistent formatting creates a professional
+ * user experience. Tests ensure amounts always show 2 decimals,
+ * thousands are separated correctly (£1,000.50), and dates are
+ * human-readable relative to now.
+ */
+
 describe('formatCurrency helpers', () => {
   it('formats amounts in GBP with thousands separator', () => {
     expect(formatCurrencyGBP(1234.56)).toBe('£1,234.56');

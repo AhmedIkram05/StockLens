@@ -6,13 +6,9 @@ node_modules/
 
 # Expo
 .expo/
-dist/
-web-build/
-expo-env.d.ts
 
 # macOS
 .DS_Store
-*.pem
 
 # generated native folders
 .github/

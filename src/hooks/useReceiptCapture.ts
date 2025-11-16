@@ -3,7 +3,7 @@ import { Alert, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { receiptService } from '@/services/dataService';
 import { performOcrWithFallback } from '@/services/ocrService';
-import { parseAmountFromOcrText } from '@/services/receiptParser';
+import { parseAmountFromOcrText, validateAmount } from '@/services/receiptParser';
 import { emit } from '@/services/eventBus';
 import { formatCurrencyGBP } from '@/utils/formatters';
 import showConfirmationPrompt from '@/components/ConfirmationPrompt';
@@ -158,6 +158,36 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
 
       const parsed = parseAmountFromOcrText(ocrText);
       const amount = parsed != null && parsed > 0 ? parsed : null;
+      
+      // Validate extracted amount for realistic values
+      if (amount !== null && !validateAmount(amount)) {
+        // Amount is unrealistic (too high, negative, etc.)
+        if (onSuggestion) onSuggestion(null, ocrText);
+        const draft = draftIdArg ?? draftReceiptId ?? null;
+        pendingRef.current = { draftId: draft, ocrText, photoUri: photoUri ?? null, amount: null };
+        if (!skipOverlay) {
+          Alert.alert(
+            'Invalid Amount Detected',
+            `The detected amount (${formatCurrencyGBP(amount)}) seems unrealistic. Please enter the amount manually.`,
+            [
+              {
+                text: 'Enter Manually',
+                onPress: () => handleManualEntry(null),
+              },
+              {
+                text: 'Rescan',
+                onPress: async () => {
+                  await discardDraft(draft);
+                  resetWorkflowState();
+                  onResetCamera?.();
+                },
+              },
+            ]
+          );
+        }
+        return;
+      }
+      
       if (onSuggestion) onSuggestion(amount, ocrText);
 
       const draft = draftIdArg ?? draftReceiptId ?? null;

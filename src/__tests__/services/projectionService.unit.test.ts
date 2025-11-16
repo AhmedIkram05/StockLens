@@ -1,3 +1,22 @@
+/**
+ * projectionService Unit Tests
+ * 
+ * Purpose: Validates financial projection calculations that show users
+ * what their spending could have become if invested in stocks.
+ * 
+ * What it tests:
+ * - CAGR (Compound Annual Growth Rate) calculations from price series
+ * - Historical stock data fetching and processing
+ * - Fallback to preset rates when data is unavailable
+ * - Future value projections using compound interest formula
+ * - Edge cases (empty series, single data point)
+ * 
+ * Why it's important: These projections are the core value proposition
+ * of the app. Accuracy is critical - users need to trust the numbers.
+ * Tests ensure the compound interest math is correct and that the app
+ * gracefully handles missing stock data.
+ */
+
 jest.mock('@/services/dataService', () => ({
   stockService: {
     getHistoricalForTicker: jest.fn(),
@@ -8,6 +27,7 @@ jest.mock('@/services/dataService', () => ({
 import { stockService } from '@/services/dataService';
 import * as projectionService from '@/services/projectionService';
 import { PRESET_RATES } from '@/services/stockPresets';
+import { buildOHLCVSeries } from '../fixtures';
 
 const mockedStockService = stockService as jest.Mocked<typeof stockService>;
 
@@ -36,14 +56,19 @@ describe('projectionService.projectUsingHistoricalCAGR', () => {
   });
 
   it('uses fetched CAGR when stock history is available', async () => {
-    mockedStockService.getHistoricalForTicker.mockResolvedValue([
-      { date: '2019-01-01', adjustedClose: 100, close: 100 },
-      { date: '2024-01-01', adjustedClose: 100 * Math.pow(1.12, 5), close: 100 * Math.pow(1.12, 5) },
-    ] as any);
+    // Use fixture to generate 60 months of data with 12% growth (1% per month)
+    const historicalSeries = buildOHLCVSeries(60, 0.01, 100);
+    
+    mockedStockService.getHistoricalForTicker.mockResolvedValue(historicalSeries.map(ohlcv => ({
+      date: ohlcv.date,
+      adjustedClose: ohlcv.adjustedClose,
+      close: ohlcv.close,
+    })) as any);
 
     const result = await projectionService.projectUsingHistoricalCAGR(1000, 'NVDA', 5);
 
-    expect(result.rate).toBeCloseTo(0.12, 3);
+    // The fixture uses 1% monthly growth which compounds to ~12.7% annual CAGR
+    expect(result.rate).toBeCloseTo(0.127, 2);
     expect(result.futureValue).toBeCloseTo(1000 * Math.pow(1 + result.rate, 5), 5);
   });
 

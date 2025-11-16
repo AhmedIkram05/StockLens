@@ -1,3 +1,22 @@
+/**
+ * eventBus Unit Tests
+ * 
+ * Purpose: Validates the global event bus used for cross-component
+ * communication without tight coupling.
+ * 
+ * What it tests:
+ * - Subscribe/emit pattern for event-driven updates
+ * - Multiple listeners on the same event
+ * - Unsubscribe functionality and cleanup
+ * - Error isolation (one failing listener doesn't break others)
+ * - Payload delivery to all subscribers
+ * 
+ * Why it's important: The event bus enables loose coupling between
+ * components (e.g., receipt deletion triggers list refresh on another
+ * screen). Tests ensure subscriptions work correctly, unsubscribe
+ * prevents memory leaks, and errors in one listener don't cascade.
+ */
+
 import { subscribe, emit } from '@/services/eventBus';
 
 describe('eventBus', () => {

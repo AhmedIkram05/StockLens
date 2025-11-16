@@ -1,9 +1,30 @@
+/**
+ * HomeScreen Integration Tests
+ * 
+ * Purpose: Validates the main dashboard screen that displays spending
+ * overview and quick access to scanning.
+ * 
+ * What it tests:
+ * - Empty state with onboarding message when no receipts exist
+ * - Spending stats display (total, average, receipt count)
+ * - History list expansion/collapse toggle
+ * - Navigation to Scan screen from CTA button
+ * - Navigation to ReceiptDetails when tapping a receipt
+ * - Receipt data transformation and display format
+ * 
+ * Why it's important: HomeScreen is the first screen users see after
+ * login. It must gracefully handle empty state to guide new users,
+ * accurately display spending statistics, and provide quick access
+ * to key features (scanning, viewing receipt details).
+ */
+
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import HomeScreen from '@/screens/HomeScreen';
 import { renderWithProviders } from '../utils';
 import useReceipts from '@/hooks/useReceipts';
 import { useNavigation } from '@react-navigation/native';
+import { createUserProfile } from '../fixtures';
 
 jest.mock('@/hooks/useReceipts', () => jest.fn());
 
@@ -23,16 +44,18 @@ describe('HomeScreen', () => {
     jest.clearAllMocks();
   });
 
-  const renderScreen = () =>
-    renderWithProviders(<HomeScreen />, {
+  const renderScreen = () => {
+    const testUser = createUserProfile({ full_name: 'Alex Johnson', uid: 'user-1' });
+    return renderWithProviders(<HomeScreen />, {
       providerOverrides: {
         withNavigation: false,
         authValue: {
-          userProfile: { full_name: 'Alex Johnson' } as any,
-          user: { uid: 'user-1' } as any,
+          userProfile: testUser as any,
+          user: { uid: testUser.uid } as any,
         },
       },
     });
+  };
 
   it('shows onboarding empty state and navigates to Scan when CTA pressed', () => {
     const navigateSpy = jest.fn();
