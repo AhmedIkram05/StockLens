@@ -19,6 +19,7 @@ jest.mock('@/services/eventBus', () => ({
 import { databaseService } from '@/services/database';
 import { emit } from '@/services/eventBus';
 import { receiptService, settingsService, userService } from '@/services/dataService';
+import { createReceipt, createUserProfile } from '../fixtures';
 
 const mockedDb = databaseService as jest.Mocked<typeof databaseService>;
 const mockedEmit = emit as jest.MockedFunction<typeof emit>;
@@ -31,11 +32,13 @@ describe('receiptService', () => {
   it('creates receipts with default values and returns insert id', async () => {
     mockedDb.executeNonQuery.mockResolvedValueOnce(42);
 
+    const receiptData = createReceipt({ user_id: 'uid-123', image_uri: 'file:///foo.jpg', total_amount: 12.5, ocr_data: '£12.50' });
+
     const id = await receiptService.create({
-      user_id: 'uid-123',
-      image_uri: 'file:///foo.jpg',
-      total_amount: 12.5,
-      ocr_data: '£12.50',
+      user_id: receiptData.user_id,
+      image_uri: receiptData.image_uri,
+      total_amount: receiptData.total_amount,
+      ocr_data: receiptData.ocr_data,
     });
 
     expect(id).toBe(42);
@@ -77,7 +80,9 @@ describe('userService', () => {
   it('upserts user profiles via executeNonQuery', async () => {
     mockedDb.executeNonQuery.mockResolvedValueOnce(1);
 
-    const result = await userService.upsert('uid', 'Alice', 'alice@example.com');
+    const user = createUserProfile({ uid: 'uid', full_name: 'Alice', email: 'alice@example.com' });
+
+    const result = await userService.upsert(user.uid, user.full_name!, user.email!);
 
     expect(result).toBe(1);
     expect(mockedDb.executeNonQuery).toHaveBeenCalledTimes(1);
@@ -88,7 +93,9 @@ describe('userService', () => {
     mockedDb.executeNonQuery.mockRejectedValueOnce(new Error('UNIQUE constraint failed: users.email'));
     mockedDb.executeNonQuery.mockResolvedValueOnce(2);
 
-    const result = await userService.upsert('uid-new', 'Bob', 'duplicate@example.com');
+    const user = createUserProfile({ uid: 'uid-new', full_name: 'Bob', email: 'duplicate@example.com' });
+
+    const result = await userService.upsert(user.uid, user.full_name!, user.email!);
 
     expect(result).toBe(2);
     expect(mockedDb.executeNonQuery.mock.calls[1][0]).toContain('UPDATE users');

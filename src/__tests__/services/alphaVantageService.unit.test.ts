@@ -9,6 +9,7 @@
 import { alphaVantageService, OHLCV } from '@/services/alphaVantageService';
 import Constants from 'expo-constants';
 import { databaseService } from '@/services/database';
+import { createOHLCV } from '../fixtures';
 
 jest.mock('expo-constants', () => ({
   expoConfig: {
@@ -77,13 +78,11 @@ describe('alphaVantageService', () => {
     });
 
     it('returns cached data when available and fresh', async () => {
-      const cachedData = [
-        { date: '2024-01-01', open: 100, high: 105, low: 99, close: 104, adjustedClose: 104, volume: 1000000 },
-      ];
+      const cachedOHLCV = createOHLCV({ date: '2024-01-01', open: 100, high: 105, low: 99, close: 104, adjustedClose: 104, volume: 1000000 });
 
       mockedDb.executeQuery.mockResolvedValue([
         {
-          data: JSON.stringify(cachedData),
+          data: JSON.stringify([cachedOHLCV]),
           expires_at: Date.now() + 100000,
         },
       ]);
@@ -91,7 +90,7 @@ describe('alphaVantageService', () => {
       const result = await alphaVantageService.getMonthlyAdjusted('AAPL');
 
       expect(mockedFetch).not.toHaveBeenCalled();
-      expect(result).toEqual(cachedData);
+      expect(result).toEqual([cachedOHLCV]);
     });
 
     it('handles API errors gracefully', async () => {

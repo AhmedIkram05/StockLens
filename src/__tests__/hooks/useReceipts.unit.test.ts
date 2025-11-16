@@ -10,6 +10,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import useReceipts from '@/hooks/useReceipts';
 import { receiptService } from '@/services/dataService';
 import { subscribe } from '@/services/eventBus';
+import { createReceipt } from '../fixtures';
 
 // Handler type used by the mocked event bus
 type ReceiptsChangedHandler = (payload?: { userId?: string }) => void;
@@ -50,9 +51,8 @@ describe('useReceipts', () => {
     });
 
     // Initial response returned by mocked service
-    mockedReceiptService.getByUserId.mockResolvedValueOnce([
-      { id: 7, total_amount: 42.5, date_scanned: '2025-01-01T10:00:00Z', image_uri: 'uri://1' },
-    ] as any);
+    const receipt1 = createReceipt({ id: 7, total_amount: 42.5, date_scanned: '2025-01-01T10:00:00Z', image_uri: 'uri://1' });
+    mockedReceiptService.getByUserId.mockResolvedValueOnce([receipt1] as any);
 
     const { result, unmount } = renderHook(() => useReceipts('user-123'));
 
@@ -73,9 +73,8 @@ describe('useReceipts', () => {
     ]);
 
     // Simulate event bus telling hook to refresh; mock next service response
-    mockedReceiptService.getByUserId.mockResolvedValueOnce([
-      { id: 8, total_amount: 99.99, date_scanned: '2025-01-05T12:00:00Z' },
-    ] as any);
+    const receipt2 = createReceipt({ id: 8, total_amount: 99.99, date_scanned: '2025-01-05T12:00:00Z' });
+    mockedReceiptService.getByUserId.mockResolvedValueOnce([receipt2] as any);
 
     await act(async () => {
       await handlers[0]?.({ userId: 'user-123' });

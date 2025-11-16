@@ -18,6 +18,7 @@
 import React from 'react';
 import { act, renderHook } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { createUserProfile } from '../fixtures';
 
 // Mock Firebase auth module to avoid actual authentication calls during tests
 jest.mock('@/services/firebase', () => ({
@@ -38,12 +39,15 @@ jest.mock('firebase/auth', () => {
   };
 });
 
-jest.mock('@/services/dataService', () => ({
-  userService: {
-    getByUid: jest.fn(async () => ({ uid: 'uid-1', email: 'demo@example.com' })),
-    upsert: jest.fn(async () => 1),
-  },
-}));
+jest.mock('@/services/dataService', () => {
+  const { createUserProfile } = require('../fixtures');
+  return {
+    userService: {
+      getByUid: jest.fn(async () => createUserProfile({ uid: 'uid-1', email: 'demo@example.com' })),
+      upsert: jest.fn(async () => 1),
+    },
+  };
+});
 
 jest.mock('@/hooks/useBiometricAuth', () => ({
   isBiometricAvailable: jest.fn(async () => true),

@@ -16,6 +16,7 @@ jest.mock('@/services/dataService', () => ({
 import { stockService } from '@/services/dataService';
 import * as projectionService from '@/services/projectionService';
 import { PRESET_RATES } from '@/services/stockPresets';
+import { buildOHLCVSeries } from '../fixtures';
 
 const mockedStockService = stockService as jest.Mocked<typeof stockService>;
 
@@ -44,14 +45,19 @@ describe('projectionService.projectUsingHistoricalCAGR', () => {
   });
 
   it('uses fetched CAGR when stock history is available', async () => {
-    mockedStockService.getHistoricalForTicker.mockResolvedValue([
-      { date: '2019-01-01', adjustedClose: 100, close: 100 },
-      { date: '2024-01-01', adjustedClose: 100 * Math.pow(1.12, 5), close: 100 * Math.pow(1.12, 5) },
-    ] as any);
+    // Use fixture to generate 60 months of data with 12% growth (1% per month)
+    const historicalSeries = buildOHLCVSeries(60, 0.01, 100);
+    
+    mockedStockService.getHistoricalForTicker.mockResolvedValue(historicalSeries.map(ohlcv => ({
+      date: ohlcv.date,
+      adjustedClose: ohlcv.adjustedClose,
+      close: ohlcv.close,
+    })) as any);
 
     const result = await projectionService.projectUsingHistoricalCAGR(1000, 'NVDA', 5);
 
-    expect(result.rate).toBeCloseTo(0.12, 3);
+    // The fixture uses 1% monthly growth which compounds to ~12.7% annual CAGR
+    expect(result.rate).toBeCloseTo(0.127, 2);
     expect(result.futureValue).toBeCloseTo(1000 * Math.pow(1 + result.rate, 5), 5);
   });
 

@@ -12,6 +12,7 @@ import HomeScreen from '@/screens/HomeScreen';
 import { renderWithProviders } from '../utils';
 import useReceipts from '@/hooks/useReceipts';
 import { useNavigation } from '@react-navigation/native';
+import { createUserProfile } from '../fixtures';
 
 jest.mock('@/hooks/useReceipts', () => jest.fn());
 
@@ -31,16 +32,18 @@ describe('HomeScreen', () => {
     jest.clearAllMocks();
   });
 
-  const renderScreen = () =>
-    renderWithProviders(<HomeScreen />, {
+  const renderScreen = () => {
+    const testUser = createUserProfile({ full_name: 'Alex Johnson', uid: 'user-1' });
+    return renderWithProviders(<HomeScreen />, {
       providerOverrides: {
         withNavigation: false,
         authValue: {
-          userProfile: { full_name: 'Alex Johnson' } as any,
-          user: { uid: 'user-1' } as any,
+          userProfile: testUser as any,
+          user: { uid: testUser.uid } as any,
         },
       },
     });
+  };
 
   it('shows onboarding empty state and navigates to Scan when CTA pressed', () => {
     const navigateSpy = jest.fn();
