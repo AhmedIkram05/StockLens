@@ -129,17 +129,12 @@ export const initDatabase = async (): Promise<void> => {
       if (!hasOcr) {
         try {
           await db.execAsync('ALTER TABLE receipts ADD COLUMN ocr_data TEXT;');
-          console.log('Added ocr_data column to receipts table');
         } catch (e) {
-          console.warn('Failed to add ocr_data column (it may already exist):', e);
         }
       }
     } catch (e) {
-      console.warn('Failed to verify receipts table columns:', e);
     }
-    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('Error initializing database:', error);
     throw error;
   }
 };
@@ -165,7 +160,6 @@ export const databaseService = {
       const result = await db.getAllAsync(query, params);
       return result;
     } catch (error) {
-      console.error('Query error:', error);
       throw error;
     }
   },
@@ -182,7 +176,6 @@ export const databaseService = {
       const result = await db.runAsync(query, params);
       return result.lastInsertRowId || result.changes;
     } catch (error) {
-      console.error('Non-query error:', error);
       throw error;
     }
   },
@@ -204,7 +197,6 @@ export const databaseService = {
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
       await databaseService.executeNonQuery('DELETE FROM alpha_cache WHERE fetched_at IS NOT NULL AND fetched_at < ?', [cutoff]);
     } catch (e) {
-      console.warn('pruneAlphaCacheOlderThan failed', e);
     }
   },
 };

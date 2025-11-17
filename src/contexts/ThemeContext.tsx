@@ -111,7 +111,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           setModeState(savedMode);
         }
       } catch (error) {
-        console.warn('Failed to load theme preference:', error);
       }
     };
     loadTheme();
@@ -123,7 +122,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       await SecureStore.setItemAsync(THEME_STORAGE_KEY, newMode);
     } catch (error) {
-      console.warn('Failed to save theme preference:', error);
     }
   };
 

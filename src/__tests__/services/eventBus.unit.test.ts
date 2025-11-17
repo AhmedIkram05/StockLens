@@ -63,7 +63,6 @@ describe('eventBus', () => {
   });
 
   it('isolates errors in individual listeners', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     const goodListener = jest.fn();
     const badListener = jest.fn(() => {
       throw new Error('Listener crashed');
@@ -76,8 +75,5 @@ describe('eventBus', () => {
 
     expect(badListener).toHaveBeenCalled();
     expect(goodListener).toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
   });
 });

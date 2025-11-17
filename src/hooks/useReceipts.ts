@@ -18,12 +18,6 @@
  * 
  * @param userId - Firebase user ID to fetch receipts for. If undefined, returns empty array.
  * @returns Object with receipts array, loading boolean, and error string (null if no error)
- * 
- * @example
- * const { receipts, loading, error } = useReceipts(user?.uid);
- * if (loading) return <Spinner />;
- * if (error) return <ErrorMessage text={error} />;
- * return <ReceiptList data={receipts} />;
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';

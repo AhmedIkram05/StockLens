@@ -57,7 +57,15 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
   const pixelWidth = cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width: cardWidth ?? Math.max(200, Math.round(isTablet ? width * 0.4 : width * 0.82)), backgroundColor: theme.surface }, isLast && styles.cardLast]}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      style={[
+        styles.card,
+        { width: pixelWidth, backgroundColor: theme.surface },
+        isLast && styles.cardLast,
+      ]}
+    >
       {badgeText ? (
         <View style={styles.badgeContainer}>
           <LinearGradient
@@ -81,21 +89,19 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
         <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
       </View>
 
-      <View style={[styles.divider, { backgroundColor: theme.border }]} />
+      <View style={styles.dividerHorizontal} />
 
-      <View style={styles.footerChips}>
-        <View style={styles.chipItem}>
+      <View style={styles.footer}>
+        <View style={styles.footerItem}>
           <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Return</Text>
-          <View style={[styles.chip, { backgroundColor: theme.surfaceVariant }]}> 
-            <Text style={[styles.chipValue, { color: valueColor }]}>{percentDisplay}</Text>
-          </View>
+          <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
         </View>
 
-        <View style={styles.chipItem}>
+        <View style={styles.dividerVertical} />
+
+        <View style={styles.footerItem}>
           <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Gained</Text>
-          <View style={[styles.chip, { backgroundColor: theme.surfaceVariant }]}> 
-            <Text style={[styles.chipValue, { color: valueColor }]}>{gainDisplay}</Text>
-          </View>
+          <Text style={[styles.footerValue, { color: valueColor }]}>{gainDisplay}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -142,32 +148,30 @@ const styles = StyleSheet.create<any>({
   name: {
     ...typography.bodyStrong,
   },
-  ticker: {
-    ...typography.captionStrong,
-    color: brandColors.blue,
-  },
   valueContainer: {
     alignItems: 'flex-start',
     marginBottom: spacing.md,
   },
   value: {
-    ...typography.sectionTitle,
+    ...typography.metric,
   },
   caption: {
     ...typography.caption,
     marginTop: spacing.xs,
   },
-  divider: {
+  dividerHorizontal: {
     height: StyleSheet.hairlineWidth,
     marginBottom: spacing.md,
+    backgroundColor: brandColors.black,
   },
   footer: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   footerItem: {
     flex: 1,
+    alignItems: 'center',
   },
   footerLabel: {
     ...typography.overline,
@@ -179,9 +183,11 @@ const styles = StyleSheet.create<any>({
     ...typography.metricSm,
     color: brandColors.green,
   },
-  verticalDivider: {
-    width: 1,
+  dividerVertical: {
+    width: StyleSheet.hairlineWidth,
     marginHorizontal: spacing.md,
+    alignSelf: 'stretch',
+    backgroundColor: brandColors.black,
   },
   headerRow: {
     flexDirection: 'row',
@@ -200,24 +206,5 @@ const styles = StyleSheet.create<any>({
   valueContainerCentered: {
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  footerChips: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  chipItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  chip: {
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
-  },
-  chipValue: {
-    ...typography.metricSm,
-    fontWeight: '700',
   },
 });

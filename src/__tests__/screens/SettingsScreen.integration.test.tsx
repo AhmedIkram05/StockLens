@@ -6,16 +6,16 @@
  * 
  * What it tests:
  * - Dark mode toggle integration with ThemeContext
- * - Biometric login enable/disable with authentication
+ * - Device passcode login enable/disable with authentication
  * - Sign out confirmation prompt and AuthContext integration
  * - Clear all data confirmation and deletion flow
  * - Settings persistence across app restarts
  * - Alert dialogs for destructive actions
  * 
  * Why it's important: SettingsScreen controls critical user preferences
- * (theme, biometrics) and destructive actions (sign out, clear data).
+ * (theme, device auth) and destructive actions (sign out, clear data).
  * Tests ensure toggles update global context correctly, confirmations
- * prevent accidental data loss, and biometric setup requires authentication.
+ * prevent accidental data loss, and device-auth setup requires authentication.
  */
 
 import React from 'react';
@@ -23,15 +23,15 @@ import { Alert } from 'react-native';
 import { act, fireEvent, waitFor } from '@testing-library/react-native';
 import SettingsScreen from '@/screens/SettingsScreen';
 import { renderWithProviders } from '../utils';
-import * as biometric from '@/hooks/useBiometricAuth';
+import * as deviceAuth from '@/hooks/useDeviceAuth';
 import { receiptService } from '@/services/dataService';
 
-jest.mock('@/hooks/useBiometricAuth', () => ({
-  isBiometricAvailable: jest.fn(),
-  isBiometricEnabled: jest.fn(),
-  authenticateBiometric: jest.fn(),
-  setBiometricEnabled: jest.fn(),
-  clearBiometricCredentials: jest.fn(),
+jest.mock('@/hooks/useDeviceAuth', () => ({
+  isDeviceAuthAvailable: jest.fn(),
+  isDeviceEnabled: jest.fn(),
+  authenticateDevice: jest.fn(),
+  setDeviceEnabled: jest.fn(),
+  clearDeviceCredentials: jest.fn(),
 }));
 
 jest.mock('@/services/dataService', () => ({
@@ -41,16 +41,15 @@ jest.mock('@/services/dataService', () => ({
 }));
 
 const alertSpy = jest.spyOn(Alert, 'alert');
-const biometricModule = biometric as jest.Mocked<typeof biometric>;
 const mockedReceiptService = receiptService as jest.Mocked<typeof receiptService>;
 
 describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     alertSpy.mockClear();
-    biometricModule.isBiometricAvailable.mockResolvedValue(true);
-    biometricModule.isBiometricEnabled.mockResolvedValue(false);
-    biometricModule.authenticateBiometric.mockResolvedValue({ success: true } as any);
+    (deviceAuth.isDeviceAuthAvailable as jest.Mock).mockResolvedValue(true);
+    (deviceAuth.isDeviceEnabled as jest.Mock).mockResolvedValue(false);
+    (deviceAuth.authenticateDevice as jest.Mock).mockResolvedValue({ success: true } as any);
     mockedReceiptService.deleteAll.mockResolvedValue();
   });
 
@@ -59,7 +58,7 @@ describe('SettingsScreen', () => {
 
   const renderAndAwaitSwitches = async (overrides?: Parameters<typeof renderWithProviders>[1]) => {
     const utils = renderScreen(overrides);
-    await waitFor(() => expect(biometricModule.isBiometricAvailable).toHaveBeenCalled());
+    await waitFor(() => expect(deviceAuth.isDeviceAuthAvailable).toHaveBeenCalled());
     const switches = utils.getAllByRole('switch');
     return { ...utils, switches };
   };
@@ -84,15 +83,15 @@ describe('SettingsScreen', () => {
     expect(setMode).toHaveBeenCalledWith('dark');
   });
 
-  it('enables biometric login when toggle is switched on', async () => {
+  it('enables device passcode login when toggle is switched on', async () => {
     const { switches } = await renderAndAwaitSwitches();
 
-    const biometricSwitch = switches[0];
-    fireEvent(biometricSwitch, 'valueChange', true);
+    const deviceAuthSwitch = switches[0];
+    fireEvent(deviceAuthSwitch, 'valueChange', true);
 
-    await waitFor(() => expect(biometricModule.authenticateBiometric).toHaveBeenCalled());
-    expect(biometricModule.setBiometricEnabled).toHaveBeenCalledWith(true);
-    expect(alertSpy).toHaveBeenCalledWith('Enabled', expect.stringContaining('Biometric login enabled successfully'));
+    await waitFor(() => expect(deviceAuth.authenticateDevice).toHaveBeenCalled());
+    expect(deviceAuth.setDeviceEnabled).toHaveBeenCalledWith(true);
+    expect(alertSpy).toHaveBeenCalledWith('Enabled', expect.stringContaining('Device passcode login enabled successfully'));
   });
 
   it('confirms sign out before calling AuthContext', async () => {

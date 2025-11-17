@@ -45,7 +45,7 @@ describe('HomeScreen', () => {
   });
 
   const renderScreen = () => {
-    const testUser = createUserProfile({ full_name: 'Alex Johnson', uid: 'user-1' });
+    const testUser = createUserProfile({ first_name: 'Alex', uid: 'user-1' });
     return renderWithProviders(<HomeScreen />, {
       providerOverrides: {
         withNavigation: false,

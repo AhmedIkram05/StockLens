@@ -114,7 +114,6 @@ function createSQLitePersistence(): Persistence {
         await db.runAsync(`DELETE FROM ${AUTH_STATE_TABLE} WHERE key = ?`, [STORAGE_AVAILABLE_KEY]);
         return true;
       } catch (error) {
-        console.error('SQLite auth persistence unavailable:', error);
         return false;
       }
     }

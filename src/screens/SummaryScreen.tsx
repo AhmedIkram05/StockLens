@@ -100,7 +100,6 @@ export default function SummaryScreen() {
 
   loadTotals();
     const unsubHist = subscribe('historical-updated', () => {
-      // re-run totals when historical data updates
       loadTotals().catch(() => {});
     });
     return () => {

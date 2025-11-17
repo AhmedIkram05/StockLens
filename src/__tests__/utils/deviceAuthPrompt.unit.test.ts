@@ -1,7 +1,7 @@
 /**
- * biometricPrompt Unit Tests
+ * deviceAuthPrompt Unit Tests
  * 
- * Purpose: Validates the biometric enrollment prompt shown after
+ * Purpose: Validates the device auth enrollment prompt shown after
  * successful sign-up or login.
  * 
  * What it tests:
@@ -12,49 +12,50 @@
  * - Secure credential storage integration
  * 
  * Why it's important: This prompt is the entry point for enabling
- * biometric login. Tests ensure it only appears on capable devices,
+ * device login. Tests ensure it only appears on capable devices,
  * correctly saves credentials when users opt-in, and respects user
  * choice when they decline.
  */
 
 import { Alert } from 'react-native';
-import { promptEnableBiometrics } from '@/utils/biometricPrompt';
-import * as biometric from '@/hooks/useBiometricAuth';
+import * as deviceAuth from '@/hooks/useDeviceAuth';
 
-jest.mock('@/hooks/useBiometricAuth', () => ({
-  isBiometricAvailable: jest.fn(),
-  saveBiometricCredentials: jest.fn(),
-  clearBiometricCredentials: jest.fn(),
+jest.mock('@/hooks/useDeviceAuth', () => ({
+  isDeviceAuthAvailable: jest.fn(),
+  saveDeviceCredentials: jest.fn(),
+  clearDeviceCredentials: jest.fn(),
 }));
 
-const alertSpy = jest.spyOn(Alert, 'alert');
-const mockedBiometric = biometric as jest.Mocked<typeof biometric>;
+const { promptEnableDeviceAuth } = require('@/utils/deviceAuthPrompt');
 
-describe('biometricPrompt', () => {
+const alertSpy = jest.spyOn(Alert, 'alert');
+const mockedDeviceAuth = deviceAuth as jest.Mocked<typeof deviceAuth>;
+
+describe('deviceAuthPrompt', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     alertSpy.mockClear();
   });
 
-  it('returns false when biometric hardware unavailable', async () => {
-    mockedBiometric.isBiometricAvailable.mockResolvedValue(false);
+  it('returns false when device auth hardware unavailable', async () => {
+    mockedDeviceAuth.isDeviceAuthAvailable.mockResolvedValue(false);
 
-    const result = await promptEnableBiometrics('user@example.com', 'pass123');
+    const result = await promptEnableDeviceAuth('user@example.com', 'pass123');
 
     expect(result).toBe(false);
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
-  it('shows prompt when biometric available and saves on acceptance', async () => {
-    mockedBiometric.isBiometricAvailable.mockResolvedValue(true);
-    mockedBiometric.saveBiometricCredentials.mockResolvedValue(undefined);
+  it('shows prompt when device auth available and saves on acceptance', async () => {
+    mockedDeviceAuth.isDeviceAuthAvailable.mockResolvedValue(true);
+    mockedDeviceAuth.saveDeviceCredentials.mockResolvedValue(undefined);
 
-    const promptPromise = promptEnableBiometrics('user@example.com', 'secret');
+    const promptPromise = promptEnableDeviceAuth('user@example.com', 'secret');
 
     await new Promise(resolve => setImmediate(resolve));
 
     expect(alertSpy).toHaveBeenCalledWith(
-      'Enable Biometrics?',
+      'Enable Device Auth?',
       expect.any(String),
       expect.any(Array),
       expect.any(Object)
@@ -68,7 +69,7 @@ describe('biometricPrompt', () => {
 
     const result = await promptPromise;
 
-    expect(mockedBiometric.saveBiometricCredentials).toHaveBeenCalledWith('user@example.com', 'secret');
+    expect(mockedDeviceAuth.saveDeviceCredentials).toHaveBeenCalledWith('user@example.com', 'secret');
     expect(result).toBe(true);
   });
 });

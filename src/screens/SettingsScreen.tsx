@@ -5,13 +5,13 @@
  * Features:
  * - User profile display (name, email)
  * - Dark mode toggle
- * - Biometric authentication (Face ID/Touch ID) toggle
+ * - Device passcode authentication toggle
  * - Data management (clear local receipts, delete account)
  * - App information (version, support)
  * - Sign out functionality
  * 
  * Uses native Alert dialogs for destructive actions (sign out, clear data, delete account).
- * Biometric settings are persisted using expo-secure-store.
+ * Device authentication settings are persisted using expo-secure-store.
  * 
  * Data clearing only removes local receipts; Firebase data remains intact unless account is deleted.
  */
@@ -24,19 +24,19 @@ import PageHeader from '../components/PageHeader';
 import SettingRow from '../components/SettingRow';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import * as biometric from '../hooks/useBiometricAuth';
+import * as deviceAuth from '../hooks/useDeviceAuth';
 import { receiptService } from '../services/dataService';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 /**
  * Renders the settings screen with user preferences and account actions.
- * Handles sign out, data clearing, and biometric toggle with appropriate prompts.
+ * Handles sign out, data clearing, and device-auth toggle with appropriate prompts.
  */
 export default function SettingsScreen() {
   const { signOutUser, userProfile } = useAuth();
   const { mode, setMode, isDark, theme } = useTheme();
-  const [faceIdEnabled, setFaceIdEnabled] = useState(false);
+  const [deviceAuthEnabled, setDeviceAuthEnabled] = useState(false);
   const { isSmallPhone, isTablet } = useBreakpoint();
 
   const handleSignOut = async () => {
@@ -64,73 +64,70 @@ export default function SettingsScreen() {
     let mounted = true;
     (async () => {
       try {
-        // First check if biometrics are available on device
-        const available = await biometric.isBiometricAvailable();
+        // First check if device authentication is available on the device
+        const available = await deviceAuth.isDeviceAuthAvailable();
         
         if (!available) {
-          // If biometrics not available, ensure toggle is OFF and disable the setting
-          if (mounted) setFaceIdEnabled(false);
-          await biometric.setBiometricEnabled(false);
+          // If device auth not available, ensure toggle is OFF and disable the setting
+          if (mounted) setDeviceAuthEnabled(false);
+          await deviceAuth.setDeviceEnabled(false);
           return;
         }
         
         // If available, load the saved preference
-        const enabled = await biometric.isBiometricEnabled();
-        if (mounted) setFaceIdEnabled(enabled);
+        const enabled = await deviceAuth.isDeviceEnabled();
+        if (mounted) setDeviceAuthEnabled(enabled);
       } catch (err) {
-        console.warn('Failed to read biometric state', err);
-        if (mounted) setFaceIdEnabled(false);
+        if (mounted) setDeviceAuthEnabled(false);
       }
     })();
     return () => { mounted = false; };
   }, []);
 
-  const handleToggleFaceId = async (val: boolean) => {
+  const handleToggleDeviceAuth = async (val: boolean) => {
     if (!val) {
-      // Disabling biometrics - clear flag and credentials
-      setFaceIdEnabled(false);
+      // Disabling device auth - clear flag and credentials
+      setDeviceAuthEnabled(false);
       try {
-        await biometric.setBiometricEnabled(false);
-        await biometric.clearBiometricCredentials();
+        await deviceAuth.setDeviceEnabled(false);
+        await deviceAuth.clearDeviceCredentials();
       } catch (err) {
-        console.warn('Failed to disable biometric setting', err);
       }
       return;
     }
 
-    // Enabling biometrics - check availability first
+    // Enabling device auth - check availability first
     try {
-      const available = await biometric.isBiometricAvailable();
+      const available = await deviceAuth.isDeviceAuthAvailable();
       if (!available) {
         Alert.alert(
           'Not Available', 
-          'Biometric authentication is not available on this device. Please ensure Face ID or Touch ID is set up in your device settings.',
-          [{ text: 'OK', onPress: () => setFaceIdEnabled(false) }]
+          'Device authentication is not available on this device. Please make sure a device passcode is set up in your system settings.',
+          [{ text: 'OK', onPress: () => setDeviceAuthEnabled(false) }]
         );
-        setFaceIdEnabled(false);
+        setDeviceAuthEnabled(false);
         return;
       }
 
-      // Verify with native biometric prompt
-      const { success, error } = await biometric.authenticateBiometric('Authenticate to enable biometric login');
+      // Verify with native device auth prompt
+      const { success, error } = await deviceAuth.authenticateDevice('Authenticate to enable device passcode login');
       if (!success) {
         Alert.alert(
           'Authentication Failed', 
-          error || 'Could not verify your identity with biometrics',
-          [{ text: 'OK', onPress: () => setFaceIdEnabled(false) }]
+          error || 'Could not verify your identity with your device credentials',
+          [{ text: 'OK', onPress: () => setDeviceAuthEnabled(false) }]
         );
-        setFaceIdEnabled(false);
+        setDeviceAuthEnabled(false);
         return;
       }
 
-      // Successfully authenticated - enable biometric login
-      await biometric.setBiometricEnabled(true);
-      setFaceIdEnabled(true);
-      Alert.alert('Enabled', 'Biometric login enabled successfully. You can now use Face ID or Touch ID to unlock the app.');
+      // Successfully authenticated - enable device login
+      await deviceAuth.setDeviceEnabled(true);
+      setDeviceAuthEnabled(true);
+      Alert.alert('Enabled', 'Device passcode login enabled successfully. You can now unlock the app with your system credentials.');
     } catch (err) {
-      console.warn('Failed to update biometric setting', err);
-      Alert.alert('Error', 'Failed to enable biometric login. Please try again.');
-      setFaceIdEnabled(false);
+      Alert.alert('Error', 'Failed to enable device login. Please try again.');
+      setDeviceAuthEnabled(false);
     }
   };
 
@@ -153,7 +150,6 @@ export default function SettingsScreen() {
               await receiptService.deleteAll(uid);
               Alert.alert('Data Cleared', 'All scanned data has been cleared locally.');
             } catch (err: any) {
-              console.error('Failed to clear receipts', err);
               Alert.alert('Error', err?.message || 'Failed to clear scanned data');
             }
           },
@@ -177,9 +173,9 @@ export default function SettingsScreen() {
           <SettingRow
             icon="finger-print"
             iconBgColor={theme.secondary}
-            title="Face ID / Touch ID"
-            subtitle="Secure login with biometrics"
-            right={<Switch value={faceIdEnabled} onValueChange={handleToggleFaceId} trackColor={{ false: theme.border, true: theme.primary }} thumbColor="#ffffff" />}
+            title="Device Passcode Unlock"
+            subtitle="Secure login with your device credentials"
+            right={<Switch value={deviceAuthEnabled} onValueChange={handleToggleDeviceAuth} trackColor={{ false: theme.border, true: theme.primary }} thumbColor="#ffffff" />}
           />
 
           <SettingRow

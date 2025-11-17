@@ -5,24 +5,6 @@
  * Used throughout the app to show when lists/data are empty (e.g., no receipts, no results).
  * 
  * Provides a consistent, user-friendly experience with clear calls-to-action when content is missing.
- * 
- * @example
- * // Basic empty state with action button
- * <EmptyState
- *   iconName="receipt-outline"
- *   title="No Receipts Yet"
- *   subtitle="Start scanning your receipts to track spending"
- *   primaryText="Scan Receipt"
- *   onPrimaryPress={() => navigation.navigate('Scan')}
- * />
- * 
- * @example
- * // Empty state without button
- * <EmptyState
- *   iconName="search-outline"
- *   title="No Results Found"
- *   subtitle="Try adjusting your filters"
- * />
  */
 
 import React from 'react';

@@ -5,25 +5,6 @@
  * Commonly used for displaying metrics, stats, and labeled data throughout the app.
  * 
  * Created to eliminate repetitive "icon + value" patterns found in HomeScreen and SummaryScreen.
- * 
- * @example
- * // Display a calendar icon with a date
- * <IconValue
- *   iconName="calendar-outline"
- *   iconColor={theme.primary}
- *   value="Nov 9, 2025"
- *   valueStyle={styles.dateText}
- * />
- * 
- * @example
- * // Display a trophy icon with a score
- * <IconValue
- *   iconName="trophy"
- *   iconSize={32}
- *   iconColor="#FFD700"
- *   value={1250}
- *   valueStyle={typography.metric}
- * />
  */
 
 import React from 'react';

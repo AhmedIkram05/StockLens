@@ -250,7 +250,7 @@ export const alphaVantageService = {
             const json = JSON.parse(row.raw_json);
             const parsed = parseMonthlyAdjusted(json);
             // stale: return parsed and trigger background refresh
-            backgroundRefreshMonthly(symbol, cacheKey).catch(err => console.warn('background monthly refresh', err));
+            backgroundRefreshMonthly(symbol, cacheKey);
             serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
             try { emit('alpha_cache_hit', { symbol, interval: 'monthly', stale: true }); } catch (e) {}
             return parsed;
@@ -384,7 +384,7 @@ export const alphaVantageService = {
           try {
             const json = JSON.parse(row.raw_json);
             const parsed = parseDailyAdjusted(json);
-            backgroundRefreshDaily(symbol, cacheKey).catch(err => console.warn('background daily refresh', err));
+            backgroundRefreshDaily(symbol, cacheKey);
             serviceMemCache.set(cacheKey, { value: parsed, expiresAt: fetchedAt + ttlMs });
             try { emit('alpha_cache_hit', { symbol, interval: 'daily', stale: true }); } catch (e) {}
             return parsed;

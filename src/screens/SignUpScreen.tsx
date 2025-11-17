@@ -7,7 +7,7 @@
  * - Real-time form validation (password length, matching passwords)
  * - Firebase Authentication account creation
  * - Firestore user profile creation
- * - Biometric prompt after successful registration
+ * - Device authentication prompt after successful registration
  * - Back navigation to Login screen
  * 
  * Validation rules:
@@ -20,7 +20,7 @@
  * 1. User fills form with validation feedback
  * 2. App creates Firebase Auth account
  * 3. App creates Firestore user profile document
- * 4. Prompts user to enable biometric authentication
+ * 4. Prompts user to enable device passcode authentication
  * 5. Redirects to main app via AuthContext
  */
 
@@ -33,7 +33,7 @@ import AuthFooter from '../components/AuthFooter';
 import { useNavigation } from '@react-navigation/native';
 import IconButton from '../components/IconButton';
 import { authService, SignUpData } from '../services/authService';
-import { promptEnableBiometrics } from '../utils/biometricPrompt';
+import { promptEnableDeviceAuth } from '../utils/deviceAuthPrompt';
 import { useAuth } from '../contexts/AuthContext';
 import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, sizes } from '../styles/theme';
@@ -85,9 +85,8 @@ export default function SignUpScreen() {
       startLockGrace();
       
       try {
-        await promptEnableBiometrics(email, password);
+        await promptEnableDeviceAuth(email, password);
       } catch (e) {
-        console.log('Biometric prompt dismissed or failed:', e);
       }
     } catch (error: any) {
       let errorMessage = 'An error occurred during sign up';

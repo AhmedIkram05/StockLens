@@ -32,6 +32,8 @@ import {
   Image,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../components/ScreenContainer';
@@ -139,7 +141,6 @@ export default function ScanScreen() {
             try { emit('receipts-changed', { id: createdId, userId: userProfile?.uid }); } catch (e) {}
           }
         } catch (e) {
-          console.warn('Failed to create draft receipt', e);
         }
 
         await processReceipt({
@@ -157,44 +158,57 @@ export default function ScanScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: brandColors.black }}>
         <View style={styles.previewContainer}>
           <Image testID="scan-preview-image" source={{ uri: photo }} style={styles.previewImage} />
-          <Modal visible={manualModalVisible} transparent animationType="fade" onRequestClose={() => setManualModalVisible(false)}>
-            <View style={styles.modalBackdrop}>
-              <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Manual entry</Text>
-                <Text style={styles.modalSubtitle}>Enter the total amount</Text>
-                <TextInput
-                  testID="manual-entry-input"
-                  style={styles.modalInput}
-                  keyboardType="decimal-pad"
-                  value={manualEntryText}
-                  onChangeText={setManualEntryText}
-                  placeholder="0.00"
-                />
-                <View style={styles.modalRow}>
-                  <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setManualModalVisible(false)}>
-                    <Text style={styles.modalCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    testID="manual-confirm-button"
-                    style={[styles.modalBtn, styles.modalConfirm]}
-                    onPress={async () => {
-                      const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-                      const parsed = Number(cleaned);
-                      if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
-                      setManualModalVisible(false);
-                      const draft = draftReceiptId;
-                      await saveAndNavigate(parsed, draft, ocrRaw, photo);
-                    }}
-                  >
-                    <Text style={styles.modalConfirmText}>Confirm</Text>
-                  </TouchableOpacity>
+          <Modal
+            visible={manualModalVisible}
+            transparent
+            statusBarTranslucent
+            animationType="fade"
+            presentationStyle="overFullScreen"
+            onRequestClose={() => setManualModalVisible(false)}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={styles.modalAvoider}
+            >
+              <View style={styles.modalBackdrop}>
+                <View style={styles.modalCard}>
+                  <Text style={styles.modalTitle}>Manual entry</Text>
+                  <Text style={styles.modalSubtitle}>Enter the total amount</Text>
+                  <TextInput
+                    testID="manual-entry-input"
+                    style={styles.modalInput}
+                    keyboardType="decimal-pad"
+                    value={manualEntryText}
+                    onChangeText={setManualEntryText}
+                    placeholder="0.00"
+                      placeholderTextColor="#7A7A7A"
+                  />
+                  <View style={styles.modalRow}>
+                    <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setManualModalVisible(false)}>
+                      <Text style={styles.modalCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="manual-confirm-button"
+                      style={[styles.modalBtn, styles.modalConfirm]}
+                      onPress={async () => {
+                        const cleaned = String(manualEntryText || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+                        const parsed = Number(cleaned);
+                        if (!Number.isFinite(parsed) || parsed <= 0) { Alert.alert('Invalid amount', 'Enter a valid number'); return; }
+                        setManualModalVisible(false);
+                        const draft = draftReceiptId;
+                        await saveAndNavigate(parsed, draft, ocrRaw, photo);
+                      }}
+                    >
+                      <Text style={styles.modalConfirmText}>Confirm</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
+            </KeyboardAvoidingView>
           </Modal>
           {processing && (
             <View style={styles.processingOverlay} pointerEvents="none">
-              <Text style={styles.processingText}>Processing...</Text>
+              <Text style={styles.processingText}>Processing Receipt...</Text>
             </View>
           )}
         </View>
@@ -300,36 +314,46 @@ const styles = StyleSheet.create({
     color: brandColors.white,
     ...typography.sectionTitle,
   },
+  modalAvoider: {
+    flex: 1,
+  },
   modalBackdrop: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: spacing.lg,
   },
   modalCard: {
-    width: '80%',
+    width: '100%',
+    maxWidth: 380,
     borderRadius: radii.lg,
     padding: spacing.lg,
+    backgroundColor: brandColors.white,
     shadowColor: brandColors.black,
     shadowOffset: { width: 0, height: spacing.xs },
     shadowOpacity: 0.25,
     shadowRadius: spacing.md,
-    elevation: 5,
+    elevation: 6,
   },
   modalTitle: {
     ...typography.sectionTitle,
     marginBottom: spacing.sm,
     textAlign: 'center',
+    color: brandColors.black,
   },
   modalSubtitle: {
     ...typography.body,
     marginBottom: spacing.lg,
     textAlign: 'center',
+    color: brandColors.black,
   },
   modalInput: {
     backgroundColor: brandColors.gray,
     borderRadius: radii.md,
     padding: spacing.md,
     marginBottom: spacing.md,
+    color: brandColors.black,
   },
   modalRow: {
     flexDirection: 'row',

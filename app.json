@@ -12,10 +12,7 @@
       "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to quickly sign in to StockLens"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

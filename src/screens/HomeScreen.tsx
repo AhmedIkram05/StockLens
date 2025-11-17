@@ -153,8 +153,6 @@ export default function HomeScreen() {
                 const cols = 1;
 
                 return (
-                  // grid wrapper — keep simple row/wrap layout; padding is handled
-                  // by ScreenContainer / ResponsiveContainer so we don't double-pad
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                     {list.map((scan) => {
                       return (

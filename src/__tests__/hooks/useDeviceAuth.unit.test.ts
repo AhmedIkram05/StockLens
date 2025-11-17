@@ -1,17 +1,17 @@
 /**
- * useBiometricAuth Unit Tests
+ * useDeviceAuth Unit Tests
  * 
- * Purpose: Validates biometric authentication helpers that enable Face ID
- * and Touch ID functionality for secure app unlocking.
+ * Purpose: Validates device authentication helpers that enable device passcode
+ * functionality for secure app unlocking.
  * 
  * What it tests:
- * - Hardware availability checks (Face ID, Touch ID, fingerprint)
- * - Biometric authentication prompts and user responses
+ * - Hardware availability checks
+ * - Device authentication prompts and user responses
  * - Secure credential storage and retrieval (email/password)
- * - Enable/disable biometric flag persistence
+ * - Enable/disable device auth flag persistence
  * - Credential deletion on sign-out
  * 
- * Why it's important: Biometric auth is a security feature that requires
+ * Why it's important: Device auth is a security feature that requires
  * careful testing. These tests ensure the app correctly detects device
  * capabilities, securely stores credentials in the keychain, and handles
  * user cancellation or hardware unavailability gracefully.
@@ -21,18 +21,17 @@ import { renderHook } from '@testing-library/react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import {
-  isBiometricAvailable,
-  authenticateBiometric,
-  saveBiometricCredentials,
-  getBiometricCredentials,
-  clearBiometricCredentials,
-  setBiometricEnabled,
-  isBiometricEnabled,
-} from '@/hooks/useBiometricAuth';
+  isDeviceAuthAvailable,
+  authenticateDevice,
+  saveDeviceCredentials,
+  getDeviceCredentials,
+  clearDeviceCredentials,
+  setDeviceEnabled,
+  isDeviceEnabled,
+} from '@/hooks/useDeviceAuth';
 
 jest.mock('expo-local-authentication', () => ({
   hasHardwareAsync: jest.fn(),
-  isEnrolledAsync: jest.fn(),
   authenticateAsync: jest.fn(),
   supportedAuthenticationTypesAsync: jest.fn(),
 }));
@@ -47,58 +46,54 @@ jest.mock('expo-secure-store', () => ({
 const mockedLocalAuth = LocalAuthentication as jest.Mocked<typeof LocalAuthentication>;
 const mockedSecureStore = SecureStore as jest.Mocked<typeof SecureStore>;
 
-describe('useBiometricAuth', () => {
+describe('useDeviceAuth', () => {
   // Ensure a clean mock state before each test
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   /**
-   * isBiometricAvailable
-   * - Verifies detection logic for biometric hardware and enrollment status.
-   * - Tests both positive and negative hardware/enrollment combinations.
+   * isDeviceAuthAvailable
+   * - Verifies detection logic for device authentication hardware.
+   * - Tests both positive and negative hardware combinations.
    */
-  describe('isBiometricAvailable', () => {
-    it('returns true when hardware exists and biometrics enrolled', async () => {
+  describe('isDeviceAuthAvailable', () => {
+    it('returns true when hardware exists', async () => {
       mockedLocalAuth.hasHardwareAsync.mockResolvedValue(true);
-      mockedLocalAuth.isEnrolledAsync.mockResolvedValue(true);
 
-      const result = await isBiometricAvailable();
+      const result = await isDeviceAuthAvailable();
 
       expect(result).toBe(true);
     });
 
-    it('returns false when hardware missing or not enrolled', async () => {
+    it('returns false when hardware missing', async () => {
       mockedLocalAuth.hasHardwareAsync.mockResolvedValue(false);
-      mockedLocalAuth.isEnrolledAsync.mockResolvedValue(true);
 
-      const result = await isBiometricAvailable();
+      const result = await isDeviceAuthAvailable();
 
       expect(result).toBe(false);
     });
   });
 
   /**
-   * authenticateBiometric
-   * - Simulates user biometric authentication and verifies returned results
+   * authenticateDevice
+   * - Simulates user device authentication and verifies returned results
    *   and the arguments passed into the native API wrapper.
    */
-  describe('authenticateBiometric', () => {
+  describe('authenticateDevice', () => {
     it('returns success when authentication succeeds', async () => {
-      mockedLocalAuth.supportedAuthenticationTypesAsync.mockResolvedValue([]);
       mockedLocalAuth.authenticateAsync.mockResolvedValue({ success: true } as any);
 
-      const result = await authenticateBiometric('Test prompt');
+      const result = await authenticateDevice('Test prompt');
 
       expect(result.success).toBe(true);
-      expect(mockedLocalAuth.authenticateAsync).toHaveBeenCalledWith({ promptMessage: 'Test prompt' });
+      expect(mockedLocalAuth.authenticateAsync).toHaveBeenCalledWith({ promptMessage: 'Test prompt', disableDeviceFallback: false });
     });
 
     it('returns failure when authentication fails', async () => {
-      mockedLocalAuth.supportedAuthenticationTypesAsync.mockResolvedValue([]);
       mockedLocalAuth.authenticateAsync.mockResolvedValue({ success: false, error: 'User canceled' } as any);
 
-      const result = await authenticateBiometric();
+      const result = await authenticateDevice();
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('User canceled');
@@ -112,11 +107,11 @@ describe('useBiometricAuth', () => {
    */
   describe('credential storage', () => {
     it('saves and retrieves credentials securely', async () => {
-      await saveBiometricCredentials('user@example.com', 'pass123');
+      await saveDeviceCredentials('user@example.com', 'pass123');
 
       // Verify SecureStore called with serialized credentials and proper options
       expect(mockedSecureStore.setItemAsync).toHaveBeenCalledWith(
-        'biometric_credentials',
+        'device_credentials',
         JSON.stringify({ email: 'user@example.com', password: 'pass123' }),
         { keychainAccessible: SecureStore.ALWAYS_THIS_DEVICE_ONLY }
       );
@@ -126,30 +121,30 @@ describe('useBiometricAuth', () => {
         JSON.stringify({ email: 'user@example.com', password: 'pass123' })
       );
 
-      const result = await getBiometricCredentials();
+      const result = await getDeviceCredentials();
 
       expect(result).toEqual({ email: 'user@example.com', password: 'pass123' });
     });
 
-    it('clears credentials and disables biometric', async () => {
-      await clearBiometricCredentials();
+    it('clears credentials and disables device auth', async () => {
+      await clearDeviceCredentials();
 
-      expect(mockedSecureStore.deleteItemAsync).toHaveBeenCalledWith('biometric_credentials');
-      expect(mockedSecureStore.deleteItemAsync).toHaveBeenCalledWith('biometric_enabled');
+      expect(mockedSecureStore.deleteItemAsync).toHaveBeenCalledWith('device_credentials');
+      expect(mockedSecureStore.deleteItemAsync).toHaveBeenCalledWith('device_enabled');
     });
   });
 
   /**
    * Enabled flag helpers
-   * - Tests saving and reading the biometric enabled flag
+   * - Tests saving and reading the device auth enabled flag
    */
   describe('enabled state', () => {
-    it('manages biometric enabled flag', async () => {
-      await setBiometricEnabled(true);
-      expect(mockedSecureStore.setItemAsync).toHaveBeenCalledWith('biometric_enabled', '1', expect.any(Object));
+    it('manages device auth enabled flag', async () => {
+      await setDeviceEnabled(true);
+      expect(mockedSecureStore.setItemAsync).toHaveBeenCalledWith('device_enabled', '1', expect.any(Object));
 
       mockedSecureStore.getItemAsync.mockResolvedValue('1');
-      const result = await isBiometricEnabled();
+      const result = await isDeviceEnabled();
       expect(result).toBe(true);
     });
   });

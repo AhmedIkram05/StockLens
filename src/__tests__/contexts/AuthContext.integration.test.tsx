@@ -1,17 +1,17 @@
 /**
  * AuthContext Integration Tests
  * 
- * Purpose: Validates authentication state management, biometric unlocking,
+ * Purpose: Validates authentication state management, device-passcode unlocking,
  * and user session persistence across the app.
  * 
  * What it tests:
  * - User authentication flows (sign-in, sign-out)
- * - Biometric lock/unlock functionality
+ * - Device lock/unlock functionality
  * - Credential verification
  * - Context provider error handling (must be used within provider)
  * 
  * Why it's important: AuthContext manages global user state and security.
- * These tests ensure users stay authenticated, biometric locks work correctly,
+ * These tests ensure users stay authenticated, device locks work correctly,
  * and auth state persists across app restarts.
  */
 
@@ -49,10 +49,14 @@ jest.mock('@/services/dataService', () => {
   };
 });
 
-jest.mock('@/hooks/useBiometricAuth', () => ({
-  isBiometricAvailable: jest.fn(async () => true),
-  isBiometricEnabled: jest.fn(async () => true),
-  authenticateBiometric: jest.fn(async () => ({ success: true })),
+jest.mock('@/hooks/useDeviceAuth', () => ({
+  isDeviceAuthAvailable: jest.fn(async () => true),
+  isDeviceEnabled: jest.fn(async () => true),
+  authenticateDevice: jest.fn(async () => ({ success: true })),
+  saveDeviceCredentials: jest.fn(),
+  getDeviceCredentials: jest.fn(),
+  clearDeviceCredentials: jest.fn(),
+  setDeviceEnabled: jest.fn(),
 }));
 
 jest.mock('@/contexts/ThemeContext', () => {
@@ -88,11 +92,11 @@ describe('AuthContext', () => {
   });
 
   /**
-   * Test: Biometric unlock flow
-   * Validates that app unlocks when biometric authentication succeeds.
-   * Critical for security feature - ensures users can access locked app with fingerprint/face ID.
+   * Test: Device unlock flow
+   * Validates that app unlocks when native device authentication succeeds.
+   * Critical for security feature - ensures users can access locked app with their device credentials.
    */
-  it('provides unlocked state when biometrics succeed', async () => {
+  it('provides unlocked state when device auth succeeds', async () => {
     // Render the auth hook with provider
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
@@ -100,9 +104,9 @@ describe('AuthContext', () => {
 
     await act(async () => {}); // Wait for initial auth state
 
-    // Trigger biometric unlock
+    // Trigger device-auth unlock
     await act(async () => {
-      await result.current.unlockWithBiometrics();
+      await result.current.unlockWithDeviceAuth();
     });
 
     // Verify app is now unlocked
@@ -133,7 +137,7 @@ describe('AuthContext', () => {
   /**
    * Test: Credential-based unlock
    * Validates that users can unlock app by entering email/password.
-   * Fallback mechanism when biometrics fail or aren't available.
+  * Fallback mechanism when device authentication fails or isn't available.
    */
   it('unlockWithCredentials verifies credentials via Firebase', async () => {
     const { result } = renderHook(() => useAuth(), {

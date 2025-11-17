@@ -57,7 +57,7 @@ const createAuthValue = (overrides?: Partial<AuthContextType>): AuthContextType 
   loading: false,
   locked: false,
   signOutUser: async () => {},
-  unlockWithBiometrics: async () => true,
+  unlockWithDeviceAuth: async () => true,
   unlockWithCredentials: async () => true,
   startLockGrace: () => {},
   ...overrides,
