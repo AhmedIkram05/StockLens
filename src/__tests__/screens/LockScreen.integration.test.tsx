@@ -6,14 +6,14 @@
  * 
  * What it tests:
  * - Locked screen UI with user email display
- * - Biometric unlock flow (Face ID / Touch ID)
+ * - Device passcode unlock flow
  * - Password unlock fallback with credential validation
- * - Error handling for failed biometric attempts
+ * - Error handling for failed device-auth attempts
  * - Error handling for incorrect passwords
  * - Forgot password reset email flow
  * 
  * Why it's important: LockScreen protects user financial data when
- * the app is reopened. Tests ensure biometric unlock works when
+ * the app is reopened. Tests ensure device unlock works when
  * available, password fallback functions correctly, and failed
  * attempts show appropriate error messages.
  */
@@ -34,13 +34,13 @@ jest.mock('@/services/authService', () => ({
 const alertSpy = jest.spyOn(Alert, 'alert');
 
 describe('LockScreen', () => {
-  let unlockWithBiometrics: jest.Mock;
+  let unlockWithDeviceAuth: jest.Mock;
   let unlockWithCredentials: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     alertSpy.mockClear();
-    unlockWithBiometrics = jest.fn();
+    unlockWithDeviceAuth = jest.fn();
     unlockWithCredentials = jest.fn();
     (authServiceModule.authService.sendPasswordReset as jest.Mock).mockResolvedValue(undefined);
   });
@@ -49,7 +49,7 @@ describe('LockScreen', () => {
     renderWithProviders(<LockScreen />, {
       providerOverrides: {
         authValue: {
-          unlockWithBiometrics,
+          unlockWithDeviceAuth,
           unlockWithCredentials,
           user: { email: overrides?.email ?? 'test@example.com' } as any,
           userProfile: { email: overrides?.email ?? 'test@example.com' } as any,
@@ -63,23 +63,23 @@ describe('LockScreen', () => {
     expect(getByText('Locked')).toBeTruthy();
     expect(getByText('Unlock to continue')).toBeTruthy();
     expect(getByText('test@example.com')).toBeTruthy();
-    expect(getByText('Unlock with Face ID / Touch ID')).toBeTruthy();
+    expect(getByText('Unlock with Device Passcode')).toBeTruthy();
   });
 
-  it('calls unlockWithBiometrics when biometric button pressed', async () => {
-    unlockWithBiometrics.mockResolvedValue(true);
+  it('calls unlockWithDeviceAuth when device auth button pressed', async () => {
+    unlockWithDeviceAuth.mockResolvedValue(true);
     const { getByText } = renderScreen();
 
-    fireEvent.press(getByText('Unlock with Face ID / Touch ID'));
+    fireEvent.press(getByText('Unlock with Device Passcode'));
 
-    await waitFor(() => expect(unlockWithBiometrics).toHaveBeenCalled());
+    await waitFor(() => expect(unlockWithDeviceAuth).toHaveBeenCalled());
   });
 
-  it('shows alert when biometric unlock fails', async () => {
-    unlockWithBiometrics.mockResolvedValue(false);
+  it('shows alert when device auth unlock fails', async () => {
+    unlockWithDeviceAuth.mockResolvedValue(false);
     const { getByText } = renderScreen();
 
-    fireEvent.press(getByText('Unlock with Face ID / Touch ID'));
+    fireEvent.press(getByText('Unlock with Device Passcode'));
 
     await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Unlock Failed', expect.any(String)));
   });

@@ -1,18 +1,18 @@
 /**
  * LockScreen
  * 
- * Biometric authentication gate shown when app returns from background (if enabled).
+ * Device-passcode authentication gate shown when app returns from background (if enabled).
  * Features:
- * - Face ID / Touch ID authentication button
+ * - Device passcode authentication button
  * - Fallback password entry field
  * - "Forgot password" flow sending reset email
  * - User profile display (name, email)
  * 
  * Flow:
  * 1. User returns to app after backgrounding
- * 2. LockScreen appears if biometric auth is enabled
+ * 2. LockScreen appears if device lock is enabled
  * 3. User can:
- *    a) Authenticate with Face ID/Touch ID (calls unlockWithBiometrics)
+ *    a) Authenticate with device passcode (calls unlockWithDeviceAuth)
  *    b) Enter password manually (calls unlockWithCredentials)
  *    c) Send password reset email via forgot password flow
  * 4. On successful auth, AuthContext unlocks and navigates to main app
@@ -36,11 +36,11 @@ import { radii, spacing, typography } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
- * Renders the biometric lock screen with Face ID/password unlock options.
- * Handles biometric authentication, credential validation, and password reset flows.
+ * Renders the device lock screen with passcode/password unlock options.
+ * Handles device authentication, credential validation, and password reset flows.
  */
 export default function LockScreen() {
-  const { unlockWithBiometrics, unlockWithCredentials, user, userProfile } = useAuth();
+  const { unlockWithDeviceAuth, unlockWithCredentials, user, userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();
   const { theme } = useTheme();
   const [password, setPassword] = useState('');
@@ -73,15 +73,15 @@ export default function LockScreen() {
     ]);
   };
 
-  const handleBiometric = async () => {
+  const handleDeviceAuth = async () => {
     setLoading(true);
     try {
-      const ok = await unlockWithBiometrics();
+      const ok = await unlockWithDeviceAuth();
       if (!ok) {
-        Alert.alert('Unlock Failed', 'Could not unlock using biometrics. Please try again or use your password.');
+        Alert.alert('Unlock Failed', 'Could not unlock using your device credentials. Please try again or use your password.');
       }
     } catch (err) {
-      Alert.alert('Error', 'Biometric unlock failed. Please use your password.');
+      Alert.alert('Error', 'Device authentication failed. Please use your password.');
     } finally {
       setLoading(false);
     }
@@ -123,13 +123,13 @@ export default function LockScreen() {
         </PageHeader>
 
         <SecondaryButton
-          onPress={handleBiometric}
+          onPress={handleDeviceAuth}
           disabled={loading}
-          accessibilityLabel="Unlock with Face ID or Touch ID"
-          style={styles.bioButton}
+          accessibilityLabel="Unlock with device passcode"
+          style={styles.deviceButton}
           textStyle={{ color: brandColors.white }}
         >
-          {loading ? 'Unlocking…' : 'Unlock with Face ID / Touch ID'}
+          {loading ? 'Unlocking…' : 'Unlock with Device Passcode'}
         </SecondaryButton>
 
         <Text style={[styles.or, { color: theme.textSecondary }]}>Or enter your account password</Text>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  bioButton: { backgroundColor: brandColors.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
+  deviceButton: { backgroundColor: brandColors.green, padding: spacing.md, borderRadius: radii.md, alignItems: 'center', marginBottom: spacing.md },
   or: { textAlign: 'center', marginVertical: spacing.md },
   unlockButton: { backgroundColor: brandColors.blue, padding: spacing.md, borderRadius: radii.md, alignItems: 'center' },
   forgotContainer: { alignItems: 'center', marginTop: spacing.sm, marginBottom: spacing.md },

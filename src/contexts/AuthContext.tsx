@@ -2,12 +2,12 @@
  * AuthContext
  * 
  * Global authentication state management using React Context API and Firebase Auth.
- * Provides user authentication, profile management, and biometric lock functionality.
+ * Provides user authentication, profile management, and device lock functionality.
  * 
  * Features:
  * - Firebase Authentication integration with onAuthStateChanged listener
  * - User profile management (Firestore sync)
- * - Biometric lock/unlock (Face ID/Touch ID)
+ * - Device lock/unlock using native passcode auth
  * - App state monitoring for auto-lock on background
  * - Credential-based unlock fallback
  * 
@@ -15,16 +15,16 @@
  * - user: Firebase User object (null if unauthenticated)
  * - userProfile: Local user profile from Firestore
  * - loading: True during initial auth check
- * - locked: True when biometric lock is active
+ * - locked: True when device lock is active
  * 
  * Methods:
  * - signOutUser: Signs out from Firebase and clears local state
- * - unlockWithBiometrics: Attempts Face ID/Touch ID unlock
+ * - unlockWithDeviceAuth: Attempts device passcode unlock
  * - unlockWithCredentials: Validates email/password from secure storage
  * 
  * Auto-lock behavior:
  * - When app goes to background, sets locked=true (if DISABLE_LOCK=false)
- * - On foreground return, user must unlock with biometrics or password
+ * - On foreground return, user must unlock with device credentials or password
  * - Grace period: 10-second window after sign-in where lock is disabled
  */
 
@@ -35,7 +35,7 @@ import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getAuthInstance } from '@/services/firebase';
 import { userService } from '@/services/dataService';
-import { authenticateBiometric, isBiometricAvailable, isBiometricEnabled } from '@/hooks/useBiometricAuth';
+import { authenticateDevice, isDeviceAuthAvailable, isDeviceEnabled } from '@/hooks/useDeviceAuth';
 
 export interface UserProfile {
   id?: number;
@@ -55,10 +55,10 @@ export interface AuthContextType {
   loading: boolean;
   /** Signs out the current user and clears auth state */
   signOutUser: () => Promise<void>;
-  /** True when biometric lock is active (app backgrounded) */
+  /** True when the device lock is active (app backgrounded) */
   locked: boolean;
   /** Attempts to unlock using Face ID/Touch ID */
-  unlockWithBiometrics: () => Promise<boolean>;
+  unlockWithDeviceAuth: () => Promise<boolean>;
   /** Unlocks using email/password credentials from secure storage */
   unlockWithCredentials: (email: string, password: string) => Promise<boolean>;
   /** Starts 10-second grace period to prevent immediate locking after sign-in */
@@ -74,7 +74,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
  * Throws error if used outside AuthProvider to catch integration mistakes early.
  * 
  * @example
- * const { user, locked, unlockWithBiometrics } = useAuth();
+ * const { user, locked, unlockWithDeviceAuth } = useAuth();
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -97,7 +97,7 @@ interface AuthProviderProps {
  * Lifecycle:
  * 1. On mount: Sets up Firebase onAuthStateChanged listener
  * 2. When user signs in: Fetches/creates Firestore profile, loads theme preference
- * 3. When app backgrounds: Sets locked=true (if biometric auth enabled)
+ * 3. When app backgrounds: Sets locked=true (if device lock enabled)
  * 4. When app foregrounds: Requires unlock before access
  * 5. On unmount: Cleans up Firebase listener and AppState subscription
  * 
@@ -172,16 +172,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => sub.remove();
   }, [user]);
 
-  const unlockWithBiometrics = async (): Promise<boolean> => {
+  const unlockWithDeviceAuth = async (): Promise<boolean> => {
     try {
       if (!LOCK_ENABLED) {
         setLocked(false);
         return true;
       }
-      const available = await isBiometricAvailable();
-      const enabled = await isBiometricEnabled();
+      const available = await isDeviceAuthAvailable();
+      const enabled = await isDeviceEnabled();
       if (!available || !enabled) return false;
-      const { success } = await authenticateBiometric('Unlock StockLens');
+      const { success } = await authenticateDevice('Unlock StockLens');
       if (success) {
         // Start grace period to prevent immediate re-locking
         startLockGrace();
@@ -263,7 +263,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     signOutUser,
     locked,
-    unlockWithBiometrics,
+    unlockWithDeviceAuth,
     unlockWithCredentials,
     startLockGrace,
   };

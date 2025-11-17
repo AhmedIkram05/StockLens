@@ -8,7 +8,7 @@
  * 
  * Navigation Flow:
  * - Unauthenticated: Splash → Login/SignUp
- * - Authenticated & Locked: LockScreen (biometric gate)
+ * - Authenticated & Locked: LockScreen (device passcode gate)
  * - Authenticated & Unlocked: MainTabs → ReceiptDetails (modal)
  * 
  * Type Safety:
@@ -16,7 +16,7 @@
  * - MainTabParamList: Defines all tab screen params
  * 
  * Features:
- * - Automatic biometric unlock attempt when app opens locked
+ * - Automatic device-auth unlock attempt when app opens locked
  * - Theme-aware tab bar with SafeAreaView edges
  * - Smooth horizontal slide transitions (200ms)
  * - Loading state with ActivityIndicator during auth check
@@ -54,7 +54,7 @@ export type RootStackParamList = {
   Login: undefined;
   /** Registration screen for new users */
   SignUp: undefined;
-  /** Biometric lock screen shown when app is locked */
+  /** Device lock screen shown when app is locked */
   Lock: undefined;
   /** Main bottom tab navigator (post-auth) */
   MainTabs: undefined;
@@ -219,11 +219,11 @@ function MainTabNavigator() {
  * Handles authentication state and conditional rendering:
  * - Loading: Shows ActivityIndicator
  * - Unauthenticated: Shows Splash → Login/SignUp flow
- * - Authenticated & Locked: Shows LockScreen (biometric gate)
+ * - Authenticated & Locked: Shows LockScreen (device passcode gate)
  * - Authenticated & Unlocked: Shows MainTabs + ReceiptDetails modal
  * 
  * Auto-unlock behavior:
- * - When user is authenticated but locked, automatically attempts biometric unlock
+ * - When user is authenticated but locked, automatically attempts a device-auth unlock
  * - Uses useEffect to trigger unlock on mount if conditions are met
  * 
  * Transition animations:
@@ -231,7 +231,7 @@ function MainTabNavigator() {
  * - 200ms duration for smooth navigation
  */
 export default function AppNavigator() {
-  const { user, loading, locked, unlockWithBiometrics } = useAuth();
+  const { user, loading, locked, unlockWithDeviceAuth } = useAuth();
   const { theme } = useTheme();
 
   React.useEffect(() => {
@@ -239,7 +239,7 @@ export default function AppNavigator() {
     (async () => {
       try {
         if (!loading && user && locked) {
-          unlockWithBiometrics();
+          unlockWithDeviceAuth();
         }
       } catch (err) {
       }
