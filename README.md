@@ -2,7 +2,17 @@
 
 Scan Your Spending, See Your Missed Investing
 
+StockLens is a mobile application built with React Native and Expo that helps users analyze their spending habits by scanning receipts using OCR (Optical Character Recognition) technology. The app identifies potential investment opportunities based on the user's spending patterns and provides insights into how small changes in daily expenses can lead to significant investment growth over time.
+
 ## How to Run
+
+Prequisites:
+
+- Node.js (LTS recommended, e.g. Node 18+)
+- npm (bundled with Node) or Yarn
+- An Android/iOS emulator OR the Expo Go app on your phone
+
+To run the StockLens app locally, follow these steps:
 
 1. Clone the repository
 2. Install dependencies
@@ -35,7 +45,17 @@ To run the test suite for StockLens, follow these steps:
     npm test
     ```
 
-This will execute all test files located in the `src/__tests__/` directory using Jest. The tests cover various components and functionalities of the StockLens app to ensure everything works as expected.
+3. To run only unit tests, use:
+
+    ```bash
+    npm test unit
+    ```
+
+4. To run only integration tests, use:
+
+    ```bash
+    npm test integration
+    ```
 
 ## Test Suite Structure
 

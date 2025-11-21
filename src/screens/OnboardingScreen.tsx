@@ -182,7 +182,7 @@ export default function OnboardingScreen() {
 
             const isUp = d.close >= d.open;
             const fill = isUp ? brandColors.green : brandColors.red;
-            const stroke = isDark ? '#ffffff6e' : '#00000014';
+            const stroke = '#00000014';
 
             const bodyY = Math.min(yOpen, yClose);
             const bodyH = Math.max(1, Math.abs(yClose - yOpen));

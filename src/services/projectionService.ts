@@ -83,6 +83,7 @@ export async function getHistoricalCAGRFromToday(symbol: string, years: number):
     const actualYears = (new Date(endEntry.date).getTime() - new Date(startEntry.date).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
     if (!(actualYears > 0)) return null;
 
+    // CAGR formula
     return Math.pow(lastVal / firstVal, 1 / actualYears) - 1;
   } catch (e) {
     return null;
@@ -113,6 +114,7 @@ export function computeCAGRFromSeries(series: Array<{ date: string; adjustedClos
   if (!first || !last || first <= 0) return null;
   const actualYears = (new Date(series[series.length - 1].date).getTime() - new Date(series[0].date).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
   if (!(actualYears > 0)) return null;
+  // CAGR formula
   return Math.pow(last / first, 1 / actualYears) - 1;
 }
 
