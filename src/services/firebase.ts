@@ -29,6 +29,8 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import type { Auth, Persistence } from 'firebase/auth';
 import db from './database';
 import { firebaseConfig } from './firebaseConfig';
+import keyManager from './keyManager';
+import { encryptString, decryptString, isEncryptedPayload } from '@/utils/crypto';
 
 /**
  * Firebase app instance (singleton)
@@ -120,9 +122,17 @@ function createSQLitePersistence(): Persistence {
 
     async _set(key: string, value: PersistenceValue): Promise<void> {
       await ensureAuthTable();
+      // Store encrypted JSON payload where possible to protect auth tokens/state
+      let payload: string = JSON.stringify(value);
+      try {
+        const k = await keyManager.getOrCreateKey();
+        payload = await encryptString(payload, k);
+      } catch (e) {
+        // fallback to plaintext JSON
+      }
       await db.runAsync(
         `INSERT OR REPLACE INTO ${AUTH_STATE_TABLE} (key, value) VALUES (?, ?)`,
-        [key, JSON.stringify(value)]
+        [key, payload]
       );
     }
 
@@ -135,10 +145,30 @@ function createSQLitePersistence(): Persistence {
       if (rows.length === 0 || rows[0].value == null) {
         return null;
       }
+      const raw = rows[0].value as string;
+      // Attempt decryption if payload looks encrypted, otherwise parse JSON as before
       try {
-        return JSON.parse(rows[0].value) as T;
-      } catch {
-        return rows[0].value as T;
+        const k = await keyManager.getOrCreateKey();
+        if (isEncryptedPayload(raw)) {
+          try {
+            const dec = await decryptString(raw, k);
+            return JSON.parse(dec) as T;
+          } catch (e) {
+            // decryption failed, fall through to parse attempt
+          }
+        }
+        try {
+          return JSON.parse(raw) as T;
+        } catch {
+          return raw as unknown as T;
+        }
+      } catch (e) {
+        // If key retrieval failed, try to parse raw stored value
+        try {
+          return JSON.parse(raw) as T;
+        } catch {
+          return raw as unknown as T;
+        }
       }
     }
 

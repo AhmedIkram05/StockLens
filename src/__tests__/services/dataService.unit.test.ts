@@ -9,6 +9,24 @@ jest.mock('@/services/eventBus', () => ({
   emit: jest.fn(),
 }));
 
+// Mock crypto helpers so encryption is deterministic in tests
+jest.mock('@/utils/crypto', () => ({
+  isEncryptedPayload: jest.fn((s: any) => typeof s === 'string' && s.startsWith('enc:')),
+  encryptString: jest.fn(async (s: string) => `enc:${s}`),
+  decryptString: jest.fn(async (s: string) => (typeof s === 'string' && s.startsWith('enc:')) ? s.slice(4) : s),
+}));
+
+// Mock file-level encryption to avoid touching filesystem
+jest.mock('@/utils/fileCrypto', () => ({
+  encryptImageFile: jest.fn(async (uri: string) => `enc-${uri}`),
+  decryptImageToTemp: jest.fn(async (uri: string) => (typeof uri === 'string' && uri.startsWith('enc-')) ? uri.replace('enc-','tmp-') : uri),
+}));
+
+// Mock key manager to return a stable key
+jest.mock('@/services/keyManager', () => ({
+  getOrCreateKey: jest.fn(async () => 'test-key'),
+}));
+
 import { databaseService } from '@/services/database';
 import { emit } from '@/services/eventBus';
 import { receiptService, settingsService, userService } from '@/services/dataService';
@@ -59,7 +77,7 @@ describe('receiptService', () => {
 
   it('updates only provided fields', async () => {
     await receiptService.update(7, { total_amount: 99.9 });
-    expect(mockedDb.executeNonQuery).toHaveBeenCalledWith(expect.stringContaining('UPDATE receipts SET total_amount = ?'), [99.9, 7]);
+    expect(mockedDb.executeNonQuery).toHaveBeenCalledWith(expect.stringContaining('UPDATE receipts SET total_amount = ?'), ['enc:99.9', 7]);
   });
 
   it('deletes all receipts for a user and emits event', async () => {
@@ -76,10 +94,9 @@ describe('settingsService', () => {
 
   it('upserts settings with defaults when fields missing', async () => {
     await settingsService.upsert({ user_id: 'uid-settings' } as any);
-
     expect(mockedDb.executeNonQuery).toHaveBeenCalledWith(
       expect.stringContaining('INSERT OR REPLACE INTO user_settings'),
-      ['uid-settings', 'light', 0]
+      ['uid-settings', 'enc:light', 0]
     );
   });
 });
