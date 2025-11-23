@@ -4,7 +4,7 @@
     "slug": "StockLens",
     "version": "1.0.0",
     "orientation": "portrait",
-  "icon": "./assets/StockLens_Logo_T.png",
+    "icon": "./assets/StockLens_Logo_T.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -22,9 +22,9 @@
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
-      "expo-sqlite"
-    ]
-    ,
+      "expo-sqlite",
+      "expo-secure-store"
+    ],
     "extra": {
       "OCR_SPACE_API_KEY": "K86345927288957"
     }

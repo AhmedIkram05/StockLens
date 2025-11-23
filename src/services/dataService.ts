@@ -13,6 +13,11 @@
  * - Uses alphaVantageService for stock market data
  * - Emits 'receipts-changed' events via eventBus for UI updates
  * 
+ * Encryption notes:
+ * - New receipt OCR text and images are encrypted on write using a device-local
+ *   AES-256-GCM key stored in Expo SecureStore. Decryption is attempted on read
+ * - This keeps the implementation lightweight and Expo Go compatible.
+ * 
  * Prefetch System:
  * - Automatically prefetches monthly data for 10 popular stocks (NVDA, AAPL, MSFT, etc.)
  * - Uses __stocklens_prefetch_done__ marker to track prefetch completion
@@ -22,6 +27,9 @@
 import { databaseService } from './database';
 import { alphaVantageService, OHLCV } from './alphaVantageService';
 import { emit } from './eventBus';
+import keyManager from './keyManager';
+import { isEncryptedPayload, decryptString, encryptString } from '@/utils/crypto';
+import fileCrypto from '@/utils/fileCrypto';
 
 /**
  * Receipt type - Represents a scanned receipt record
@@ -80,19 +88,44 @@ export const receiptService = {
    * @returns Newly inserted receipt ID
    */
   create: async (receipt: Receipt): Promise<number> => {
+    // encrypt ocr_data and image file before saving (works for new writes only)
+    let imageUri = receipt.image_uri;
+    if (imageUri) {
+      try {
+        imageUri = await fileCrypto.encryptImageFile(imageUri);
+      } catch (e) {}
+    }
+
+    let ocr = receipt.ocr_data || '';
+    let totalAmountToStore: any = receipt.total_amount;
+    let dateScannedToStore: any = receipt.date_scanned;
+    try {
+      const key = await keyManager.getOrCreateKey();
+      ocr = await encryptString(ocr, key);
+      if (receipt.total_amount !== undefined && receipt.total_amount !== null) {
+        totalAmountToStore = await encryptString(String(receipt.total_amount), key);
+      }
+      if (receipt.date_scanned) {
+        dateScannedToStore = await encryptString(String(receipt.date_scanned), key);
+      }
+    } catch (e) {
+      // on error, fall back to plaintext
+      totalAmountToStore = receipt.total_amount;
+      dateScannedToStore = receipt.date_scanned;
+    }
+
     const query = `
       INSERT INTO receipts (user_id, image_uri, total_amount, ocr_data, synced)
       VALUES (?, ?, ?, ?, ?)
     `;
     const params = [
       receipt.user_id,
-      receipt.image_uri,
-      receipt.total_amount,
-      receipt.ocr_data || '',
+      imageUri,
+      totalAmountToStore,
+      ocr,
       receipt.synced || 0,
     ];
     const id = await databaseService.executeNonQuery(query, params);
-
     return id;
   },
 
@@ -104,7 +137,32 @@ export const receiptService = {
    */
   getByUserId: async (userId: string): Promise<Receipt[]> => {
     const query = 'SELECT * FROM receipts WHERE user_id = ? ORDER BY date_scanned DESC';
-    return await databaseService.executeQuery(query, [userId]);
+    const rows = await databaseService.executeQuery(query, [userId]);
+    // attempt to decrypt ocr_data and image files for display (newly encrypted rows only)
+    try {
+      const key = await keyManager.getOrCreateKey();
+      for (const r of rows) {
+        if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
+          try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
+        }
+        if (r?.image_uri && typeof r.image_uri === 'string') {
+          try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
+        }
+        // decrypt total_amount if stored encrypted
+        if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
+          try {
+            const dec = await decryptString(r.total_amount, key);
+            const num = parseFloat(dec);
+            r.total_amount = Number.isFinite(num) ? num : undefined;
+          } catch (e) {}
+        }
+        // decrypt date_scanned if stored encrypted
+        if (r?.date_scanned && typeof r.date_scanned === 'string' && isEncryptedPayload(r.date_scanned)) {
+          try { r.date_scanned = await decryptString(r.date_scanned, key); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    return rows;
   },
 
   /**
@@ -116,7 +174,28 @@ export const receiptService = {
   getById: async (id: number): Promise<Receipt | null> => {
     const query = 'SELECT * FROM receipts WHERE id = ?';
     const results = await databaseService.executeQuery(query, [id]);
-    return results.length > 0 ? results[0] : null;
+    if (results.length === 0) return null;
+    const r = results[0];
+    try {
+      const key = await keyManager.getOrCreateKey();
+      if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
+        try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
+      }
+      if (r?.image_uri && typeof r.image_uri === 'string') {
+        try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
+      }
+      if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
+        try {
+          const dec = await decryptString(r.total_amount, key);
+          const num = parseFloat(dec);
+          r.total_amount = Number.isFinite(num) ? num : undefined;
+        } catch (e) {}
+      }
+      if (r?.date_scanned && typeof r.date_scanned === 'string' && isEncryptedPayload(r.date_scanned)) {
+        try { r.date_scanned = await decryptString(r.date_scanned, key); } catch (e) {}
+      }
+    } catch (e) {}
+    return r;
   },
 
   /**
@@ -143,6 +222,27 @@ export const receiptService = {
 
     const query = `UPDATE receipts SET ${setClause} WHERE id = ?`;
     values.push(id);
+
+    // encrypt any ocr_data or image_uri in the update values
+    try {
+      const key = await keyManager.getOrCreateKey();
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        const raw = values[i];
+        if (f === 'ocr_data' && typeof raw === 'string') {
+          try { values[i] = await encryptString(raw, key); } catch (e) {}
+        }
+        if (f === 'total_amount' && (typeof raw === 'number' || typeof raw === 'string')) {
+          try { values[i] = await encryptString(String(raw), key); } catch (e) {}
+        }
+        if (f === 'date_scanned' && typeof raw === 'string') {
+          try { values[i] = await encryptString(raw, key); } catch (e) {}
+        }
+        if (f === 'image_uri' && typeof raw === 'string' && raw.length > 0) {
+          try { values[i] = await fileCrypto.encryptImageFile(raw); } catch (e) {}
+        }
+      }
+    } catch (e) {}
 
     await databaseService.executeNonQuery(query, values);
   },
@@ -188,7 +288,29 @@ export const receiptService = {
    */
   getUnsynced: async (userId: string): Promise<Receipt[]> => {
     const query = 'SELECT * FROM receipts WHERE user_id = ? AND synced = 0';
-    return await databaseService.executeQuery(query, [userId]);
+    const rows = await databaseService.executeQuery(query, [userId]);
+    try {
+      const key = await keyManager.getOrCreateKey();
+      for (const r of rows) {
+        if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
+          try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
+        }
+        if (r?.image_uri && typeof r.image_uri === 'string') {
+          try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
+        }
+        if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
+          try {
+            const dec = await decryptString(r.total_amount, key);
+            const num = parseFloat(dec);
+            r.total_amount = Number.isFinite(num) ? num : undefined;
+          } catch (e) {}
+        }
+        if (r?.date_scanned && typeof r.date_scanned === 'string' && isEncryptedPayload(r.date_scanned)) {
+          try { r.date_scanned = await decryptString(r.date_scanned, key); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    return rows;
   },
 
   /**
@@ -220,13 +342,22 @@ export const settingsService = {
    * Process: Uses INSERT OR REPLACE to upsert settings record
    */
   upsert: async (settings: UserSettings): Promise<void> => {
+    // encrypt theme before storing (backwards-compatible: decrypt attempted on read)
+    let theme = settings.theme || 'light';
+    try {
+      const key = await keyManager.getOrCreateKey();
+      theme = await encryptString(theme, key);
+    } catch (e) {
+      // fall back to plaintext on error
+    }
+
     const query = `
       INSERT OR REPLACE INTO user_settings (user_id, theme, auto_backup)
       VALUES (?, ?, ?)
     `;
     const params = [
       settings.user_id,
-      settings.theme || 'light',
+      theme,
       settings.auto_backup || 0,
     ];
     await databaseService.executeNonQuery(query, params);
@@ -241,7 +372,15 @@ export const settingsService = {
   getByUserId: async (userId: string): Promise<UserSettings | null> => {
     const query = 'SELECT * FROM user_settings WHERE user_id = ?';
     const results = await databaseService.executeQuery(query, [userId]);
-    return results.length > 0 ? results[0] : null;
+    if (results.length === 0) return null;
+    const r = results[0];
+    try {
+      const key = await keyManager.getOrCreateKey();
+      if (r?.theme && typeof r.theme === 'string' && isEncryptedPayload(r.theme)) {
+        try { r.theme = await decryptString(r.theme, key); } catch (e) {}
+      }
+    } catch (e) {}
+    return r;
   },
 };
 
@@ -275,6 +414,26 @@ export const userService = {
     const timestamp = new Date().toISOString();
 
     try {
+      // encrypt firstName and email before storing
+      let encFirstName = firstName;
+      let encEmail = email;
+      if (firstName !== null && firstName !== undefined) {
+        try {
+          const key = await keyManager.getOrCreateKey();
+          encFirstName = await encryptString(firstName, key);
+        } catch (e) {
+          // fall back to plaintext
+          encFirstName = firstName;
+        }
+      }
+
+      try {
+        const key2 = await keyManager.getOrCreateKey();
+        encEmail = await encryptString(email, key2);
+      } catch (e) {
+        encEmail = email;
+      }
+
       const query = `
         INSERT INTO users (uid, first_name, email, last_login)
         VALUES (?, ?, ?, ?)
@@ -283,7 +442,7 @@ export const userService = {
           email = excluded.email,
           last_login = excluded.last_login
       `;
-      const params = [uid, firstName, email, timestamp];
+      const params = [uid, encFirstName, encEmail, timestamp];
       return await databaseService.executeNonQuery(query, params);
     } catch (error: any) {
       if (error?.message?.includes('UNIQUE constraint failed: users.email')) {
@@ -292,7 +451,25 @@ export const userService = {
           SET uid = ?, first_name = ?, last_login = ?
           WHERE email = ?
         `;
-        return await databaseService.executeNonQuery(updateQuery, [uid, firstName, timestamp, email]);
+        // encrypt firstName for the update branch as well
+        let encFirstName2 = firstName;
+        if (firstName !== null && firstName !== undefined) {
+          try {
+            const key = await keyManager.getOrCreateKey();
+            encFirstName2 = await encryptString(firstName, key);
+          } catch (e) {
+            encFirstName2 = firstName;
+          }
+        }
+        // encrypt email for update branch as well
+        let encEmail2 = email;
+        try {
+          const key3 = await keyManager.getOrCreateKey();
+          encEmail2 = await encryptString(email, key3);
+        } catch (e) {
+          encEmail2 = email;
+        }
+        return await databaseService.executeNonQuery(updateQuery, [uid, encFirstName2, timestamp, encEmail2]);
       }
 
       throw error;
@@ -308,7 +485,18 @@ export const userService = {
   getByUid: async (uid: string) => {
     const query = 'SELECT * FROM users WHERE uid = ?';
     const results = await databaseService.executeQuery(query, [uid]);
-    return results.length > 0 ? results[0] : null;
+    if (results.length === 0) return null;
+    const r = results[0];
+    try {
+      const key = await keyManager.getOrCreateKey();
+      if (r?.first_name && typeof r.first_name === 'string' && isEncryptedPayload(r.first_name)) {
+        try { r.first_name = await decryptString(r.first_name, key); } catch (e) {}
+      }
+        if (r?.email && typeof r.email === 'string' && isEncryptedPayload(r.email)) {
+          try { r.email = await decryptString(r.email, key); } catch (e) {}
+        }
+    } catch (e) {}
+    return r;
   },
 
   /**
