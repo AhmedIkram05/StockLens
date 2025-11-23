@@ -21,13 +21,17 @@ To run the StockLens app locally, follow these steps:
     npm install
     ```
 
-3. Launch the Expo development server
+3. Launch the Expo server
 
     ```bash
     npm start
     ```
 
-4. Use the Expo Go app on your mobile device or an emulator to view the app, You can scan the QR code provided by the Expo server in the terminal to launch the app.
+4. Run the app
+
+   - For iOS simulator: Press `i` in the terminal
+   - For Android emulator: Press `a` in the terminal
+   - For physical device: Scan the QR code with the Expo Go app to launch the app
 
 ## Testing
 

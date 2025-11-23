@@ -171,7 +171,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Security</Text>
 
           <SettingRow
-            icon="finger-print"
+            icon={deviceAuthEnabled ? "lock-closed" : "lock-open"}
             iconBgColor={theme.secondary}
             title="Device Passcode Unlock"
             subtitle="Secure login with your device credentials"
@@ -190,7 +190,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</Text>
 
           <SettingRow
-            icon="moon"
+            icon={isDark ? "moon" : "sunny"}
             iconBgColor={theme.secondary}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"
