@@ -9,7 +9,8 @@
  */
 
 import React from 'react';
-import { Pressable, Text, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
+import { Pressable, StyleSheet, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
+import AppText from './AppText';
 import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
@@ -50,7 +51,7 @@ export default function PrimaryButton({ onPress, children, style, textStyle, dis
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={[styles.text, { color: isDark ? brandColors.black : brandColors.white }, textStyle]}>{children}</Text>
+      <AppText style={[styles.text, { color: isDark ? brandColors.black : brandColors.white }, textStyle]}>{children}</AppText>
     </Pressable>
   );
 }

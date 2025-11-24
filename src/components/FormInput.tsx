@@ -51,6 +51,9 @@ export default function FormInput({
         <TextInput
           {...rest}
           secureTextEntry={shouldShowToggle ? isSecure : secureTextEntry}
+          allowFontScaling
+          maxFontSizeMultiplier={1.6}
+          accessibilityLabel={rest.accessibilityLabel ?? rest.placeholder}
           style={[
             styles.input,
             shouldShowToggle && styles.inputWithToggle,
