@@ -8,7 +8,8 @@
  */
 
 import React from 'react';
-import { Pressable, Text, StyleSheet, View, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
+import { Pressable, StyleSheet, View, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
+import AppText from './AppText';
 import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
@@ -42,7 +43,7 @@ export default function DangerButton({ onPress, children, style, textStyle, acce
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={[styles.text, textStyle]}>{children}</Text>
+      <AppText style={[styles.text, textStyle]}>{children}</AppText>
     </Pressable>
   );
 }
