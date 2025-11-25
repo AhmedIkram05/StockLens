@@ -77,6 +77,8 @@ describe('HomeScreen', () => {
       receipts: [
         { id: '1', label: '2 hours ago', amount: 80, date: '2025-02-01T10:00:00Z', time: '9:00', image: 'uri://receipt-1' },
         { id: '2', label: 'Yesterday', amount: 40, date: '2025-01-05T10:00:00Z', time: '12:00', image: 'uri://receipt-2' },
+        { id: '3', label: 'Last week', amount: 20, date: '2024-12-15T10:00:00Z', time: '15:00', image: 'uri://receipt-3' },
+        { id: '4', label: '2 weeks ago', amount: 10, date: '2024-12-01T10:00:00Z', time: '11:00', image: 'uri://receipt-4' },
       ],
       loading: false,
       error: null,
@@ -85,7 +87,7 @@ describe('HomeScreen', () => {
     const { getByText, getAllByTestId } = renderScreen();
 
     await waitFor(() => expect(getByText('Total Money Spent')).toBeTruthy());
-    expect(getByText('£120.00')).toBeTruthy();
+    expect(getByText('£150.00')).toBeTruthy();
     expect(getByText('Receipts Scanned')).toBeTruthy();
     expect(getByText('£80.00')).toBeTruthy();
 
