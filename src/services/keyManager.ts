@@ -26,20 +26,32 @@ const KEY_NAME = 'stocklens_encryption_key_v1';
  * @returns Promise<string> - base64 encoded 32-byte AES key
  */
 export async function getOrCreateKey(): Promise<string> {
-  // simple in-memory cache to avoid repeated SecureStore round-trips
+  // Prefer the stored key in SecureStore on each call to remain in sync
+  // with native storage (tests and other processes may change it). If
+  // the stored key is absent, fall back to an in-memory cached key or
+  // generate a new one and attempt to persist it.
+  try {
+    const stored = await SecureStore.getItemAsync(KEY_NAME);
+    if (stored) {
+      (getOrCreateKey as any)._cachedKey = stored;
+      return stored;
+    }
+  } catch (e) {
+    // If reading SecureStore fails, continue and possibly return the in-memory cache
+  }
+
+  // Use in-memory cache if available (avoids regenerating a key between calls when SecureStore is unavailable)
   if ((getOrCreateKey as any)._cachedKey) return (getOrCreateKey as any)._cachedKey as string;
 
-  let key = await SecureStore.getItemAsync(KEY_NAME);
-  if (!key) {
-    key = generateKeyBase64();
-    try {
-      await SecureStore.setItemAsync(KEY_NAME, key as string, { keychainAccessible: SecureStore.ALWAYS_THIS_DEVICE_ONLY });
-    } catch (e) {
-      // ignore store errors; fall back to in-memory (not ideal)
-    }
+  // Generate and attempt to persist
+  const newKey = generateKeyBase64();
+  try {
+    await SecureStore.setItemAsync(KEY_NAME, newKey as string, { keychainAccessible: SecureStore.ALWAYS_THIS_DEVICE_ONLY });
+  } catch (e) {
+    // ignore store errors; continue with in-memory key
   }
-  (getOrCreateKey as any)._cachedKey = key;
-  return key as string;
+  (getOrCreateKey as any)._cachedKey = newKey;
+  return newKey;
 }
 
 /**
