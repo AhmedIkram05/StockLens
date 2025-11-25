@@ -72,6 +72,8 @@ export default function ScanScreen() {
     setManualModalVisible,
     processReceipt,
     saveAndNavigate,
+    discardDraft,
+    resetWorkflowState,
   } = capture.actions;
   const cameraRef = useRef<CameraView>(null);
   const { isSmallPhone, isTablet, contentHorizontalPadding, sectionVerticalSpacing, width } = useBreakpoint();
@@ -184,7 +186,18 @@ export default function ScanScreen() {
                       placeholderTextColor="#7A7A7A"
                   />
                   <View style={styles.modalRow}>
-                    <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setManualModalVisible(false)}>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, styles.modalCancel]}
+                      onPress={async () => {
+                        // User cancelled manual entry: delete draft and reset state, return to camera
+                        try {
+                          await discardDraft(draftReceiptId);
+                        } catch (e) {}
+                        try { resetWorkflowState(); } catch (e) {}
+                        setManualModalVisible(false);
+                        clearPhotoPreview();
+                      }}
+                    >
                       <Text style={styles.modalCancelText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity

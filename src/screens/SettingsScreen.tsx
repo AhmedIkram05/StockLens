@@ -124,7 +124,7 @@ export default function SettingsScreen() {
       // Successfully authenticated - enable device login
       await deviceAuth.setDeviceEnabled(true);
       setDeviceAuthEnabled(true);
-      Alert.alert('Enabled', 'Device passcode login enabled successfully. You can now unlock the app with your system credentials.');
+      Alert.alert('Enabled', 'Device passcode login enabled. You can now unlock the app with your device credentials.');
     } catch (err) {
       Alert.alert('Error', 'Failed to enable device login. Please try again.');
       setDeviceAuthEnabled(false);
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
-      'This will delete all scanned receipts stored on this device.',
+      'Are you sure you want to delete all scanned receipts stored on this device? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -190,7 +190,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</Text>
 
           <SettingRow
-            icon={isDark ? "moon" : "sunny"}
+            icon={"moon"}
             iconBgColor={theme.secondary}
             title="Dark Mode"
             subtitle="Reduce glare & save battery"

@@ -34,10 +34,10 @@ export type ReceiptShape = {
   amount: number;
   /** ISO date string of when receipt was scanned */
   date: string;
-  /** Optional time string (currently unused, empty string) */
-  time?: string;
-  /** Optional URI to receipt image in Firebase Storage */
-  image?: string;
+  /** Time string (e.g., "14:30") for display purposes */
+  time: string;
+  /** URI to receipt image in Firebase Storage */
+  image: string;
 };
 
 /**

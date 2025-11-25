@@ -183,7 +183,7 @@ export default function HomeScreen() {
 
               {allScans.length >= 4 && (
                 <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
-                  <Text style={[styles.viewAllText, { color: theme.text }]}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
+                  <Text style={[styles.viewAllText, { color: theme.text }]}>{showAllHistory ? 'Show Less' : 'View all receipts'}</Text>
                 </TouchableOpacity>
               )}
             </View>

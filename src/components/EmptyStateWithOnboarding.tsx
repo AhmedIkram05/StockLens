@@ -99,7 +99,7 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
           <View style={styles.cardContent}>
             <Text style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</Text>
             <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>
-              Monitor your spending patterns and investment opportunities
+              Monitor your spending patterns and missed investment opportunities
             </Text>
           </View>
         </View>
@@ -141,5 +141,7 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     ...typography.caption,
     lineHeight: 20,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
 });

@@ -116,30 +116,11 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
   }, [navigation, onResetCamera, resetWorkflowState, userUid]);
 
   /** Prompts the user for a manual amount (Alert.prompt on iOS, modal elsewhere). */
-  const handleManualEntry = useCallback((prefill?: number | null) => {
-    const preset = prefill != null ? String(prefill) : '';
-    if (Platform.OS === 'ios' && (Alert as any).prompt) {
-      (Alert as any).prompt(
-        'Enter total',
-        '',
-        async (value: string | undefined) => {
-          const cleaned = String(value || '').replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
-          const parsed = Number(cleaned);
-          if (!Number.isFinite(parsed) || parsed <= 0) {
-            Alert.alert('Invalid amount', 'Enter a valid number');
-            return;
-          }
-          const draft = pendingRef.current.draftId ?? draftReceiptId ?? null;
-          await saveAndNavigate(parsed, draft, pendingRef.current.ocrText, pendingRef.current.photoUri);
-        },
-        'plain-text',
-        preset,
-      );
-    } else {
+    const handleManualEntry = useCallback((prefill?: number | null) => {
+      const preset = prefill != null ? String(prefill) : '';
       setManualEntryText(preset);
       setManualModalVisible(true);
-    }
-  }, [draftReceiptId, saveAndNavigate]);
+    }, [setManualEntryText, setManualModalVisible]);
 
   /** Runs OCR, validates totals, and routes through the confirmation overlay decisions. */
   const processReceipt = useCallback(async ({ photoUri, photoBase64, draftIdArg, onSuggestion, skipOverlay }: ProcessReceiptOptions) => {

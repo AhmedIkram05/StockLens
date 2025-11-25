@@ -67,7 +67,7 @@ export async function promptEnableDeviceAuth(email: string, password: string): P
             onPress: async () => {
               try {
                 await deviceAuth.saveDeviceCredentials(email, password);
-                Alert.alert('Enabled', 'Device passcode login enabled successfully');
+                Alert.alert('Enabled', 'Device passcode login enabled');
                 resolve(true);
               } catch (err) {
                 resolve(false);

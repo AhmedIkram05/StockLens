@@ -91,7 +91,7 @@ describe('HomeScreen', () => {
     expect(getByText('Receipts Scanned')).toBeTruthy();
     expect(getByText('£80.00')).toBeTruthy();
 
-    fireEvent.press(getByText('View all history'));
+    fireEvent.press(getByText('View all receipts'));
     expect(getByText('Show Less')).toBeTruthy();
 
     fireEvent.press(getAllByTestId('receipt-card')[0]);

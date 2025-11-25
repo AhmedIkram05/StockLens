@@ -60,7 +60,7 @@ export async function authenticateDevice(promptMessage = 'Authenticate'): Promis
   try {
     const res = await LocalAuthentication.authenticateAsync({ promptMessage, disableDeviceFallback: false });
     if (res.success) return { success: true };
-    return { success: false, error: res.error ?? 'Authentication failed' };
+    return { success: false, error: res.error ?? 'Authentication failed, please try again.' };
   } catch (e: any) {
     return { success: false, error: e?.message ?? 'Unknown error' };
   }

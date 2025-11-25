@@ -121,38 +121,30 @@ export default function SummaryScreen() {
       });
     }
     
-    if (totalMoneySpent > 1000) {
+    // Lower thresholds so insights appear quickly for small test datasets
+    if (totalMoneySpent > 1) {
       dynamicInsights.push({
         icon: 'alert-circle-outline',
         title: 'High Spending Opportunity',
         description: `Even 20% invested could transform your future`,
       });
     }
-    
-    if (receiptsScanned > 20 && avgPerReceipt < 50) {
+
+    if (receiptsScanned >= 2 && avgPerReceipt < 50) {
       dynamicInsights.push({
         icon: 'cash-outline',
         title: 'Small Purchases Add Up',
         description: `${receiptsScanned} small purchases total ${formatCurrency(totalMoneySpent)}`,
       });
     }
-    
-    if (receiptsScanned >= 10 && receiptsScanned <= 20) {
+
+    if (receiptsScanned >= 2 && receiptsScanned <= 3) {
       dynamicInsights.push({
         icon: 'trending-up',
         title: 'Consistent Spending Pattern',
         description: `${receiptsScanned} transactions show investment potential`,
       });
     }
-    
-    if (mostActiveMonth) {
-      dynamicInsights.push({
-        icon: 'calendar-outline',
-        title: 'Peak Spending Month',
-        description: `${mostActiveMonth} was your most active period`,
-      });
-    }
-    
     dynamicInsights.push({
       icon: 'time-outline',
       title: 'Time is Your Superpower',
@@ -165,7 +157,7 @@ export default function SummaryScreen() {
       description: 'Cash loses purchasing power—investments can beat inflation',
     });
     
-    return dynamicInsights.slice(0, 5);
+    return dynamicInsights;
   };
 
   const insights = getDynamicInsights();
@@ -242,7 +234,7 @@ export default function SummaryScreen() {
     },
     'Small Purchases Add Up': {
       bullets: [
-        `Your average £${avgPerReceipt.toFixed(2)} purchase happened ${receiptsScanned} times`,
+        `Your average spend is ${formatCurrency(avgPerReceipt)} over ${receiptsScanned} purchases`,
         'Small frequent expenses are the #1 wealth killer',
         'Cutting just 30% of these could fund a retirement account',
       ],
@@ -256,14 +248,7 @@ export default function SummaryScreen() {
       ],
       example: `With consistent spending of ${formatCurrency(avgPerReceipt)} per purchase, redirecting 25% monthly (${formatCurrency(avgPerReceipt * 0.25 * receiptsScanned / 12)}) for 20 years at 7% = ${formatCurrency((avgPerReceipt * 0.25 * receiptsScanned / 12) * 12 * (Math.pow(1.07, 20) - 1) / 0.07)}.`,
     },
-    'Peak Spending Month': {
-      bullets: [
-        `${mostActiveMonth} showed your highest activity`,
-        'Plan investments during low-spend months to balance cash flow',
-        'Seasonal spending awareness helps optimize saving strategies',
-      ],
-      example: `If you invested surplus from off-peak months (estimated ${formatCurrency(avgPerReceipt * 5)}), you'd accumulate ${formatCurrency(avgPerReceipt * 5 * 12 * Math.pow(1.07, 10))} over 10 years at 7%.`,
-    },
+    
     'Time is Your Superpower': {
       bullets: [
         'Starting at 25 vs 35 can mean 2-3x more wealth by retirement',
@@ -276,9 +261,9 @@ export default function SummaryScreen() {
       bullets: [
         'At 3% inflation, £1,000 today is worth £744 in 10 years',
         'Savings accounts (~1-2%) lose value after inflation',
-        'Stocks historically return 7-10%, beating inflation by 4-7%',
+        'The S&P 500 historically return 7-10%, beating inflation by 4-7%',
       ],
-      example: `Your ${formatCurrency(totalMoneySpent)} in cash will have the buying power of only ${formatCurrency(totalMoneySpent * Math.pow(0.97, 10))} in 10 years. Invested at 8%, it becomes ${formatCurrency(totalMoneySpent * Math.pow(1.08, 10))}.`,
+      example: `Your ${formatCurrency(totalMoneySpent)} in cash may have the buying power of only ${formatCurrency(totalMoneySpent * Math.pow(0.97, 10))} in 10 years. Invested at 8%, it becomes ${formatCurrency(totalMoneySpent * Math.pow(1.08, 10))}.`,
     },
   };
 
@@ -472,7 +457,6 @@ export default function SummaryScreen() {
               />
             }
             label="Most active month"
-            subtitle="Month with most receipts"
             variant="green"
             style={cardLayoutStyle}
           />
@@ -513,6 +497,13 @@ export default function SummaryScreen() {
               />
             );
           })}
+        </View>
+
+        <View style={[styles.warningBox, { backgroundColor: theme.surface }]}>
+          <Ionicons name="warning" size={28} color={brandColors.red} style={styles.warningIcon} />
+          <Text style={[styles.warningText, { color: theme.text }]}>
+            Projections are hypothetical. Past performance does not guarantee future results.
+          </Text>
         </View>
 
         <View style={styles.sectionHeader}>
@@ -617,6 +608,25 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     marginBottom: spacing.md,
+  },
+  warningBox: {
+    marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radii.md,
+    padding: spacing.lg,
+  },
+  warningBoxCompact: {
+    padding: spacing.md,
+  },
+  warningIcon: {
+    marginRight: spacing.md,
+  },
+  warningText: {
+    ...typography.caption,
+    lineHeight: 18,
+    flex: 1,
+    textAlign: 'left',
   },
   
 });
