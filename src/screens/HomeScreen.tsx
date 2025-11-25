@@ -181,9 +181,11 @@ export default function HomeScreen() {
                 );
               })()}
 
-              <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
-                <Text style={[styles.viewAllText, { color: theme.text }]}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
-              </TouchableOpacity>
+              {allScans.length >= 4 && (
+                <TouchableOpacity style={styles.viewAllButton} onPress={() => setShowAllHistory(!showAllHistory)}>
+                  <Text style={[styles.viewAllText, { color: theme.text }]}>{showAllHistory ? 'Show Less' : 'View all history'}</Text>
+                </TouchableOpacity>
+              )}
             </View>
             </ResponsiveContainer>
           </>
