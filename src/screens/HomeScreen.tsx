@@ -32,6 +32,7 @@ import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding
 import IconValue from '../components/IconValue';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import useReceipts from '../hooks/useReceipts';
+import { ActivityIndicator } from 'react-native';
 import { formatRelativeDate, formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import type { MainTabParamList, RootStackParamList } from '../navigation/AppNavigator';
@@ -54,7 +55,7 @@ export default function HomeScreen() {
   const { theme } = useTheme();
 
   const { user } = useAuth();
-  const { receipts: allScans } = useReceipts(user?.uid);
+  const { receipts: allScans, loading: receiptsLoading } = useReceipts(user?.uid);
 
   const { userProfile } = useAuth();
   const firstName = useMemo(() => {
@@ -92,7 +93,11 @@ export default function HomeScreen() {
   return (
     <ScreenContainer contentStyle={{ paddingVertical: sectionVerticalSpacing }}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {hasScans ? (
+        {receiptsLoading ? (
+          <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#888" />
+          </View>
+        ) : hasScans ? (
           <>
             <ResponsiveContainer maxWidth={width - contentHorizontalPadding * 2}>
               <PageHeader>

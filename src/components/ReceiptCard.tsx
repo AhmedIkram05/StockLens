@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import useDecryptedImage from '@/hooks/useDecryptedImage';
 import { View, Text, Image, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
@@ -36,6 +37,7 @@ type Props = {
  */
 export default function ReceiptCard({ image, amount, label, time, onPress, style }: Props) {
   const { theme } = useTheme();
+  const resolvedImage = useDecryptedImage(image);
 
   return (
     <TouchableOpacity
@@ -44,8 +46,8 @@ export default function ReceiptCard({ image, amount, label, time, onPress, style
       onPress={onPress}
       activeOpacity={0.85}
     >
-      {image ? (
-        <Image testID="receipt-card-image" source={{ uri: image }} style={styles.image} />
+      {resolvedImage ? (
+        <Image testID="receipt-card-image" source={{ uri: resolvedImage }} style={styles.image} />
       ) : (
         <View testID="receipt-card-placeholder" style={styles.placeholder} />
       )}

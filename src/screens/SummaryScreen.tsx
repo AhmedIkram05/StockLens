@@ -33,6 +33,7 @@ import { ScrollView } from 'react-native';
 import { ensureHistoricalPrefetch, PREFETCH_TICKERS } from '../services/dataService';
 import { subscribe } from '../services/eventBus';
 import useReceipts, { ReceiptShape } from '../hooks/useReceipts';
+import { ActivityIndicator } from 'react-native';
 import { formatCurrencyRounded } from '../utils/formatters';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -58,7 +59,7 @@ export default function SummaryScreen() {
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
   const [expandedDefinition, setExpandedDefinition] = useState<string | null>(null);
 
-  const { receipts } = useReceipts(user?.uid);
+  const { receipts, loading: receiptsLoading } = useReceipts(user?.uid);
 
   useEffect(() => {
     let mounted = true;
@@ -350,7 +351,13 @@ export default function SummaryScreen() {
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Your investment insights at a glance</Text>
         </PageHeader>
 
-        {receiptsScanned === 0 ? (
+        {receiptsLoading ? (
+          <ResponsiveContainer maxWidth={screenWidth - contentHorizontalPadding * 2}>
+            <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+          </ResponsiveContainer>
+        ) : receiptsScanned === 0 ? (
           <ResponsiveContainer maxWidth={screenWidth - contentHorizontalPadding * 2}>
             <EmptyStateWithOnboarding
               iconName="stats-chart-outline"

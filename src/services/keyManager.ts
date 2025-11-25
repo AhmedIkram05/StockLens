@@ -26,6 +26,9 @@ const KEY_NAME = 'stocklens_encryption_key_v1';
  * @returns Promise<string> - base64 encoded 32-byte AES key
  */
 export async function getOrCreateKey(): Promise<string> {
+  // simple in-memory cache to avoid repeated SecureStore round-trips
+  if ((getOrCreateKey as any)._cachedKey) return (getOrCreateKey as any)._cachedKey as string;
+
   let key = await SecureStore.getItemAsync(KEY_NAME);
   if (!key) {
     key = generateKeyBase64();
@@ -35,6 +38,7 @@ export async function getOrCreateKey(): Promise<string> {
       // ignore store errors; fall back to in-memory (not ideal)
     }
   }
+  (getOrCreateKey as any)._cachedKey = key;
   return key as string;
 }
 
@@ -46,6 +50,7 @@ export async function getOrCreateKey(): Promise<string> {
  */
 export async function clearKey(): Promise<void> {
   try { await SecureStore.deleteItemAsync(KEY_NAME); } catch (e) {}
+  try { delete (getOrCreateKey as any)._cachedKey; } catch (e) {}
 }
 
 export default { getOrCreateKey, clearKey };

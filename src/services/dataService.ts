@@ -141,13 +141,12 @@ export const receiptService = {
     // attempt to decrypt ocr_data and image files for display (newly encrypted rows only)
     try {
       const key = await keyManager.getOrCreateKey();
-      for (const r of rows) {
+      // Parallelise per-row decryption to avoid sequential awaiting that delays UI
+      await Promise.all(rows.map(async (r: any) => {
         if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
           try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
         }
-        if (r?.image_uri && typeof r.image_uri === 'string') {
-          try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
-        }
+        // keep image_uri as stored (decryption is deferred to the UI to avoid blocking)
         // decrypt total_amount if stored encrypted
         if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
           try {
@@ -160,7 +159,7 @@ export const receiptService = {
         if (r?.date_scanned && typeof r.date_scanned === 'string' && isEncryptedPayload(r.date_scanned)) {
           try { r.date_scanned = await decryptString(r.date_scanned, key); } catch (e) {}
         }
-      }
+      }));
     } catch (e) {}
     return rows;
   },
@@ -181,9 +180,7 @@ export const receiptService = {
       if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
         try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
       }
-      if (r?.image_uri && typeof r.image_uri === 'string') {
-        try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
-      }
+      // keep image_uri as stored (decryption is deferred to the UI to avoid blocking)
       if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
         try {
           const dec = await decryptString(r.total_amount, key);
@@ -291,13 +288,11 @@ export const receiptService = {
     const rows = await databaseService.executeQuery(query, [userId]);
     try {
       const key = await keyManager.getOrCreateKey();
-      for (const r of rows) {
+      await Promise.all(rows.map(async (r: any) => {
         if (r?.ocr_data && typeof r.ocr_data === 'string' && isEncryptedPayload(r.ocr_data)) {
           try { r.ocr_data = await decryptString(r.ocr_data, key); } catch (e) {}
         }
-        if (r?.image_uri && typeof r.image_uri === 'string') {
-          try { r.image_uri = await fileCrypto.decryptImageToTemp(r.image_uri); } catch (e) {}
-        }
+        // keep image_uri as stored (decryption is deferred to the UI to avoid blocking)
         if (r?.total_amount && typeof r.total_amount === 'string' && isEncryptedPayload(r.total_amount)) {
           try {
             const dec = await decryptString(r.total_amount, key);
@@ -308,7 +303,7 @@ export const receiptService = {
         if (r?.date_scanned && typeof r.date_scanned === 'string' && isEncryptedPayload(r.date_scanned)) {
           try { r.date_scanned = await decryptString(r.date_scanned, key); } catch (e) {}
         }
-      }
+      }));
     } catch (e) {}
     return rows;
   },
