@@ -1,24 +1,7 @@
 /**
- * SummaryScreen (Summary Tab)
- * 
- * Analytics and insights screen showing spending statistics and trends.
- * Features:
- * - Four stat cards: Total spent, Receipts scanned, Highest impact, Avg per receipt
- * - Most active month calculation
- * - Expandable insight cards explaining key metrics
- * - Expandable definition cards for financial terms (CAGR, Investment, etc.)
- * - Empty state with onboarding for new users
- * - Historical stock data prefetching for performance
- * 
- * Calculations:
- * - Total spent: Sum of all receipt amounts
- * - Receipts scanned: Total count of receipts
- * - Highest impact: Receipt with largest amount
- * - Avg per receipt: Total spent ÷ receipt count
- * - Most active month: Month with highest receipt count
- * 
- * Uses event bus to listen for receipt updates and refresh calculations.
- * Prefetches historical stock data for all ticker symbols on mount.
+ * SummaryScreen
+ *
+ * Analytics view showing spending statistics and insights.
  */
 
 import React from 'react';
@@ -44,10 +27,7 @@ import { EmptyStateWithOnboarding } from '../components/EmptyStateWithOnboarding
 import IconValue from '../components/IconValue';
 import ExpandableCard from '../components/ExpandableCard';
 
-/**
- * Renders the summary/analytics screen with spending insights.
- * Recalculates all statistics when receipts change via event bus subscription.
- */
+/** Summary/analytics screen. */
 export default function SummaryScreen() {
   const { user } = useAuth();
   const { theme, isDark } = useTheme();

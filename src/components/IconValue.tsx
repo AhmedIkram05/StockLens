@@ -1,10 +1,7 @@
 /**
- * IconValue Component
- * 
- * A reusable component that displays an icon alongside a text value in a horizontal layout.
- * Commonly used for displaying metrics, stats, and labeled data throughout the app.
- * 
- * Created to eliminate repetitive "icon + value" patterns found in HomeScreen and SummaryScreen.
+ * IconValue
+ *
+ * Displays an icon alongside a short value label.
  */
 
 import React from 'react';

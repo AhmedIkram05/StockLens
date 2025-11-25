@@ -33,22 +33,9 @@ import { receiptService, settingsService, userService } from '@/services/dataSer
 import { createReceipt, createUserProfile } from '../fixtures';
 
 /**
- * dataService Unit Tests
- * 
- * Purpose: Validates SQLite database operations for receipts, users,
- * and settings through the service layer.
- * 
- * What it tests:
- * - Receipt CRUD operations (create, update, delete, getByUserId)
- * - User profile upserts and UNIQUE constraint handling
- * - Settings persistence with default values
- * - Event bus emissions on data changes
- * - Proper SQL parameter binding
- * 
- * Why it's important: The dataService is the single source of truth
- * for local data persistence. These tests ensure data integrity,
- * proper constraint handling (unique emails), and that the event
- * bus notifies other parts of the app when data changes.
+ * Tests for `dataService` (receipt/user/settings persistence).
+ * Exercises receipt CRUD, settings upsert, user upsert with UNIQUE handling,
+ * and event emissions on data changes.
  */
 
 const mockedDb = databaseService as jest.Mocked<typeof databaseService>;

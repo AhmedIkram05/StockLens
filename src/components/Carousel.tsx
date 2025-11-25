@@ -1,11 +1,7 @@
 /**
- * Carousel Component
- * 
- * A generic horizontal scrolling carousel built on top of FlatList.
- * Supports snapping behavior, custom rendering, and responsive layouts.
- * 
- * Used for displaying stock cards, projection options, and other horizontally scrollable content.
- * Provides configurable snap behavior and deceleration rates for smooth user experience.
+ * Carousel
+ *
+ * Generic horizontal carousel (FlatList wrapper).
  */
 
 import React from 'react';

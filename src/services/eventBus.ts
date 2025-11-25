@@ -1,26 +1,7 @@
 /**
- * Event Bus - Simple pub/sub system for cross-component communication
- * 
- * Features:
- * - Lightweight event emitter pattern
- * - Type-agnostic payloads (any data structure)
- * - Automatic cleanup (unsubscribe function returned)
- * - Error isolation (listener errors don't crash other listeners)
- * 
- * Events Used in App:
- * - 'receipts-changed': Emitted when receipts are added/deleted (payload: { userId })
- * - 'alpha_cache_hit': Emitted when stock data served from cache
- * - 'historical-updated': Emitted when stock data refreshed in background
- * 
- * Integration:
- * - Used by dataService to notify UI of receipt changes
- * - Used by alphaVantageService to track cache hits
- * - useReceipts hook subscribes to 'receipts-changed' for auto-refresh
- * 
- * Usage:
- * const unsubscribe = subscribe('receipts-changed', (payload) => { ... });
- * emit('receipts-changed', { userId: 'abc123' });
- * unsubscribe(); // cleanup on unmount
+ * EventBus
+ *
+ * Lightweight pub/sub helper for cross-component communication.
  */
 
 /**

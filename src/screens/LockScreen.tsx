@@ -1,24 +1,7 @@
 /**
  * LockScreen
- * 
- * Device-passcode authentication gate shown when app returns from background (if enabled).
- * Features:
- * - Device passcode authentication button
- * - Fallback password entry field
- * - "Forgot password" flow sending reset email
- * - User profile display (name, email)
- * 
- * Flow:
- * 1. User returns to app after backgrounding
- * 2. LockScreen appears if device lock is enabled
- * 3. User can:
- *    a) Authenticate with device passcode (calls unlockWithDeviceAuth)
- *    b) Enter password manually (calls unlockWithCredentials)
- *    c) Send password reset email via forgot password flow
- * 4. On successful auth, AuthContext unlocks and navigates to main app
- * 
- * Credentials are securely stored using expo-secure-store.
- * Password reset uses Firebase Auth's sendPasswordResetEmail.
+ *
+ * Device-passcode unlock screen shown when returning from background.
  */
 
 import React, { useState } from 'react';
@@ -35,10 +18,7 @@ import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
-/**
- * Renders the device lock screen with passcode/password unlock options.
- * Handles device authentication, credential validation, and password reset flows.
- */
+/** Lock screen for device/passcode unlock. */
 export default function LockScreen() {
   const { unlockWithDeviceAuth, unlockWithCredentials, user, userProfile } = useAuth();
   const { contentHorizontalPadding, sectionVerticalSpacing, isSmallPhone } = useBreakpoint();

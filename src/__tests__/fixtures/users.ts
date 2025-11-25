@@ -1,23 +1,6 @@
 /**
- * User Profile Test Fixtures
- * 
- * Purpose: Factory functions for generating consistent user profile
- * test data across authentication and settings tests.
- * 
- * What it provides:
- * - createUserProfile(): Factory function with partial overrides
- * - sampleUser: Pre-built test user with default values
- * - Auto-incrementing ID/UID sequence for unique users
- * - Automatic timestamp generation for created_at/last_login
- * 
- * Why it's important: User profiles are used extensively in auth tests,
- * navigation guards, and settings screens. Centralizing mock data here
- * ensures consistency and makes it easy to add new UserProfile fields
- * without updating dozens of test files.
- * 
- * Usage:
- * createUserProfile({ email: 'test@example.com' }) → Full profile
- * sampleUser → Pre-built user for quick tests
+ * Test fixtures for user profiles.
+ * Provides `createUserProfile` and `sampleUser` used across auth and settings tests.
  */
 
 import { UserProfile } from '@/contexts/AuthContext';

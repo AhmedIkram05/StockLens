@@ -1,20 +1,7 @@
 /**
- * useDeviceAuth Unit Tests
- * 
- * Purpose: Validates device authentication helpers that enable device passcode
- * functionality for secure app unlocking.
- * 
- * What it tests:
- * - Hardware availability checks
- * - Device authentication prompts and user responses
- * - Secure credential storage and retrieval (email/password)
- * - Enable/disable device auth flag persistence
- * - Credential deletion on sign-out
- * 
- * Why it's important: Device auth is a security feature that requires
- * careful testing. These tests ensure the app correctly detects device
- * capabilities, securely stores credentials in the keychain, and handles
- * user cancellation or hardware unavailability gracefully.
+ * Tests for device authentication helpers (`useDeviceAuth`).
+ * Validates hardware checks, authentication flow, credential storage,
+ * and enable/disable flag behavior.
  */
 
 import { renderHook } from '@testing-library/react-native';

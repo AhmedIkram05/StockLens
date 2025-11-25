@@ -1,16 +1,6 @@
 /**
- * ThemeContext Integration Tests
- * 
- * Purpose: Validates light/dark mode theming and theme persistence.
- * 
- * What it tests:
- * - Theme mode switching (light ↔ dark)
- * - Theme persistence (saves to SecureStore)
- * - Default theme state (light mode)
- * - Context provider requirement
- * 
- * Why it's important: Ensures users can toggle between light/dark themes
- * and their preference persists across app restarts.
+ * Tests for `ThemeContext` (integration).
+ * Verifies theme mode switching, persistence to SecureStore, and defaults.
  */
 
 import React from 'react';

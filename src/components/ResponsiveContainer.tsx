@@ -1,11 +1,7 @@
 /**
- * ResponsiveContainer Component
- * 
- * A container that caps content width on large displays while centering the content.
- * Prevents content from stretching too wide on tablets and desktops (max 960px by default).
- * 
- * Automatically accounts for safe area insets and horizontal padding from breakpoints.
- * Useful for forms, cards, and text-heavy content that should remain readable on large screens.
+ * ResponsiveContainer
+ *
+ * Centered container that caps content width for improved readability on large screens.
  */
 
 import React from 'react';
@@ -22,10 +18,6 @@ type Props = {
   style?: any;
 };
 
-/**
- * Renders a centered container with capped width for optimal readability on large displays.
- * Calculates available width considering safe area insets and responsive padding.
- */
 export default function ResponsiveContainer({ children, maxWidth = 960, style }: Props) {
   const insets = useSafeAreaInsets();
   const { width, contentHorizontalPadding } = useBreakpoint();

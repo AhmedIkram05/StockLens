@@ -1,11 +1,7 @@
 /**
- * PrimaryButton Component
- * 
- * The main action button used throughout the app for primary CTAs.
- * Features theme-aware styling with automatic text color adjustment for light/dark modes.
- * 
- * Supports disabled states, custom styling, and accessibility labels.
- * Uses brandColors.green as the primary action color per design system.
+ * PrimaryButton
+ *
+ * Themed primary CTA button.
  */
 
 import React from 'react';

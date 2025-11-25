@@ -1,13 +1,7 @@
 /**
- * EmptyStateWithOnboarding Component
- * 
- * An enhanced empty state that includes onboarding cards explaining how to use the app.
- * Combines the EmptyState component with three numbered instruction cards.
- * 
- * Used on screens where users need guidance on getting started (e.g., empty receipts list).
- * Number circles are responsive, adapting size based on device type (tablet vs phone).
- * 
- * Teaches users the three-step flow: Scan receipts → See investment potential → Track progress
+ * EmptyStateWithOnboarding
+ *
+ * Empty state that includes onboarding instruction cards.
  */
 
 import React from 'react';
@@ -31,11 +25,6 @@ interface EmptyStateWithOnboardingProps {
   onPrimaryPress: () => void;
 }
 
-/**
- * Renders an empty state with three onboarding cards below.
- * Each card has a responsive numbered circle, title, and description.
- * Number circle size: 44px (phones) or 56px (tablets) from theme.sizes.
- */
 export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> = ({
   iconName,
   title,

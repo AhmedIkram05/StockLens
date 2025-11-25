@@ -1,34 +1,10 @@
 /**
- * Formatters Utility - Currency and date formatting helpers
- * 
- * Features:
- * - formatCurrencyGBP: Format numbers as British pounds (£12.50)
- * - formatRelativeDate: Convert ISO dates to relative time (2m ago, Yesterday, etc.)
- * - formatCurrencyRounded: Format currency with exact 2 decimal places
- * 
- * Integration:
- * - Used by ReceiptCard, StatCard, StockCard for currency display
- * - Used by ReceiptCard for relative timestamps
- * - Uses Intl.NumberFormat for locale-aware formatting
- * - Fallback to manual formatting if Intl API unavailable
+ * Formatters
+ *
+ * Currency and date formatting helpers (GBP, relative dates).
  */
 
-/**
- * Format number as British pounds (GBP)
- * 
- * @param amount - Numeric value to format
- * @returns Formatted string (e.g., "£12.50")
- * 
- * Features:
- * - Uses Intl.NumberFormat with en-GB locale
- * - Minimum 2 decimal places
- * - Fallback to manual £X.XX formatting if Intl API fails
- * - Handles null/undefined (defaults to 0)
- * 
- * Usage:
- * formatCurrencyGBP(12.5) → "£12.50"
- * formatCurrencyGBP(1234.56) → "£1,234.56"
- */
+/** Format number as GBP (e.g., "£12.50"). */
 export function formatCurrencyGBP(amount: number) {
   try {
     return new Intl.NumberFormat('en-GB', {
@@ -41,28 +17,7 @@ export function formatCurrencyGBP(amount: number) {
   }
 }
 
-/**
- * Format ISO date as relative time string
- * 
- * @param isoDate - ISO 8601 date string (e.g., "2024-01-15T10:30:00Z")
- * @returns Relative time string
- * 
- * Time Ranges:
- * - < 1 minute: "Xs ago" (e.g., "45s ago")
- * - < 1 hour: "Xm ago" (e.g., "15m ago")
- * - < 24 hours: "Xh ago" (e.g., "3h ago")
- * - 1 day: "Yesterday"
- * - 2-7 days: "X days ago" (e.g., "5 days ago")
- * - > 7 days: "15 Jan 2024" (locale date format)
- * 
- * Features:
- * - Handles invalid/missing dates (returns "Receipt")
- * - Uses locale-aware date formatting for old dates
- * - Always shows relative time for recent items
- * 
- * Usage:
- * formatRelativeDate("2024-01-15T10:30:00Z") → "3h ago" or "15 Jan 2024"
- */
+/** Format ISO date as a short relative string (e.g., "3h ago", "Yesterday"). */
 export function formatRelativeDate(isoDate?: string) {
   if (!isoDate) return 'Receipt';
   try {
@@ -86,21 +41,7 @@ export function formatRelativeDate(isoDate?: string) {
   }
 }
 
-/**
- * Format number as currency with exactly 2 decimal places
- * 
- * @param amount - Numeric value to format
- * @returns Formatted string (e.g., "£12.50")
- * 
- * Features:
- * - Identical to formatCurrencyGBP but explicitly sets min/max decimals to 2
- * - Ensures consistent decimal places (12 → "£12.00", not "£12")
- * - Fallback to manual £X.XX formatting if Intl API fails
- * 
- * Usage:
- * formatCurrencyRounded(12) → "£12.00"
- * formatCurrencyRounded(1234.567) → "£1,234.57" (rounded)
- */
+/** Format currency with exactly two decimal places (GBP). */
 export function formatCurrencyRounded(amount: number) {
   try {
     return new Intl.NumberFormat('en-GB', {

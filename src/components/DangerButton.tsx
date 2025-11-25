@@ -1,10 +1,7 @@
 /**
- * DangerButton Component
- * 
- * A solid red button used for destructive or dangerous actions (e.g., "Delete", "Sign Out", "Cancel").
- * Uses brandColors.red to visually communicate potential consequences of the action.
- * 
- * Provides clear visual distinction from primary and secondary buttons to prevent accidental clicks.
+ * DangerButton
+ *
+ * Red destructive action button.
  */
 
 import React from 'react';

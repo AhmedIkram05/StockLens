@@ -1,23 +1,7 @@
 /**
- * Projection Service - Investment return calculations using historical CAGR
- * 
- * Features:
- * - Calculate CAGR (Compound Annual Growth Rate) from historical stock data
- * - Project future values using CAGR: futureValue = amount * (1 + CAGR)^years
- * - Automatic fallback to preset rates if API data unavailable
- * - Handles edge cases (insufficient data, missing dates, invalid prices)
- * 
- * Formula:
- * CAGR = (endValue / startValue)^(1 / years) - 1
- * Future Value = principal * (1 + CAGR)^years
- * 
- * Integration:
- * - Uses stockService (dataService.ts) to fetch historical OHLCV data
- * - Falls back to PRESET_RATES (stockPresets.ts) for common stocks
- * - Used by ReceiptDetailsScreen for investment projections
- * 
- * Usage:
- * Call projectUsingHistoricalCAGR() with amount, symbol, and years.
+ * ProjectionService
+ *
+ * Calculate CAGR and project future values using historical stock data.
  */
 
 import { stockService } from './dataService';

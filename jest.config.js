@@ -1,3 +1,9 @@
+/**
+ * JestConfig
+ *
+ * Jest configuration for the project (jest-expo preset), moduleNameMapper
+ * for `@` alias, and setup file for test environment mocks.
+ */
 const path = require('path');
 
 module.exports = {

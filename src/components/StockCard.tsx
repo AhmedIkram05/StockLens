@@ -1,13 +1,7 @@
 /**
- * StockCard Component
- * 
- * Displays investment projection data in a horizontal scrollable card format.
- * Shows stock name, ticker, projected future value, return percentage, and gained amount.
- * 
- * Includes optional badge for special designations (e.g., "Popular", "High Growth").
- * Card width is responsive, adapting to tablet vs phone screen sizes.
- * 
- * Used in Calculator/Projection screens to show what receipted spending could have earned if invested.
+ * StockCard
+ *
+ * Investment projection card showing name, future value and returns.
  */
 
 import React from 'react';
@@ -46,11 +40,6 @@ type Props = {
   badgeColor?: string;
 };
 
-/**
- * Renders an investment projection card with stock details, future value, and returns.
- * Card width is responsive: 82% of screen width on phones, 40% on tablets.
- * Badge is positioned absolutely at top-right when provided.
- */
 export default function StockCard({ name, ticker, futureDisplay, formattedAmount, percentDisplay, gainDisplay, valueColor = brandColors.green, onPress, isLast, cardWidth, badgeText, badgeColor }: Props) {
   const { isTablet, width } = useBreakpoint();
   const { theme } = useTheme();

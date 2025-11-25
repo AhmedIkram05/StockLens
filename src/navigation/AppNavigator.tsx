@@ -1,25 +1,7 @@
 /**
  * AppNavigator
- * 
- * Root navigation structure for the StockLens app using React Navigation v7.
- * Implements a two-level navigation hierarchy:
- * 1. Stack Navigator (root) - handles auth flow and modal screens
- * 2. Bottom Tab Navigator - main app with 4 tabs
- * 
- * Navigation Flow:
- * - Unauthenticated: Splash → Login/SignUp
- * - Authenticated & Locked: LockScreen (device passcode gate)
- * - Authenticated & Unlocked: MainTabs → ReceiptDetails (modal)
- * 
- * Type Safety:
- * - RootStackParamList: Defines all stack screen params
- * - MainTabParamList: Defines all tab screen params
- * 
- * Features:
- * - Automatic device-auth unlock attempt when app opens locked
- * - Theme-aware tab bar with SafeAreaView edges
- * - Smooth horizontal slide transitions (200ms)
- * - Loading state with ActivityIndicator during auth check
+ *
+ * Root navigation (stack + bottom tabs) with auth and lock flow handling.
  */
 
 import { NavigationContainer } from '@react-navigation/native';

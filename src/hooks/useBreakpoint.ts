@@ -1,32 +1,7 @@
 /**
- * useBreakpoint Hook
- * 
- * Provides responsive design information based on current window dimensions.
- * Returns device classification, orientation, and responsive spacing values.
- * 
- * Uses React Native's useWindowDimensions to reactively update on screen changes
- * (e.g., rotation, tablet split-screen, window resize).
- * 
- * Breakpoints (from theme.ts):
- * - Small phone: ≤ 360px
- * - Large phone: 414px - 767px
- * - Tablet: ≥ 768px
- * 
- * Returned values:
- * - width/height: Current window dimensions
- * - orientation: 'portrait' or 'landscape'
- * - isTablet: True for screens ≥ 768px
- * - isLargePhone: True for 414-767px screens
- * - isSmallPhone: True for screens ≤ 360px
- * - contentHorizontalPadding: spacing.md (16px) or spacing.xxl (32px)
- * - sectionVerticalSpacing: spacing.xl (24px) or spacing.xxl (32px)
- * - cardsPerRow: 2 (phone) or 3 (tablet) for grid layouts
- * 
- * Memoized for performance - only recalculates when width or height change.
- * 
- * @example
- * const { isTablet, contentHorizontalPadding, orientation } = useBreakpoint();
- * const fontSize = isTablet ? 20 : 16;
+ * useBreakpoint
+ *
+ * Returns responsive layout info (orientation, device class, spacing, cardsPerRow).
  */
 
 import { useMemo } from 'react';

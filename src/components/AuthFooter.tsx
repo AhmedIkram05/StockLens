@@ -1,10 +1,7 @@
 /**
- * AuthFooter Component
- * 
- * A footer component used on authentication screens (Login/SignUp) to prompt navigation to the alternate screen.
- * Displays a prompt text and an action button (e.g., "Don't have an account? Sign Up").
- * 
- * Features a bordered button style with theme-aware colors and consistent spacing.
+ * AuthFooter
+ *
+ * Footer used on auth screens to prompt navigation to the alternate flow.
  */
 
 import React from 'react';
@@ -24,10 +21,6 @@ type Props = {
   style?: ViewStyle;
 };
 
-/**
- * Renders a footer with optional prompt text and a bordered action button.
- * Used to navigate between Login and SignUp screens.
- */
 export default function AuthFooter({ prompt = '', actionText, onPress, style }: Props) {
   const { theme } = useTheme();
   

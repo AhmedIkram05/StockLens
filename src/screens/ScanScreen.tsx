@@ -1,25 +1,7 @@
 /**
  * ScanScreen
- * 
- * Camera screen for capturing receipt images and extracting transaction data via OCR.
- * Features:
- * - expo-camera integration for taking photos
- * - OCR processing with Google Cloud Vision API (fallback to mock data)
- * - Amount parsing from OCR text
- * - Manual entry modal for corrections
- * - Confirmation prompt for detected amounts
- * - Draft receipt creation and Firebase upload
- * 
- * Flow:
- * 1. User grants camera permission
- * 2. User captures receipt photo
- * 3. OCR processes image to extract text
- * 4. App parses amount from OCR text
- * 5. User confirms, manually edits, or rescans
- * 6. Receipt saved to Firestore and navigates to ReceiptDetails
- * 
- * Camera deactivates when screen loses focus to save battery.
- * Capture button size is responsive (60px/70px/80px based on device).
+ *
+ * Camera view for capturing receipts and extracting amounts via OCR.
  */
 
 import React, { useState, useRef, useCallback } from 'react';
@@ -48,10 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useReceiptCapture } from '../hooks/useReceiptCapture';
 
-/**
- * Renders the camera view with capture controls and photo preview.
- * Handles OCR processing, amount parsing, and receipt creation workflow.
- */
+/** Camera/receipt capture screen. */
 export default function ScanScreen() {
   const { userProfile } = useAuth();
   const navigation = useNavigation<any>();

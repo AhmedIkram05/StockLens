@@ -7,67 +7,47 @@ import { initDatabase, databaseService } from './src/services/database';
 import { ensureHistoricalPrefetch } from './src/services/dataService';
 
 /**
- * App root component
+ * App entrypoint.
  *
- * Responsibilities:
- * - Initialize application-wide services (database, prefetch tasks)
- * - Provide global context providers (Theme, Auth)
- * - Mount the main application navigator and status bar
- *
- * Lifecycle:
- * - On first mount the app runs `initDatabase()` to ensure the local SQLite
- *   schema exists and is migrated. This is a best-effort, idempotent operation.
- * - Kicks off a background historical data prefetch and prunes stale cache
- *   entries from the local alpha_cache table.
- *
- * Notes:
- * - initDatabase() is awaited inside an effect but errors are swallowed to
- *   avoid blocking the UI; errors will surface in logs for debugging.
- * - Database pruning and prefetching are intentionally best-effort to avoid
- *   impacting startup time.
+ * - Initializes the local SQLite schema via `initDatabase`.
+ * - Starts a best-effort historical prefetch and prunes stale `alpha_cache`.
+ * - Provides `ThemeProvider` and `AuthProvider` around `AppNavigator`.
  */
 
 /**
- * Application content (internal)
+ * Internal app content.
  *
- * This component is mounted inside the global providers and is responsible
- * for running one-time startup effects (database initialization, prefetching)
- * and for rendering the main `AppNavigator` and `StatusBar`.
- *
- * It intentionally keeps side-effects minimal and best-effort so the UI can
- * render quickly even if background initialization fails.
+ * Runs one-time startup effects (DB init, prefetch) and renders navigation.
+ * Startup tasks are best-effort and do not block initial UI rendering.
  */
 function AppContent() {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    // Initialize the database when the app starts
     (async () => {
       try {
         await initDatabase();
       } catch (e) {
+        // Swallow init errors to avoid blocking the UI; errors are logged elsewhere.
       }
-      // Kick off the one-time historical prefetch (best-effort)
+      // Best-effort background prefetch and cache pruning.
       ensureHistoricalPrefetch();
-  // Prune old alpha_cache entries older than 180 days on startup (best-effort)
-  databaseService.pruneAlphaCacheOlderThan(180);
+      databaseService.pruneAlphaCacheOlderThan(180);
     })();
   }, []);
 
   return (
     <>
       <AppNavigator />
-      <StatusBar style={isDark ? "light" : "dark"} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
   );
 }
 
 /**
- * Root exported App component
+ * Root App component.
  *
- * Wraps the application with Theme and Auth providers so context is available
- * throughout the component tree. The `AppContent` component is the logical
- * child that mounts navigation and performs startup initialization.
+ * Wraps the app with `ThemeProvider` and `AuthProvider`.
  */
 export default function App() {
   return (

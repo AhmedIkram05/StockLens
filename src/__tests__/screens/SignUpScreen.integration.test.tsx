@@ -1,21 +1,7 @@
 /**
- * SignUpScreen Integration Tests
- * 
- * Purpose: Validates new account creation flow with form validation
- * and device-auth setup prompt.
- * 
- * What it tests:
- * - Email format validation before submission
- * - Password matching validation (password vs confirm password)
- * - Account creation via authService.signUp
- * - Lock grace period start after registration
- * - Device authentication enrollment prompt after signup
- * - Navigation to Login screen from footer link
- * 
- * Why it's important: SignUpScreen is the entry point for new users.
- * Tests ensure form validation catches errors early (invalid email,
- * mismatched passwords), accounts are created correctly, and users
- * are offered device passcode login immediately after registration.
+ * Tests for `SignUpScreen` (integration).
+ * Verifies form validation, account creation, lock-grace start, device-auth
+ * prompt, and navigation to Login.
  */
 
 import React from 'react';

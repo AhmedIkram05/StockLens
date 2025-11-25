@@ -1,22 +1,7 @@
 /**
- * OCR Service - Receipt text recognition using OCR.Space API
- * 
- * Features:
- * - Image file upload (URI) to OCR.Space
- * - Base64 image string upload to OCR.Space
- * - Image preprocessing (resize/compression) for better OCR quality
- * - Multi-strategy fallback approach (base64 → file → larger base64)
- * - 10-second timeout protection
- * - Automatic retry logic (3 attempts with exponential backoff)
- * 
- * Integration:
- * - Uses OCR.Space API with OCREngine 2 (better for receipts)
- * - Leverages expo-image-manipulator for image preprocessing
- * - FormData-based multipart requests for image uploads
- * 
- * Usage:
- * Call performOcrWithFallback() for automatic fallback handling, or use
- * recognizeImageWithOCRSpace()/recognizeBase64WithOCRSpace() directly.
+ * OcrService
+ *
+ * Helpers for performing OCR on receipt images via OCR.Space (file/base64).
  */
 
 /**

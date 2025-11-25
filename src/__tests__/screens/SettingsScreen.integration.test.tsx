@@ -1,21 +1,7 @@
 /**
- * SettingsScreen Integration Tests
- * 
- * Purpose: Validates user preferences and account management features
- * on the settings screen.
- * 
- * What it tests:
- * - Dark mode toggle integration with ThemeContext
- * - Device passcode login enable/disable with authentication
- * - Sign out confirmation prompt and AuthContext integration
- * - Clear all data confirmation and deletion flow
- * - Settings persistence across app restarts
- * - Alert dialogs for destructive actions
- * 
- * Why it's important: SettingsScreen controls critical user preferences
- * (theme, device auth) and destructive actions (sign out, clear data).
- * Tests ensure toggles update global context correctly, confirmations
- * prevent accidental data loss, and device-auth setup requires authentication.
+ * Tests for `SettingsScreen` (integration).
+ * Verifies theme toggles, device-auth enable/disable flows, sign-out and
+ * clear-data confirmations, and persistence interactions.
  */
 
 import React from 'react';

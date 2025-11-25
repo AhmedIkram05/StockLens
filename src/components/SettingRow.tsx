@@ -1,11 +1,7 @@
 /**
- * SettingRow Component
- * 
- * A reusable row component for Settings screens with icon, title, subtitle, and right accessory.
- * Supports Ionicons vector icons with custom background colors and optional destructive styling (e.g., "Sign Out").
- * 
- * Used extensively in SettingsScreen for displaying user preferences, app info, and account actions.
- * Can be made pressable by providing an onPress callback, or static by omitting it.
+ * SettingRow
+ *
+ * Reusable settings list row with icon, title, subtitle and optional right accessory.
  */
 
 import React from 'react';
@@ -33,12 +29,6 @@ type Props = {
   style?: ViewStyle;
 };
 
-/**
- * Renders a settings row with optional icon, title, subtitle, and right accessory.
- * Destructive prop applies error color to title for dangerous actions (e.g., "Delete Account").
- * Uses Pressable with platform-specific press feedback for native feel.
- * Card backgrounds use theme.surface for automatic light/dark adaptation.
- */
 export default function SettingRow({ icon, iconBgColor, title, subtitle, right, onPress, destructive, style }: Props) {
   const { theme } = useTheme();
 

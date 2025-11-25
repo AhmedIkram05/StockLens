@@ -1,11 +1,7 @@
 /**
- * ConfirmationPrompt Component
- * 
- * A utility function that displays a native Alert dialog for confirming scanned receipt amounts.
- * Provides three action options: Confirm, Enter manually, or Rescan.
- * 
- * Used in the ScanScreen after OCR processing to let users verify or correct detected amounts.
- * Wraps handler callbacks in try-catch for error safety.
+ * ConfirmationPrompt
+ *
+ * Show a confirmation alert offering Confirm / Enter manually / Rescan options.
  */
 
 import { Alert, Platform } from 'react-native';
@@ -19,13 +15,7 @@ type Handlers = {
   onRescan: () => void | Promise<void>;
 };
 
-/**
- * Displays a native alert dialog with the detected amount and three action buttons.
- * All button handlers are wrapped in try-catch to prevent crashes from handler errors.
- * 
- * @param displayAmount - The formatted amount detected from OCR (e.g., "$45.99")
- * @param handlers - Object containing three callback functions for user actions
- */
+/** Show a confirmation dialog for the detected amount. */
 export function showConfirmationPrompt(displayAmount: string, handlers: Handlers) {
   const buttons: any[] = [
     { text: 'Confirm', onPress: () => { try { handlers.onConfirm(); } catch (e) {} } },

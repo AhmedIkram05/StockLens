@@ -1,31 +1,7 @@
 /**
  * AuthContext
- * 
- * Global authentication state management using React Context API and Firebase Auth.
- * Provides user authentication, profile management, and device lock functionality.
- * 
- * Features:
- * - Firebase Authentication integration with onAuthStateChanged listener
- * - User profile management (Firestore sync)
- * - Device lock/unlock using native passcode auth
- * - App state monitoring for auto-lock on background
- * - Credential-based unlock fallback
- * 
- * State:
- * - user: Firebase User object (null if unauthenticated)
- * - userProfile: Local user profile from Firestore
- * - loading: True during initial auth check
- * - locked: True when device lock is active
- * 
- * Methods:
- * - signOutUser: Signs out from Firebase and clears local state
- * - unlockWithDeviceAuth: Attempts device passcode unlock
- * - unlockWithCredentials: Validates email/password from secure storage
- * 
- * Auto-lock behavior:
- * - When app goes to background, sets locked=true (if DISABLE_LOCK=false)
- * - On foreground return, user must unlock with device credentials or password
- * - Grace period: 10-second window after sign-in where lock is disabled
+ *
+ * Provides authentication state and unlock/lock helpers via React context.
  */
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';

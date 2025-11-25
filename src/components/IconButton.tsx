@@ -1,11 +1,7 @@
 /**
- * IconButton Component
- * 
- * A circular button containing only an icon, used for compact actions throughout the app.
- * Features a green background by default with customizable icon, size, and color.
- * 
- * Includes hitSlop for improved touch target accessibility (expands hit area by 10px in all directions).
- * Commonly used for camera controls, navigation actions, and toolbar buttons.
+ * IconButton
+ *
+ * Compact circular icon-only button with hitSlop.
  */
 
 import React from 'react';
@@ -29,10 +25,7 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-/**
- * Renders a circular button with an icon centered inside.
- * Button size is theme.sizes.controlMd (44px) with hitSlop for easier pressing.
- */
+/** Render a circular icon button. */
 export default function IconButton({ name, size = 20, color = brandColors.white, onPress, style, accessibilityLabel }: Props) {
   if (__DEV__ && !accessibilityLabel) {
     // Ensure icon-only buttons are reachable by screen readers during development

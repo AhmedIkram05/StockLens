@@ -1,20 +1,7 @@
 /**
- * Auth Service - Firebase Authentication wrapper for sign up, sign in, and password reset
- * 
- * Features:
- * - User registration with email/password + display name
- * - Sign in with email/password
- * - Password reset email sending
- * - User profile synchronization with local SQLite (userService)
- * - Dynamic imports for code splitting (firebase/auth loaded on demand)
- * 
- * Integration:
- * - Uses Firebase Authentication for backend auth
- * - Syncs user profiles to local SQLite via userService.upsert
- * - Returns Firebase UserCredential for auth state management
- * 
- * Usage:
- * Called by LoginScreen, SignUpScreen, and SettingsScreen (password reset)
+ * AuthService
+ *
+ * Firebase authentication helpers for sign-up, sign-in and password reset.
  */
 
 import type { UserCredential } from 'firebase/auth';
@@ -43,32 +30,9 @@ export interface SignInData {
   password: string;
 }
 
-/**
- * authService - Firebase Authentication operations
- * 
- * Methods:
- * - signUp: Create new user account with email/password
- * - signIn: Authenticate existing user
- * - sendPasswordReset: Send password reset email
- * - getUserData: Fetch user profile from local SQLite
- */
+/** Firebase auth helper methods. */
 export const authService = {
-  /**
-   * Register a new user account
-   * 
-   * @param firstName - User's first name
-   * @param email - Email address for login
-   * @param password - Password (Firebase enforces min 6 chars)
-   * @returns UserCredential with user object and auth tokens
-   * 
-   * Process:
-   * 1. Creates Firebase auth user with createUserWithEmailAndPassword
-   * 2. Updates Firebase profile with displayName (updateProfile)
-   * 3. Syncs user to local SQLite via userService.upsert
-   * 4. Returns UserCredential for immediate sign-in
-   * 
-   * @throws Firebase auth errors (e.g., email-already-in-use, weak-password)
-   */
+  /** Create a new user account and sync local profile. */
   async signUp({ firstName, email, password }: SignUpData): Promise<UserCredential> {
     try {
       const { getAuthInstance } = await import('./firebase');
@@ -90,21 +54,7 @@ export const authService = {
     }
   },
 
-  /**
-   * Sign in an existing user
-   * 
-   * @param email - Email address
-   * @param password - Password
-   * @returns UserCredential with user object and auth tokens
-   * 
-   * Process:
-   * 1. Authenticates user with signInWithEmailAndPassword
-   * 2. Syncs/updates user profile in local SQLite via userService.upsert
-   * 3. Updates last_login timestamp
-   * 4. Returns UserCredential for auth state management
-   * 
-   * @throws Firebase auth errors (e.g., user-not-found, wrong-password, invalid-credential)
-   */
+  /** Authenticate existing user and update local profile. */
   async signIn({ email, password }: SignInData): Promise<UserCredential> {
     try {
       const { getAuthInstance } = await import('./firebase');
@@ -122,20 +72,7 @@ export const authService = {
     }
   },
 
-  /**
-   * Send password reset email to user
-   * 
-   * @param email - Email address to send reset link
-   * 
-   * Process:
-   * 1. Calls Firebase sendPasswordResetEmail
-   * 2. User receives email with reset link
-   * 3. Clicking link opens Firebase-hosted reset page
-   * 
-   * @throws Firebase auth errors (e.g., user-not-found, invalid-email)
-   * 
-   * Note: Always succeeds silently even if email doesn't exist (security best practice)
-   */
+  /** Send a password reset email to the given address. */
   async sendPasswordReset(email: string): Promise<void> {
     try {
       const { getAuthInstance } = await import('./firebase');
@@ -147,16 +84,7 @@ export const authService = {
     }
   },
 
-  /**
-   * Get user profile data from local SQLite
-   * 
-   * @param userId - Firebase user UID
-   * @returns User object or null if not found
-   * 
-   * Usage:
-   * - Fetch user profile for display (full name, email, created_at, last_login)
-   * - Check if user exists in local database
-   */
+  /** Fetch user profile from local database by UID. */
   async getUserData(userId: string) {
     try {
       const { userService } = await import('./dataService');

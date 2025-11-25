@@ -1,11 +1,7 @@
 /**
- * SecondaryButton Component
- * 
- * A transparent button with green border, used for secondary actions throughout the app.
- * Provides visual hierarchy by contrast with the solid PrimaryButton.
- * 
- * Supports disabled states and custom styling. Follows the app's design system
- * with brandColors.green for brand consistency.
+ * SecondaryButton
+ *
+ * Transparent bordered button for secondary actions.
  */
 
 import React from 'react';

@@ -1,27 +1,7 @@
 /**
- * Data Service - High-level data access layer for receipts, users, settings, and stocks
- * 
- * Features:
- * - receiptService: CRUD operations for scanned receipts
- * - userService: User profile management (upsert, get, delete)
- * - settingsService: User preferences (theme, auto_backup)
- * - stockService: Historical stock data fetching (delegates to alphaVantageService)
- * - Prefetch mechanism: Preloads popular stock data on app start
- * 
- * Integration:
- * - Uses databaseService for all SQL operations
- * - Uses alphaVantageService for stock market data
- * - Emits 'receipts-changed' events via eventBus for UI updates
- * 
- * Encryption notes:
- * - New receipt OCR text and images are encrypted on write using a device-local
- *   AES-256-GCM key stored in Expo SecureStore. Decryption is attempted on read
- * - This keeps the implementation lightweight and Expo Go compatible.
- * 
- * Prefetch System:
- * - Automatically prefetches monthly data for 10 popular stocks (NVDA, AAPL, MSFT, etc.)
- * - Uses __stocklens_prefetch_done__ marker to track prefetch completion
- * - Reduces latency when users view stock projections
+ * DataService
+ *
+ * High-level data access for receipts, users, settings and stocks.
  */
 
 import { databaseService } from './database';

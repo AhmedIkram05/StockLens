@@ -1,11 +1,7 @@
 /**
- * ExpandableCard Component
- * 
- * A reusable collapsible card component with an icon, title, description, and expandable content area.
- * Displays a chevron indicator that toggles between up/down based on expanded state.
- * 
- * Created to eliminate repetitive expandable card patterns in SummaryScreen.
- * Provides a consistent, accessible pattern for showing/hiding additional information.
+ * ExpandableCard
+ *
+ * Reusable collapsible card with header and expandable content.
  */
 
 import React from 'react';
@@ -33,11 +29,6 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Renders a pressable card that can expand to show additional content.
- * The card includes an icon, title, description, and a chevron indicator.
- * When pressed, it toggles between expanded and collapsed states.
- */
 export default function ExpandableCard({
   icon,
   iconColor,

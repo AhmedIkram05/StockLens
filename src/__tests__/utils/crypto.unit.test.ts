@@ -1,9 +1,8 @@
 import { generateKeyBase64, encryptString, decryptString, isEncryptedPayload } from '@/utils/crypto';
 
 /**
- * Crypto helpers unit tests
- * - Verifies AES-GCM encrypt/decrypt roundtrip
- * - isEncryptedPayload detects encrypted payloads
+ * Tests for `crypto` helpers.
+ * Verifies AES-GCM encrypt/decrypt roundtrip and encrypted-payload detection.
  */
 
 test('crypto roundtrip and detection', async () => {

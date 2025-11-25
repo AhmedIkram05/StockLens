@@ -1,19 +1,7 @@
 /**
  * SettingsScreen
- * 
+ *
  * User preferences and account management screen.
- * Features:
- * - User profile display (name, email)
- * - Dark mode toggle
- * - Device passcode authentication toggle
- * - Data management (clear local receipts, delete account)
- * - App information (version, support)
- * - Sign out functionality
- * 
- * Uses native Alert dialogs for destructive actions (sign out, clear data, delete account).
- * Device authentication settings are persisted using expo-secure-store.
- * 
- * Data clearing only removes local receipts; Firebase data remains intact unless account is deleted.
  */
 
 import React, { useState } from 'react';
@@ -29,10 +17,7 @@ import { receiptService } from '../services/dataService';
 import { radii, spacing, typography, sizes } from '../styles/theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
-/**
- * Renders the settings screen with user preferences and account actions.
- * Handles sign out, data clearing, and device-auth toggle with appropriate prompts.
- */
+/** Settings screen. */
 export default function SettingsScreen() {
   const { signOutUser, userProfile } = useAuth();
   const { mode, setMode, isDark, theme } = useTheme();

@@ -1,26 +1,6 @@
 /**
- * Test Rendering Utilities
- * 
- * Purpose: Custom render function that wraps components with all required
- * providers (Auth, Theme, Navigation, SafeArea) for integration testing.
- * 
- * What it provides:
- * - renderWithProviders(): Enhanced render with automatic provider wrapping
- * - ProviderOverrides: Type-safe overrides for context values
- * - Default mock implementations for AuthContext and ThemeContext
- * - Optional NavigationContainer wrapping (disable for non-nav screens)
- * - SafeAreaProvider with realistic device dimensions (375x812 iPhone)
- * 
- * Why it's important: Screen components rely on multiple contexts and
- * navigation. Without this utility, every test would need 50+ lines of
- * boilerplate provider setup. This centralizes provider configuration,
- * ensures consistent test environments, and allows targeted overrides
- * (e.g., mock authenticated user, toggle dark mode).
- * 
- * Usage:
- * renderWithProviders(<HomeScreen />) → Full provider wrapping
- * renderWithProviders(<LoginScreen />, { providerOverrides: { withNavigation: false } })
- * renderWithProviders(<SettingsScreen />, { providerOverrides: { authValue: { user: mockUser } } })
+ * Test render utility `renderWithProviders`.
+ * Wraps UI with Theme, Auth, SafeArea and optional Navigation for integration tests.
  */
 
 import React, { ReactElement, ReactNode } from 'react';

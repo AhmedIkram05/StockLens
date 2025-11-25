@@ -1,18 +1,7 @@
 /**
- * Theme System - Design tokens for spacing, typography, shadows, and layout
- * 
- * Non-color design tokens that remain consistent across light/dark modes.
- * For colors, see ThemeContext.tsx which handles light/dark theme switching.
- * 
- * Features:
- * - spacing: Consistent spacing scale (xs to xxl)
- * - sizes: Control and avatar dimensions  
- * - radii: Border radius scale (sm to pill)
- * - typography: Text styles (display, pageTitle, body, etc.)
- * - shadows: Elevation system (level1, level2)
- * - breakpoints: Device width breakpoints
- * 
- * All values use responsive scaling based on device dimensions.
+ * Theme Tokens
+ *
+ * Non-color design tokens: spacing, sizes, radii, typography, shadows and breakpoints.
  */
 
 import { TextStyle, ViewStyle } from 'react-native';

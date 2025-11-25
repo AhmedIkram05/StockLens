@@ -14,9 +14,8 @@ import * as FS from 'expo-file-system/legacy';
 import fileCrypto from '@/utils/fileCrypto';
 
 /**
- * fileCrypto unit tests
- * - Verifies encryptImageFile writes encrypted payload to disk
- * - Verifies decryptImageToTemp returns temp decoded path for encrypted payload
+ * Tests for `fileCrypto` helpers.
+ * Verifies image encrypt/write and decrypt-to-temp behaviors using mocked FS.
  */
 
 describe('fileCrypto', () => {

@@ -1,15 +1,7 @@
 /**
- * Key Manager - Secure key storage for app encryption
+ * KeyManager
  *
- * This module centralises generation and retrieval of the app-wide AES-256
- * encryption key. The key itself is stored in the platform-provided secure
- * keystore/keychain via `expo-secure-store`. Large data (images, DB fields)
- * are encrypted with this key by other helpers; the key is never exported in
- * plaintext except within the running process.
- *
- * Exports:
- * - getOrCreateKey(): Promise<string>  — returns a base64-encoded 32-byte key
- * - clearKey(): Promise<void>           — delete the stored key from keystore
+ * Generate and retrieve the app-wide AES-256 key stored in secure storage.
  */
 import * as SecureStore from 'expo-secure-store';
 import { generateKeyBase64 } from '@/utils/crypto';

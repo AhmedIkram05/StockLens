@@ -1,11 +1,7 @@
 /**
- * Logo Component
- * 
- * Displays the StockLens app logo with responsive sizing based on screen dimensions.
- * Logo automatically scales to 60% of screen width (max 360px on phones, 480px on tablets).
- * 
- * Maintains proper aspect ratio (2:1 width:height) and uses 'contain' resize mode.
- * Used on splash screens, onboarding, login, and branding areas throughout the app.
+ * Logo
+ *
+ * StockLens logo component (responsive image).
  */
 
 import React from 'react';

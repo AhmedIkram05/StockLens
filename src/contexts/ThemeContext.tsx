@@ -1,19 +1,7 @@
 /**
- * ThemeContext - Unified color system and theme management
- * 
- * Handles all color definitions and light/dark mode switching.
- * Replaces the old brandColors.ts file for a single source of truth.
- * 
- * Features:
- * - Semantic color naming (background, surface, text, etc.)
- * - Lean palette focused on high-impact tokens
- * - Proper dark mode support with thoughtful contrast
- * - Persistent theme storage across app restarts
- * 
- * Color Philosophy:
- * - Brand colors stay consistent (green, blue, red)
- * - Semantic tokens adapt per mode (background, surface, text)
- * - Surfaces stay simple to keep UI consistent and predictable
+ * ThemeContext
+ *
+ * Semantic theme tokens and light/dark mode management.
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';

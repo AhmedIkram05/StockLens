@@ -1,3 +1,9 @@
+/*
+ * TSConfig
+ *
+ * TypeScript configuration that extends Expo's base tsconfig, enables strict
+ * mode and sets the `@/*` path alias to `src/*`.
+ */
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {

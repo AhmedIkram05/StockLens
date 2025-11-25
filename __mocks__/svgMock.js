@@ -1,10 +1,7 @@
-// More realistic mock module for SVG files in Jest tests.
-// Exports a React component that mimics an SVG element by
-// accepting common SVG props (width, height, viewBox, fill)
-// and rendering a simple View with a testID so tests can
-// query and assert on it. Also exports the same component
-// as `ReactComponent` so imports like `import { ReactComponent as Icon } from './icon.svg'`
-// work in tests.
+/**
+ * Mock component for SVG imports in React Native tests.
+ * Renders a simple View with SVG props as data attributes for inspection.
+ */
 
 const React = require('react');
 const { View } = require('react-native');

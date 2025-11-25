@@ -1,25 +1,7 @@
 /**
- * Database Service - SQLite database initialization and management
- * 
- * Features:
- * - expo-sqlite database initialization and schema management
- * - 5 core tables: users, receipts, alpha_cache, user_settings, auth_state
- * - Foreign key constraints and cascading deletes
- * - Indexes for performance optimization on common queries
- * - Query execution helpers (executeQuery, executeNonQuery)
- * - Cache pruning for Alpha Vantage historical data
- * 
- * Tables:
- * - users: User profile records (uid, first_name, email, created_at, last_login)
- * - receipts: Scanned receipts (user_id, image_uri, total_amount, ocr_data, synced)
- * - alpha_cache: Cached stock market data (symbol, interval, params, fetched_at, raw_json)
- * - user_settings: User preferences (user_id, theme, auto_backup)
- * - auth_state: Authentication state storage (key-value pairs)
- * 
- * Integration:
- * - Used by dataService for all CRUD operations
- * - Used by alphaVantageService for caching stock data
- * - Automatically migrates schema (adds missing columns)
+ * DatabaseService
+ *
+ * SQLite initialization, schema management, and query helpers.
  */
 
 import * as SQLite from 'expo-sqlite';

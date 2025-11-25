@@ -9,9 +9,8 @@ import * as SecureStore from 'expo-secure-store';
 import keyManager from '@/services/keyManager';
 
 /**
- * keyManager unit tests
- * - Ensures a key is generated and stored when none exists
- * - Ensures the existing key is returned when present
+ * Tests for `keyManager` caching and SecureStore integration.
+ * Verifies key generation/storage when absent and cached retrieval behavior.
  */
 
 describe('keyManager', () => {

@@ -1,20 +1,6 @@
 /**
- * deviceAuthPrompt Unit Tests
- * 
- * Purpose: Validates the device auth enrollment prompt shown after
- * successful sign-up or login.
- * 
- * What it tests:
- * - Hardware availability checks before showing prompt
- * - User acceptance flow (saves credentials to secure storage)
- * - User rejection flow (returns false, no credentials saved)
- * - Alert dialog presentation with correct messaging
- * - Secure credential storage integration
- * 
- * Why it's important: This prompt is the entry point for enabling
- * device login. Tests ensure it only appears on capable devices,
- * correctly saves credentials when users opt-in, and respects user
- * choice when they decline.
+ * Tests for the device-auth enrollment prompt (`promptEnableDeviceAuth`).
+ * Verifies hardware checks, alert presentation, and credential save/decline flows.
  */
 
 import { Alert } from 'react-native';

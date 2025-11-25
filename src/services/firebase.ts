@@ -1,27 +1,7 @@
 /**
- * Firebase Initialization - Firebase app and auth setup with custom SQLite persistence
- * 
- * Features:
- * - Lazy Firebase initialization (only when needed)
- * - Platform-specific auth persistence:
- *   - iOS/Android: Custom SQLite persistence via auth_state table
- *   - Web: Browser local storage (fallback to in-memory)
- * - Singleton pattern (ensures single Firebase instance)
- * - Dynamic imports for code splitting
- * 
- * Custom SQLite Persistence:
- * - Stores Firebase auth state in SQLite (auth_state table)
- * - Implements Firebase Persistence interface (_get, _set, _remove, _isAvailable)
- * - Persists across app restarts (unlike in-memory persistence)
- * - Uses same database as receipts/users (database.ts)
- * 
- * Integration:
- * - Used by authService for all authentication operations
- * - Configuration loaded from firebaseConfig.ts
- * - Auth state persists in SQLite for native platforms
- * 
- * Usage:
- * const auth = await getAuthInstance();
+ * FirebaseService
+ *
+ * Firebase app and auth initialization with optional SQLite persistence.
  */
 
 import { Platform } from 'react-native';

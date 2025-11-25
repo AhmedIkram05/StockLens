@@ -5,13 +5,7 @@ import crypto, { isEncryptedPayload } from '@/utils/crypto';
 /**
  * fileCrypto
  *
- * Lightweight file-level encryption helpers for image assets. The module:
- * - encrypts image files (reads as base64, AES‑GCM encrypt, writes JSON payload)
- * - decrypts encrypted payloads back to a temporary cached image for display
- *
- * Notes:
- * - Works in Expo Go (pure JS + expo-file-system + expo-secure-store)
- * - Uses the app key stored in SecureStore (see `keyManager`)
+ * Encrypt/decrypt helpers for image files (encrypt to .enc, decrypt to temp file).
  */
 // Use any-cast to avoid TypeScript surface-level mismatch with expo-file-system
 const FS: any = FileSystem as any;
@@ -27,25 +21,12 @@ function generateUuidV4() {
   });
 }
 
-/**
- * ensureDir
- *
- * Ensure the encrypted images directory exists under the app document directory.
- */
+/** Ensure encrypted images directory exists. */
 async function ensureDir() {
   try { await FS.makeDirectoryAsync(ENCRYPTED_DIR, { intermediates: true }); } catch (e) {}
 }
 
-/**
- * encryptImageFile
- *
- * Reads an image file (local URI), converts it to base64, encrypts it using the
- * app AES key and writes the encrypted JSON payload to an .enc file under
- * the app document directory. Returns the destination encrypted URI.
- *
- * If encryption fails for any reason, falls back to returning the original URI
- * so existing flows continue to work.
- */
+/** Encrypt an image file and return encrypted .enc URI (falls back to original on error). */
 export async function encryptImageFile(origUri: string): Promise<string> {
   if (!origUri) return origUri;
   await ensureDir();
@@ -63,13 +44,7 @@ export async function encryptImageFile(origUri: string): Promise<string> {
   }
 }
 
-/**
- * decryptImageToTemp
- *
- * Reads an encrypted .enc file, decrypts the base64 image payload and writes a
- * temporary decoded image into the cache directory for use with <Image/>.
- * If the provided URI is not an encrypted payload the function returns it unchanged.
- */
+/** Decrypt an encrypted .enc image to a temporary cache file, or return input if not encrypted. */
 export async function decryptImageToTemp(encUri: string): Promise<string> {
   if (!encUri) return encUri;
   try {

@@ -1,18 +1,7 @@
 /**
- * AuthContext Integration Tests
- * 
- * Purpose: Validates authentication state management, device-passcode unlocking,
- * and user session persistence across the app.
- * 
- * What it tests:
- * - User authentication flows (sign-in, sign-out)
- * - Device lock/unlock functionality
- * - Credential verification
- * - Context provider error handling (must be used within provider)
- * 
- * Why it's important: AuthContext manages global user state and security.
- * These tests ensure users stay authenticated, device locks work correctly,
- * and auth state persists across app restarts.
+ * Integration tests for `AuthContext`.
+ * Exercises auth state handling, device-unlock flows, credential checks,
+ * and provider usage requirements.
  */
 
 import React from 'react';

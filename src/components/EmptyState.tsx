@@ -1,10 +1,7 @@
 /**
- * EmptyState Component
- * 
- * Displays a centered empty state UI with an icon, title, subtitle, and optional action button.
- * Used throughout the app to show when lists/data are empty (e.g., no receipts, no results).
- * 
- * Provides a consistent, user-friendly experience with clear calls-to-action when content is missing.
+ * EmptyState
+ *
+ * Reusable centered empty-state UI with icon, title, optional subtitle and action.
  */
 
 import React from 'react';
@@ -14,22 +11,14 @@ import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
 type Props = {
-  /** Ionicon name for the empty state icon. Default: 'checkmark-circle' */
   iconName?: string;
-  /** Main heading text displayed prominently */
   title: string;
-  /** Optional subtitle providing additional context or instructions */
   subtitle?: string;
-  /** Optional text for the action button */
   primaryText?: string;
-  /** Callback triggered when the action button is pressed */
   onPrimaryPress?: () => void;
 };
 
-/**
- * Renders a centered empty state with icon, text, and optional action button.
- * Conditionally renders subtitle and button based on provided props.
- */
+/** Centered empty-state UI component. */
 export default function EmptyState({ iconName = 'checkmark-circle', title, subtitle, primaryText, onPrimaryPress }: Props) {
   const { theme } = useTheme();
   return (

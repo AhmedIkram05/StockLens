@@ -1,21 +1,7 @@
 /**
- * LoginScreen Integration Tests
- * 
- * Purpose: Validates email/password authentication flow and post-login
- * device-auth enrollment prompt.
- * 
- * What it tests:
- * - Sign-in form submission with email and password
- * - AuthContext integration for authentication state
- * - Lock grace period start after successful login
- * - Device authentication enrollment prompt after login
- * - Navigation to SignUp screen from footer link
- * - Form validation and error handling
- * 
- * Why it's important: LoginScreen is the entry point for returning users.
- * Tests ensure credentials are correctly passed to Firebase, auth state
- * updates properly, and users are prompted to enable device passcode login for
- * faster future logins.
+ * Tests for `LoginScreen` (integration).
+ * Verifies email/password sign-in, lock-grace start, device-auth prompt,
+ * and navigation to SignUp.
  */
 
 import React from 'react';

@@ -1,21 +1,7 @@
 /**
- * LockScreen Integration Tests
- * 
- * Purpose: Validates app lock functionality requiring re-authentication
- * after inactivity or app restart.
- * 
- * What it tests:
- * - Locked screen UI with user email display
- * - Device passcode unlock flow
- * - Password unlock fallback with credential validation
- * - Error handling for failed device-auth attempts
- * - Error handling for incorrect passwords
- * - Forgot password reset email flow
- * 
- * Why it's important: LockScreen protects user financial data when
- * the app is reopened. Tests ensure device unlock works when
- * available, password fallback functions correctly, and failed
- * attempts show appropriate error messages.
+ * Tests for `LockScreen` (integration).
+ * Verifies device/passcode unlock flow, password fallback, forgot-password
+ * behavior, and associated error handling.
  */
 
 import React from 'react';

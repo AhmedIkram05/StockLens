@@ -1,25 +1,6 @@
 /**
- * Stock Data (OHLCV) Test Fixtures
- * 
- * Purpose: Factory functions for generating realistic stock price data
- * for projection and CAGR calculation tests.
- * 
- * What it provides:
- * - createOHLCV(): Factory for single price data point (Open/High/Low/Close/Volume)
- * - buildOHLCVSeries(): Generate multi-month price series with compound growth
- * - sampleOHLCVSeries: Pre-built 12-month price series (5% annual growth)
- * - Realistic volume data (1M+ shares)
- * - Auto-incrementing date offsets for historical data
- * 
- * Why it's important: Investment projections depend on historical stock
- * data. These fixtures generate mathematically correct price series with
- * compound growth for testing CAGR calculations. The buildOHLCVSeries
- * function ensures tests use realistic multi-year data without manual
- * price calculation.
- * 
- * Usage:
- * createOHLCV({ close: 150 }) → Single price point
- * buildOHLCVSeries(60, 0.01, 100) → 5 years of 1% monthly growth from £100
+ * Test fixtures for stock OHLCV data.
+ * Provides `createOHLCV` and `buildOHLCVSeries` factories used in projection tests.
  */
 
 import { OHLCV } from '@/services/alphaVantageService';

@@ -1,50 +1,8 @@
-/**
- * Receipt Parser - Extract monetary amounts from OCR text
- * 
- * Features:
- * - Multi-strategy amount extraction (keyword-based, bottom-scan, scoring fallback)
- * - Token-aware OCR error correction (O→0, l/I→1 only in digit-containing tokens)
- * - Keyword detection (total, amount, grand total, balance due, etc.)
- * - Decimal inference for amounts without decimal points (e.g., 1250 → 12.50)
- * - Currency symbol detection and scoring
- * - Footer line filtering (thank you, barcode, payment method, etc.)
- * - Amount validation (realistic values between 0 and 1,000,000)
- * 
- * Strategies (in order):
- * 1. High-confidence: Extract rightmost number from lines containing 'total' keyword
- * 2. Bottom-scan: Extract rightmost number from last non-footer lines
- * 3. Scored candidates: Collect all monetary tokens, score by position/keywords, pick best
- * 
- * Scoring Factors:
- * - +50: Line contains 'total' keyword
- * - +20: Within last 2 lines (bottom of receipt)
- * - +10: Line contains currency symbol (£, $, €)
- * - +5: Highest value among candidates
- * - -40: Line contains 'change' or 'cash change'
- * 
- * Integration:
- * - Used by ScanScreen after OCR to extract receipt amount
- * - Handles common OCR misreads (O/0, l/I/1 confusion)
- * - Returns null if no valid amount found
- */
+/** Receipt parsing helpers for extracting monetary amounts from OCR text. */
 
 /**
- * Validate extracted amount for realistic values
- * 
- * @param amount - Extracted amount to validate
- * @returns true if amount is valid, false otherwise
- * 
- * Validation Rules:
- * - Must be greater than 0 (no negative or zero amounts)
- * - Must be less than 1,000,000 (prevents unrealistic OCR extractions)
- * - Must be a finite number (not NaN or Infinity)
- * 
- * Common Invalid Cases:
- * - OCR extracts barcode numbers as amounts (e.g., 123456789)
- * - Date stamps interpreted as amounts (e.g., 20250115)
- * - Phone numbers mistaken for amounts (e.g., 4471234567890)
- * - Zero amounts from failed OCR
- * - Negative amounts from accounting notation
+ * Return true if `amount` looks like a realistic receipt total.
+ * @param amount - number to validate
  */
 export function validateAmount(amount: number | null | undefined): boolean {
   if (amount == null) return false;
@@ -56,31 +14,9 @@ export function validateAmount(amount: number | null | undefined): boolean {
 }
 
 /**
- * Parse amount from OCR text with intelligent extraction and error correction
- * 
- * @param text - Raw OCR text from receipt image
- * @returns Extracted amount as number or null if not found
- * 
- * Process:
- * 1. Token-aware normalization: Fix O→0, l/I→1 only in tokens with digits
- * 2. High-confidence pass: Extract from lines with 'total' keyword
- * 3. Bottom-scan pass: Extract from last non-footer lines
- * 4. Candidate scoring: Collect all monetary tokens, score, pick best
- * 5. Decimal inference: Convert 1250 → 12.50 if no decimal and value ≥100
- * 
- * Decimal Inference Rules:
- * - If token has no decimal point AND value ≥ 100 AND value/100 ≤ 500
- * - Then divide by 100 (e.g., 1250 → 12.50, 2999 → 29.99)
- * - Prevents false positives for large amounts (e.g., 10000 stays 10000)
- * 
- * Edge Cases:
- * - Handles multiple decimal separators (1.234,56 → 1234.56)
- * - Filters out 'change' amounts (lower priority scoring)
- * - Skips footer lines (thank you, barcode, phone, address)
- * - Returns null for invalid/empty input
- * 
- * Usage:
- * amount = parseAmountFromOcrText(ocrResult.text)
+ * Extract the most likely total amount from OCR text.
+ * Returns a number or null when no candidate is found.
+ * @param text - raw OCR text
  */
 export function parseAmountFromOcrText(text: string): number | null {
   if (!text) return null;

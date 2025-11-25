@@ -1,11 +1,7 @@
 /**
- * FormInput Component
- * 
- * A styled text input component with theme-aware appearance and consistent spacing.
- * Wraps React Native's TextInput with standardized styling for forms throughout the app.
- * 
- * Automatically applies theme colors for background, text, border, and placeholder.
- * Supports all standard TextInput props (placeholder, secureTextEntry, keyboardType, etc.).
+ * FormInput
+ *
+ * Themed text input with optional password visibility toggle.
  */
 
 import React, { useEffect, useState } from 'react';

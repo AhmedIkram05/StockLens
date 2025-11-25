@@ -1,11 +1,7 @@
 /**
- * PageHeader Component
- * 
- * Displays a page title with optional subtitle at the top of screens.
- * Provides consistent header styling and spacing across all pages.
- * 
- * Supports custom title content (text or React nodes) and optional subtitles.
- * Subtitle automatically applies reduced opacity for visual hierarchy.
+ * PageHeader
+ *
+ * Page title with optional subtitle and consistent spacing.
  */
 
 import React from 'react';
@@ -26,10 +22,6 @@ type Props = {
   headerRight?: React.ReactNode;
 };
 
-/**
- * Renders a page header with title and optional subtitle.
- * Subtitle is styled with reduced opacity for visual hierarchy.
- */
 export default function PageHeader({ children, subtitle, titleStyle, style }: Props) {
   const { theme } = useTheme();
 

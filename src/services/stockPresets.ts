@@ -1,31 +1,7 @@
 /**
- * Stock Presets - Predefined stock tickers with fallback return rates
- * 
- * Features:
- * - PRESET_RATES: Fallback annual return rates when API data unavailable
- * - STOCK_PRESETS: User-friendly list with name, ticker, and return rate
- * - NAME_MAP: Human-readable names for tickers (NVDA → NVIDIA)
- * 
- * Preset Stocks:
- * - NVDA (NVIDIA): 26% annual return
- * - AAPL (Apple): 11%
- * - MSFT (Microsoft): 18%
- * - TSLA (Tesla): 25%
- * - NKE (Nike): 8%
- * - AMZN (Amazon): 17%
- * - GOOGL (Alphabet): 16%
- * - META (Meta): 20%
- * - JPM (JPMorgan Chase): 10%
- * - UNH (UnitedHealth): 12%
- * 
- * Integration:
- * - Used by projectionService as fallback when historical data unavailable
- * - PREFETCH_TICKERS (from dataService) drives the preset list
- * - Displayed in StockCard and ReceiptDetailsScreen
- * 
- * Note:
- * Preset rates are approximate historical averages (not investment advice).
- * Real projections use actual historical CAGR when API data is available.
+ * StockPresets
+ *
+ * Preset tickers and fallback annual return rates used for projections.
  */
 
 import { PREFETCH_TICKERS } from './dataService';

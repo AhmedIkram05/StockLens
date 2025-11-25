@@ -1,16 +1,8 @@
 /**
- * useReceiptCapture Hook
+ * useReceiptCapture
  *
- * Drives the camera/OCR workflow for receipts and funnels users into the detail screen.
- *
- * Responsibilities:
- * - Creates draft receipts as soon as the camera delivers a photo
- * - Calls the OCR service with Expo config keys and parses totals
- * - Guards against invalid amounts and prompts for manual entry when needed
- * - Handles confirmation overlays, rescans, and navigation to ReceiptDetails
+ * Manages the photo → OCR → confirm → save workflow for receipts.
  */
-
-/** Tracks the mutable state of the current OCR attempt across prompts. */
 
 import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -29,14 +21,14 @@ export type PendingReceiptState = {
   amount: number | null;
 };
 
-/** Required wiring for screens that use the hook. */
+/** Options required by `useReceiptCapture` (navigation, user UID, callbacks). */
 type UseReceiptCaptureOptions = {
   navigation: any;
   userUid?: string;
   onResetCamera?: () => void;
 };
 
-/** Inputs accepted by the `processReceipt` action. */
+/** Options provided to `processReceipt` (photo, draft id, callbacks). */
 type ProcessReceiptOptions = {
   photoUri?: string | null;
   photoBase64?: string | null;
@@ -45,7 +37,7 @@ type ProcessReceiptOptions = {
   skipOverlay?: boolean;
 };
 
-/** Coordinates the full photo → OCR → confirmation pipeline for receipts. */
+/** Coordinates the photo → OCR → confirmation → save pipeline. */
 export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseReceiptCaptureOptions) => {
   const [processing, setProcessing] = useState(false);
   const [ocrRaw, setOcrRaw] = useState<string | null>(null);
@@ -54,7 +46,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
   const [manualEntryText, setManualEntryText] = useState('');
   const pendingRef = useRef<PendingReceiptState>({ draftId: null, ocrText: null, photoUri: null, amount: null });
 
-  /** Resets transient state so the camera flow can restart safely. */
+  /** Reset transient hook state so the camera flow can restart. */
   const resetWorkflowState = useCallback(() => {
     setProcessing(false);
     setOcrRaw(null);
@@ -62,7 +54,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
     pendingRef.current = { draftId: null, ocrText: null, photoUri: null, amount: null };
   }, []);
 
-  /** Deletes any draft receipt that should not persist past a rescan or cancel. */
+  /** Delete a draft receipt if it should not persist (rescan/cancel). */
   const discardDraft = useCallback(async (draftId?: number | null) => {
     const id = draftId ?? draftReceiptId;
     if (!id) return;
@@ -72,7 +64,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
     } catch (e) {}
   }, [draftReceiptId]);
 
-  /** Saves the receipt data (update or create) and navigates to the detail screen. */
+  /** Save receipt (update or create) then navigate to details. */
   const saveAndNavigate = useCallback(async (amount: number, draftId: number | null, ocrText: string | null, photoUri: string | null) => {
     try {
       if (draftId) {
@@ -115,14 +107,14 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
     }
   }, [navigation, onResetCamera, resetWorkflowState, userUid]);
 
-  /** Prompts the user for a manual amount (Alert.prompt on iOS, modal elsewhere). */
+  /** Prompt the user to enter an amount manually (platform modal). */
     const handleManualEntry = useCallback((prefill?: number | null) => {
       const preset = prefill != null ? String(prefill) : '';
       setManualEntryText(preset);
       setManualModalVisible(true);
     }, [setManualEntryText, setManualModalVisible]);
 
-  /** Runs OCR, validates totals, and routes through the confirmation overlay decisions. */
+  /** Run OCR on a photo, suggest amount, and show confirmation overlay. */
   const processReceipt = useCallback(async ({ photoUri, photoBase64, draftIdArg, onSuggestion, skipOverlay }: ProcessReceiptOptions) => {
     if (!photoUri) return;
     if (!skipOverlay) setProcessing(true);

@@ -1,13 +1,7 @@
 /**
- * YearSelector Component
- * 
- * An animated segmented control for selecting time horizons (e.g., 1Y, 5Y, 10Y, 20Y).
- * Features a sliding green pill indicator that smoothly animates between options.
- * 
- * Used in investment projection screens to allow users to adjust the time period for calculations.
- * The pill indicator animates to the selected option using React Native Animated API (220ms timing).
- * 
- * Supports compact mode for smaller displays and generic number type for flexibility.
+ * YearSelector
+ *
+ * Animated segmented control for selecting year horizons (1Y, 5Y, etc.).
  */
 
 import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 'react';
@@ -29,11 +23,6 @@ type Props<T extends number> = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Renders a segmented control with animated pill indicator.
- * Pill position is calculated based on selected index and animates smoothly on change.
- * Each option is rendered as a pressable segment with "XY" label format.
- */
 export default function YearSelector<T extends number = number>({ options, value, onChange, compact = false, style }: Props<T>) {
   const { theme } = useTheme();
   const containerWidthRef = useRef<number>(0);

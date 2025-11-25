@@ -8,8 +8,8 @@ type Props = TextProps & {
 
 /**
  * AppText
- * Small wrapper around RN Text that opts into system Dynamic Type by default.
- * Use this across the app for consistent font-scaling behaviour.
+ *
+ * Small wrapper around React Native `Text` that enables consistent font-scaling.
  */
 export default function AppText({ children, maxFontSizeMultiplier = 1.6, style, ...rest }: Props) {
   return (

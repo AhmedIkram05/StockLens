@@ -1,23 +1,7 @@
 /**
- * useReceipts Hook
- * 
- * Fetches and manages receipt data for a specific user from Firestore.
- * Provides automatic refresh on data changes via event bus subscription.
- * 
- * Features:
- * - Initial data load on mount
- * - Real-time updates via 'receipts-changed' event
- * - Auto-refresh every 30 seconds (silent, no loading spinner)
- * - Proper cleanup on unmount
- * - Loading and error state management
- * 
- * Data transformation:
- * - Converts Firestore receipt documents to simplified ReceiptShape format
- * - Formats scan dates for display
- * - Ensures image URIs are properly typed
- * 
- * @param userId - Firebase user ID to fetch receipts for. If undefined, returns empty array.
- * @returns Object with receipts array, loading boolean, and error string (null if no error)
+ * useReceipts
+ *
+ * Fetch and manage receipts for a user; subscribes to changes and polls periodically.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';

@@ -6,9 +6,8 @@ const cache = new Map<string, string>();
 
 /**
  * useDecryptedImage
- * - Accepts an image URI (possibly an encrypted .enc path or a normal file URI)
- * - Returns a decrypted temp URI when available, otherwise returns the original
- * - Caches decrypted results to avoid repeated FS work
+ *
+ * Decrypts an encrypted image URI to a temporary local file and caches the result.
  */
 export default function useDecryptedImage(src?: string | null) {
   const [resolved, setResolved] = useState<string | undefined>(undefined);
