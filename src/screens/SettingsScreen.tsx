@@ -133,9 +133,9 @@ export default function SettingsScreen() {
             try {
               const uid = userProfile?.uid;
               await receiptService.deleteAll(uid);
-              Alert.alert('Data Cleared', 'All scanned data has been cleared locally.');
+              Alert.alert('Data Cleared', 'All scanned data has been permanently deleted.');
             } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to clear scanned data');
+              Alert.alert('Error', err?.message || 'Failed to clear scanned data, Please try again later.');
             }
           },
         },

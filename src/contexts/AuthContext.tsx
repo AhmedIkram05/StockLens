@@ -90,6 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const LOCK_ENABLED = true;
   const lockGraceActive = useRef(false);
   const lockGraceTimer = useRef<NodeJS.Timeout | null>(null);
+  // Timer used to delay locking when the app backgrounds. The app will only
+  // become `locked` if it's been backgrounded for more than `LOCK_DELAY_MS`.
+  const lockDelayTimer = useRef<NodeJS.Timeout | null>(null);
+  const LOCK_DELAY_MS = 5000; // 5 seconds
   const { setMode } = useTheme();
 
   useEffect(() => {
@@ -135,12 +139,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     appState.current = AppState.currentState;
     const handle = (nextAppState: AppStateStatus) => {
-      if (appState.current && appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
-        // Only lock if lock is enabled, user exists, and grace period is not active
+      const wasActive = !!(appState.current && appState.current.match(/active/));
+      const isBackgrounding = !!nextAppState.match(/inactive|background/);
+
+      // App is transitioning from active -> background/inactive: start delayed lock
+      if (wasActive && isBackgrounding) {
         if (LOCK_ENABLED && user && !lockGraceActive.current) {
-          setLocked(true);
+          // Clear any existing delayed timer
+          if (lockDelayTimer.current) {
+            clearTimeout(lockDelayTimer.current);
+          }
+          lockDelayTimer.current = setTimeout(() => {
+            // Only lock if still backgrounded and grace not active
+            const current = AppState.currentState;
+            if (current.match(/inactive|background/) && !lockGraceActive.current) {
+              setLocked(true);
+            }
+            lockDelayTimer.current = null;
+          }, LOCK_DELAY_MS);
         }
       }
+
+      // App is transitioning from background/inactive -> active: cancel delayed lock
+      if (appState.current && appState.current.match(/inactive|background/) && nextAppState.match(/active/)) {
+        if (lockDelayTimer.current) {
+          clearTimeout(lockDelayTimer.current);
+          lockDelayTimer.current = null;
+        }
+      }
+
       appState.current = nextAppState;
     };
 
@@ -160,6 +187,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { success } = await authenticateDevice('Unlock StockLens');
       if (success) {
         // Start grace period to prevent immediate re-locking
+        // Clear any pending delayed lock and start grace
+        if (lockDelayTimer.current) {
+          clearTimeout(lockDelayTimer.current);
+          lockDelayTimer.current = null;
+        }
         startLockGrace();
         return true;
       }
@@ -183,6 +215,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithEmailAndPassword(auth, email, password);
       
       // If we get here, credentials are valid - start grace period
+      if (lockDelayTimer.current) {
+        clearTimeout(lockDelayTimer.current);
+        lockDelayTimer.current = null;
+      }
       startLockGrace();
       return true;
     } catch (err) {
@@ -198,6 +234,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         lockGraceTimer.current = null;
       }
       lockGraceActive.current = false;
+      // Clear delayed lock timer as well
+      if (lockDelayTimer.current) {
+        clearTimeout(lockDelayTimer.current);
+        lockDelayTimer.current = null;
+      }
       
       const auth = await getAuthInstance();
       await signOut(auth);
