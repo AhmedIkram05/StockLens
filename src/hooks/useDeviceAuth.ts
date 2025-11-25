@@ -1,6 +1,7 @@
 /** Device auth utilities (biometrics/passcode helpers and secure credential storage). */
 
 import * as LocalAuthentication from 'expo-local-authentication';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const DEVICE_ENABLED_KEY = 'device_enabled';
@@ -10,7 +11,25 @@ const DEVICE_CREDENTIALS_KEY = 'device_credentials';
 export async function isDeviceAuthAvailable(): Promise<boolean> {
   try {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    return !!hasHardware;
+    if (!hasHardware) return false;
+
+    // Prefer explicit enrollment check first (biometrics or device credential enrolled)
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    if (isEnrolled) return true;
+
+    // Some platforms/devices (notably Android emulators) may not report enrolled
+    // biometrics correctly. Check supported authentication types as a secondary
+    // signal (fingerprint/face), and fall back to a lenient Android heuristic so
+    // developers can test device-credential flows on emulators.
+    const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+    if (types && types.length > 0) return true;
+
+    // On Android, device PIN/pattern fallback is commonly available even when
+    // biometrics aren't enrolled. Emulators may report `isEnrolledAsync()` false
+    // despite having a passcode; allow prompting on Android to enable the flow.
+    if (Platform.OS === 'android') return true;
+
+    return false;
   } catch (e) {
     return false;
   }

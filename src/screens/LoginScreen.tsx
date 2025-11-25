@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import ScreenContainer from '../components/ScreenContainer';
 import PageHeader from '../components/PageHeader';
@@ -87,65 +87,81 @@ export default function LoginScreen() {
   };
 
   return (
-  <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
-      <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Logo />
-        </View>
+    <ScreenContainer contentStyle={{ paddingHorizontal: contentHorizontalPadding, paddingVertical: sectionVerticalSpacing }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            <View style={styles.logoContainer}>
+              <Logo />
+            </View>
 
-        <PageHeader>
-          <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
-            {(() => {
-              const titleMarginTop = isSmallPhone
-                ? spacing.lg
-                : isTablet
-                ? orientation === 'landscape'
-                  ? spacing.md
-                  : spacing.lg
-                : spacing.xl;
-              const titleMarginBottom = isSmallPhone ? spacing.xs : isTablet ? spacing.sm : spacing.md;
-              return (
-                <Text style={[styles.title, { color: theme.text, marginTop: titleMarginTop, marginBottom: titleMarginBottom }]}>
-                  Welcome to Stock
-                  <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
-                </Text>
-              );
-            })()}
+            <PageHeader>
+              <View style={[styles.titleContainer, isSmallPhone && styles.titleContainerCompact]}>
+                {(() => {
+                  const titleMarginTop = isSmallPhone
+                    ? spacing.lg
+                    : isTablet
+                    ? orientation === 'landscape'
+                      ? spacing.md
+                      : spacing.lg
+                    : spacing.xl;
+                  const titleMarginBottom = isSmallPhone ? spacing.xs : isTablet ? spacing.sm : spacing.md;
+                  return (
+                    <Text style={[styles.title, { color: theme.text, marginTop: titleMarginTop, marginBottom: titleMarginBottom }]}> 
+                      Welcome to Stock
+                      <Text style={[styles.titleLens, { color: theme.primary }]}>Lens</Text>
+                    </Text>
+                  );
+                })()}
+              </View>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scan your spending{'\n'}See your missed investing</Text>
+            </PageHeader>
+
+            <View
+              style={[
+                styles.formContainer,
+                isSmallPhone && styles.formContainerCompact,
+                // On tablet landscape, push form content down so inputs sit lower on screen
+                isTablet && orientation === 'landscape' ? { justifyContent: 'flex-start', paddingTop: spacing.xl } : undefined,
+              ]}
+            >
+              <FormInput
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+
+              <FormInput
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                showPasswordToggle
+              />
+
+              <PrimaryButton onPress={handleLogin} style={styles.loginButton} textStyle={styles.loginButtonText} accessibilityLabel="Login">
+                Login
+              </PrimaryButton>
+
+              <TouchableOpacity onPress={handleForgot} disabled={forgotDisabled} style={styles.forgotContainer} accessibilityLabel="Forgot password">
+                <Text style={[styles.forgotText, forgotDisabled && { opacity: 0.5 }]}>Forgot password?</Text>
+              </TouchableOpacity>
+
+              <AuthFooter prompt={"Don't have an account?"} actionText="Sign Up" onPress={handleSignUp} style={styles.signUpContainer} />
+            </View>
           </View>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scan your spending{'\n'}See your missed investing</Text>
-        </PageHeader>
-
-  <View style={[styles.formContainer, isSmallPhone && styles.formContainerCompact]}>
-          <FormInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          <FormInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            showPasswordToggle
-          />
-
-          <PrimaryButton onPress={handleLogin} style={styles.loginButton} textStyle={styles.loginButtonText} accessibilityLabel="Login">
-            Login
-          </PrimaryButton>
-
-          <TouchableOpacity onPress={handleForgot} disabled={forgotDisabled} style={styles.forgotContainer} accessibilityLabel="Forgot password">
-            <Text style={[styles.forgotText, forgotDisabled && { opacity: 0.5 }]}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          <AuthFooter prompt={"Don't have an account?"} actionText="Sign Up" onPress={handleSignUp} style={styles.signUpContainer} />
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
@@ -154,8 +170,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
   },
   formContainerCompact: {
     paddingBottom: spacing.lg,

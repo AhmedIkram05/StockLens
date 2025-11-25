@@ -3,7 +3,7 @@
     "name": "StockLens",
     "slug": "StockLens",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/StockLens_Logo_T.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
