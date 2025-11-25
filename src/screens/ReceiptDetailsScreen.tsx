@@ -438,7 +438,7 @@ export default function ReceiptDetailsScreen() {
         <View style={[styles.warningBox, isSmallPhone && styles.warningBoxCompact, { backgroundColor: theme.surface }]}>
           <Ionicons name="warning" size={28} color={brandColors.red} style={styles.warningIcon} />
           <Text style={[styles.warningText, { color: theme.text }]}>
-            Projections are hypothetical. Past performance does not guarantee future results.
+            Projections are hypothetical. Past performance does not guarantee future results. All projections are simply made using the CAGR formula.
           </Text>
         </View>
         </ScrollView>

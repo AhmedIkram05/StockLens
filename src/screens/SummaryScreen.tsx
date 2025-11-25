@@ -509,7 +509,7 @@ export default function SummaryScreen() {
         <View style={[styles.warningBox, { backgroundColor: theme.surface }]}>
           <Ionicons name="warning" size={28} color={brandColors.red} style={styles.warningIcon} />
           <Text style={[styles.warningText, { color: theme.text }]}>
-            Projections are hypothetical. Past performance does not guarantee future results.
+            This is not financial advice. If you are considering investing, please consult a qualified financial advisor for professional guidance.
           </Text>
         </View>
 
