@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Missing information', 'Please enter both your email and password to continue.');
       return;
     }
 
@@ -47,13 +47,13 @@ export default function LoginScreen() {
       } catch (e) {
       }
     } catch (error: any) {
-      let errorMessage = 'An error occurred during sign in';
+      let errorMessage = 'An error occurred signing in. Please try again.';
       if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
+        errorMessage = 'No account found for that email address.';
       } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password';
+        errorMessage = 'Incorrect password. Please try again.';
       } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address';
+        errorMessage = 'That does not look like a valid email address.';
       }
       Alert.alert('Sign In Error', errorMessage);
     }
@@ -68,7 +68,7 @@ export default function LoginScreen() {
     if (forgotDisabled) return;
     const target = email.trim();
     if (!target) {
-      Alert.alert('Email required', 'Please enter your email above to reset your password');
+      Alert.alert('Email required', 'Enter the email address for your account to receive a password reset link.');
       return;
     }
     setForgotDisabled(true);
@@ -78,7 +78,7 @@ export default function LoginScreen() {
         throw new Error('authService.sendPasswordReset is not available');
       }
   await mod.authService.sendPasswordReset(target);
-  Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox and spam folder.");
+  Alert.alert('Password reset', "If an account exists for that email, we'll send a reset link. Check your inbox (and spam) for the message.");
     } catch (err: any) {
       Alert.alert('Error', `Could not send reset email. ${err?.code || ''} ${err?.message || 'Try again later.'}`);
     } finally {

@@ -86,8 +86,8 @@ export default function SettingsScreen() {
       const available = await deviceAuth.isDeviceAuthAvailable();
       if (!available) {
         Alert.alert(
-          'Not Available', 
-          'Device authentication is not available on this device. Please make sure a device passcode is set up in your system settings.',
+          'Device authentication unavailable',
+          'Device authentication is not available or not configured. Ensure a device passcode or biometrics are set up in system settings.',
           [{ text: 'OK', onPress: () => setDeviceAuthEnabled(false) }]
         );
         setDeviceAuthEnabled(false);
@@ -98,8 +98,8 @@ export default function SettingsScreen() {
       const { success, error } = await deviceAuth.authenticateDevice('Authenticate to enable device passcode login');
       if (!success) {
         Alert.alert(
-          'Authentication Failed', 
-          error || 'Could not verify your identity with your device credentials',
+          'Authentication failed',
+          error || 'Could not verify your identity. Try again or check your device security settings.',
           [{ text: 'OK', onPress: () => setDeviceAuthEnabled(false) }]
         );
         setDeviceAuthEnabled(false);
@@ -109,7 +109,7 @@ export default function SettingsScreen() {
       // Successfully authenticated - enable device login
       await deviceAuth.setDeviceEnabled(true);
       setDeviceAuthEnabled(true);
-      Alert.alert('Enabled', 'Device passcode login enabled. You can now unlock the app with your device credentials.');
+      Alert.alert('Enabled', 'Device passcode login is enabled. You can now unlock the app with your device credentials.');
     } catch (err) {
       Alert.alert('Error', 'Failed to enable device login. Please try again.');
       setDeviceAuthEnabled(false);
@@ -133,9 +133,9 @@ export default function SettingsScreen() {
             try {
               const uid = userProfile?.uid;
               await receiptService.deleteAll(uid);
-              Alert.alert('Data Cleared', 'All scanned data has been permanently deleted.');
+              Alert.alert('Data cleared', 'All scanned receipts stored on this device have been permanently deleted.');
             } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to clear scanned data, Please try again later.');
+              Alert.alert('Error', err?.message || 'Failed to clear scanned data. Please try again later.');
             }
           },
         },

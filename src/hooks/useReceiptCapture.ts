@@ -123,7 +123,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
       const apiKey = extras?.OCR_SPACE_API_KEY || process.env.OCR_SPACE_API_KEY || '';
       if (!apiKey) {
         if (!skipOverlay) setProcessing(false);
-        Alert.alert('Missing API Key', 'Set OCR_SPACE_API_KEY in app config (app.json) or process.env');
+        Alert.alert('OCR API key missing', 'OCR API key not found. Add `OCR_SPACE_API_KEY` to your app config (app.json) or environment configuration.');
         return;
       }
 
@@ -136,17 +136,17 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
         const draft = draftIdArg ?? draftReceiptId ?? null;
         pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri ?? null, amount: null };
         if (!skipOverlay) {
-          showConfirmationPrompt('No amount detected', {
-            onConfirm: async () => {
-              await saveAndNavigate(0, draft, ocrText || null, photoUri || null);
-            },
-            onEnterManually: () => handleManualEntry(null),
-            onRescan: async () => {
-              await discardDraft(draft);
-              resetWorkflowState();
-              onResetCamera?.();
-            },
-          });
+          // Do not allow saving a receipt with no detected amount (0). Prompt
+          // the user to enter the amount manually or to rescan instead.
+          Alert.alert(
+            'No amount detected',
+            'We could not detect a total on this receipt. Enter the amount manually or rescan the receipt.',
+            [
+              { text: 'Enter manually', onPress: () => handleManualEntry(null) },
+              { text: 'Rescan', onPress: async () => { await discardDraft(draft); resetWorkflowState(); onResetCamera?.(); } },
+            ],
+            { cancelable: true }
+          );
         }
         return;
       }
@@ -200,7 +200,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
         },
       });
     } catch (err: any) {
-      if (!skipOverlay) Alert.alert('OCR Error', err?.message || 'Failed to process receipt');
+      if (!skipOverlay) Alert.alert('OCR Error', err?.message || 'Could not process the receipt. Please try again or check your network.');
       if (onSuggestion) onSuggestion(null, null);
     } finally {
       if (!skipOverlay) setProcessing(false);

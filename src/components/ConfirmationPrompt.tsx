@@ -23,7 +23,11 @@ export function showConfirmationPrompt(displayAmount: string, handlers: Handlers
     { text: 'Rescan', onPress: () => { try { handlers.onRescan(); } catch (e) {} } },
   ];
 
-  Alert.alert('Confirm scanned total', displayAmount, buttons, { cancelable: true });
+  const message = typeof displayAmount === 'string' && displayAmount.trim()
+    ? `We detected ${displayAmount} from this receipt.`
+    : 'No amount detected. Enter the total manually or rescan the receipt.';
+
+  Alert.alert('Confirm scanned total', message, buttons, { cancelable: true });
 }
 
 export default showConfirmationPrompt;
