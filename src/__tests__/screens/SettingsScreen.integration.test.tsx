@@ -91,7 +91,7 @@ describe('SettingsScreen', () => {
 
     await waitFor(() => expect(deviceAuth.authenticateDevice).toHaveBeenCalled());
     expect(deviceAuth.setDeviceEnabled).toHaveBeenCalledWith(true);
-    expect(alertSpy).toHaveBeenCalledWith('Enabled', expect.stringContaining('Device passcode login enabled successfully'));
+    expect(alertSpy).toHaveBeenCalledWith('Enabled', expect.stringContaining('Device passcode login enabled'));
   });
 
   it('confirms sign out before calling AuthContext', async () => {
