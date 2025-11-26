@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TextStyle, StyleProp } from 'react-native';
+import { View, StyleSheet, TextStyle, StyleProp } from 'react-native';
+import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing } from '../styles/theme';
 
@@ -30,7 +31,7 @@ export default function IconValue({ iconName, iconSize = 28, iconColor, value, v
   return (
     <View style={styles.container}>
       <Ionicons name={iconName} size={iconSize} color={iconColor} />
-      <Text style={valueStyle}>{value}</Text>
+      <AppText style={valueStyle}>{value}</AppText>
     </View>
   );
 }

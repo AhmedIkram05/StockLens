@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import AppText from './AppText';
 import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
@@ -26,9 +27,9 @@ export default function AuthFooter({ prompt = '', actionText, onPress, style }: 
   
   return (
     <View style={[styles.container, style]}>
-      {prompt ? <Text style={[styles.prompt, { color: theme.textSecondary }]}>{prompt}</Text> : null}
+      {prompt ? <AppText style={[styles.prompt, { color: theme.textSecondary }]}>{prompt}</AppText> : null}
       <TouchableOpacity style={[styles.button, { backgroundColor: theme.surface, borderColor: brandColors.green }]} onPress={onPress} accessibilityRole="button">
-        <Text style={styles.buttonText}>{actionText}</Text>
+        <AppText style={styles.buttonText}>{actionText}</AppText>
       </TouchableOpacity>
     </View>
   );

@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
+import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
@@ -49,14 +50,14 @@ export default function ExpandableCard({
       <Ionicons name={icon} size={22} color={iconColor} style={styles.icon} />
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+          <AppText style={[styles.title, { color: theme.text }]}>{title}</AppText>
           <Ionicons
             name={isExpanded ? 'chevron-up' : 'chevron-down'}
             size={20}
             color={theme.textSecondary}
           />
         </View>
-        <Text style={[styles.description, { color: theme.textSecondary }]}>{description}</Text>
+        <AppText style={[styles.description, { color: theme.textSecondary }]}>{description}</AppText>
 
         {isExpanded && expandedContent && (
           <View style={styles.expandedContent}>{expandedContent}</View>

@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import AppText from './AppText';
 import EmptyState from './EmptyState';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -53,13 +54,13 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: brandColors.white }]}>1</Text>
+            <AppText style={[styles.numberText, { color: brandColors.white }]}>1</AppText>
           </View>
           <View style={styles.cardContent}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Scan Your Receipts</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>
+            <AppText style={[styles.cardTitle, { color: theme.text }]}>Scan Your Receipts</AppText>
+            <AppText style={[styles.cardSubtitle, { color: theme.textSecondary }]}> 
               Take photos of your spending to track expenses
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -68,13 +69,13 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: brandColors.white }]}>2</Text>
+            <AppText style={[styles.numberText, { color: brandColors.white }]}>2</AppText>
           </View>
           <View style={styles.cardContent}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>See Investment Potential</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>
+            <AppText style={[styles.cardTitle, { color: theme.text }]}>See Investment Potential</AppText>
+            <AppText style={[styles.cardSubtitle, { color: theme.textSecondary }]}> 
               Discover what your spending could be worth if invested
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -83,13 +84,13 @@ export const EmptyStateWithOnboarding: React.FC<EmptyStateWithOnboardingProps> =
             styles.numberCircle,
             { backgroundColor: theme.primary, width: circleSize, height: circleSize }
           ]}>
-            <Text style={[styles.numberText, { color: brandColors.white }]}>3</Text>
+            <AppText style={[styles.numberText, { color: brandColors.white }]}>3</AppText>
           </View>
           <View style={styles.cardContent}>
-            <Text style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>
+            <AppText style={[styles.cardTitle, { color: theme.text }]}>Track Your Progress</AppText>
+            <AppText style={[styles.cardSubtitle, { color: theme.textSecondary }]}> 
               Monitor your spending patterns and missed investment opportunities
-            </Text>
+            </AppText>
           </View>
         </View>
       </View>

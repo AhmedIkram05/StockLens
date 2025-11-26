@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { Pressable, View, Text, StyleSheet, ViewStyle, Platform } from 'react-native';
+import { Pressable, View, StyleSheet, ViewStyle, Platform } from 'react-native';
+import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
@@ -33,7 +34,7 @@ export default function SettingRow({ icon, iconBgColor, title, subtitle, right, 
   const { theme } = useTheme();
 
   const Title = (
-    <Text style={[styles.title, { color: theme.text }, destructive && { color: theme.error }]}>{title}</Text>
+    <AppText style={[styles.title, { color: theme.text }, destructive && { color: theme.error }]}>{title}</AppText>
   );
 
   return (
@@ -55,7 +56,7 @@ export default function SettingRow({ icon, iconBgColor, title, subtitle, right, 
 
       <View style={styles.content}>
         {Title}
-        {subtitle ? <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</Text> : null}
+        {subtitle ? <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</AppText> : null}
       </View>
 
       <View style={styles.right}>{right}</View>

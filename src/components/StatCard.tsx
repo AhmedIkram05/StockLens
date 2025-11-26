@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import AppText from './AppText';
 import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
 
@@ -32,9 +33,9 @@ export default function StatCard({ value, label, subtitle, variant = 'white', st
 
   return (
     <View style={[styles.card, { backgroundColor: bg }, style]}>
-      <Text style={[styles.value, { color: textColor }]}>{value}</Text>
-      {label ? <Text style={[styles.label, { color: textColor }]}>{label}</Text> : null}
-      {subtitle ? <Text style={[styles.subtitle, { color: textColor, opacity: 0.85 }]}>{subtitle}</Text> : null}
+      <AppText style={[styles.value, { color: textColor }]}>{value}</AppText>
+      {label ? <AppText style={[styles.label, { color: textColor }]}>{label}</AppText> : null}
+      {subtitle ? <AppText style={[styles.subtitle, { color: textColor, opacity: 0.85 }]}>{subtitle}</AppText> : null}
     </View>
   );
 }

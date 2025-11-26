@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { brandColors, useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows } from '../styles/theme';
@@ -24,11 +25,11 @@ export default function EmptyState({ iconName = 'checkmark-circle', title, subti
   return (
     <View style={styles.container}>
       <Ionicons name={iconName as any} size={96} color={brandColors.green} />
-      <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-      {subtitle ? <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</Text> : null}
+      <AppText style={[styles.title, { color: theme.text }]}>{title}</AppText>
+      {subtitle ? <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>{subtitle}</AppText> : null}
       {primaryText ? (
         <TouchableOpacity style={styles.button} onPress={onPrimaryPress} accessibilityRole="button">
-          <Text style={styles.buttonText}>{primaryText}</Text>
+          <AppText style={styles.buttonText}>{primaryText}</AppText>
         </TouchableOpacity>
       ) : null}
     </View>

@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import AppText from './AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { brandColors } from '../contexts/ThemeContext';
@@ -63,34 +64,34 @@ export default function StockCard({ name, ticker, futureDisplay, formattedAmount
             end={{ x: 1, y: 1 }}
             style={styles.badge}
           >
-            <Text style={styles.badgeText}>{badgeText}</Text>
+            <AppText style={styles.badgeText}>{badgeText}</AppText>
           </LinearGradient>
         </View>
       ) : null}
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
+          <AppText style={[styles.name, { color: theme.text }]} numberOfLines={1} ellipsizeMode="tail">{name}</AppText>
         </View>
-        {ticker ? <Text style={[styles.ticker, { color: brandColors.blue }]}>{ticker}</Text> : null}
+        {ticker ? <AppText style={[styles.ticker, { color: brandColors.blue }]}>{ticker}</AppText> : null}
       </View>
 
       <View style={styles.valueContainerCentered}>
-        <Text style={[styles.value, { color: theme.text }]}>{futureDisplay}</Text>
+        <AppText style={[styles.value, { color: theme.text }]}>{futureDisplay}</AppText>
       </View>
 
       <View style={styles.dividerHorizontal} />
 
       <View style={styles.footer}>
         <View style={styles.footerItem}>
-          <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Return</Text>
-          <Text style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</Text>
+          <AppText style={[styles.footerLabel, { color: theme.textSecondary }]}>Return</AppText>
+          <AppText style={[styles.footerValue, { color: valueColor }]}>{percentDisplay}</AppText>
         </View>
 
         <View style={styles.dividerVertical} />
 
         <View style={styles.footerItem}>
-          <Text style={[styles.footerLabel, { color: theme.textSecondary }]}>Gained</Text>
-          <Text style={[styles.footerValue, { color: valueColor }]}>{gainDisplay}</Text>
+          <AppText style={[styles.footerLabel, { color: theme.textSecondary }]}>Gained</AppText>
+          <AppText style={[styles.footerValue, { color: valueColor }]}>{gainDisplay}</AppText>
         </View>
       </View>
     </TouchableOpacity>

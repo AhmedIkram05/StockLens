@@ -6,7 +6,8 @@
 
 import React from 'react';
 import useDecryptedImage from '@/hooks/useDecryptedImage';
-import { View, Text, Image, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import AppText from './AppText';
 import { useTheme } from '../contexts/ThemeContext';
 import { radii, spacing, typography, shadows, sizes } from '../styles/theme';
 
@@ -44,11 +45,11 @@ export default function ReceiptCard({ image, amount, label, time, onPress, style
         <View testID="receipt-card-placeholder" style={styles.placeholder} />
       )}
       <View style={styles.info}>
-        <Text style={[styles.amount, { color: theme.text }]}>{amount}</Text>
-        <Text style={[styles.label, { color: theme.textSecondary }]}>{label}</Text>
-        <Text style={[styles.time, { color: theme.textSecondary }]}>{time}</Text>
+        <AppText style={[styles.amount, { color: theme.text }]}>{amount}</AppText>
+        <AppText style={[styles.label, { color: theme.textSecondary }]}>{label}</AppText>
+        <AppText style={[styles.time, { color: theme.textSecondary }]}>{time}</AppText>
       </View>
-      <Text style={[styles.chevron, { color: theme.textSecondary }]}>›</Text>
+      <AppText style={[styles.chevron, { color: theme.textSecondary }]}>›</AppText>
     </TouchableOpacity>
   );
 }

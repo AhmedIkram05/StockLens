@@ -5,7 +5,8 @@
  */
 
 import React, { useRef, useEffect, useState, Dispatch, SetStateAction } from 'react';
-import { View, TouchableOpacity, Text, Animated, ViewStyle, StyleProp } from 'react-native';
+import { View, TouchableOpacity, Animated, ViewStyle, StyleProp } from 'react-native';
+import AppText from './AppText';
 import { spacing, typography, radii, shadows } from '../styles/theme';
 import { brandColors } from '../contexts/ThemeContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -96,7 +97,7 @@ export default function YearSelector<T extends number = number>({ options, value
           }}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: segPadVert, marginHorizontal: spacing.xs / 2 }}
         >
-          <Text style={[typography.captionStrong, { color: o === value ? brandColors.white : theme.text, opacity: o === value ? 1 : 0.8 }]}>{o}Y</Text>
+          <AppText style={[typography.captionStrong, { color: o === value ? brandColors.white : theme.text, opacity: o === value ? 1 : 0.8 }]}>{o}Y</AppText>
         </TouchableOpacity>
       ))}
     </View>

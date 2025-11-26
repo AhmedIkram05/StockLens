@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import AppText from './AppText';
 import { useTheme } from '../contexts/ThemeContext';
 import { brandColors } from '../contexts/ThemeContext';
 import { radii, spacing, typography } from '../styles/theme';
@@ -42,7 +43,7 @@ export default function ReceiptsSorter({ sortBy, sortDirection, onSortChange }: 
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: theme.textSecondary }]}>Sort by:</Text>
+      <AppText style={[styles.label, { color: theme.textSecondary }]}>Sort by:</AppText>
       <View style={styles.optionsContainer}>
         {sortOptions.map((option) => (
           <TouchableOpacity
@@ -54,18 +55,18 @@ export default function ReceiptsSorter({ sortBy, sortDirection, onSortChange }: 
             ]}
             onPress={() => handleSortByChange(option.key)}
           >
-            <Text
+            <AppText
               style={[
                 styles.optionText,
                 { color: sortBy === option.key ? brandColors.white : theme.text },
               ]}
             >
               {option.label}
-            </Text>
+            </AppText>
             {sortBy === option.key && (
-              <Text style={[styles.directionText, { color: brandColors.white }]}>
+              <AppText style={[styles.directionText, { color: brandColors.white }]}>
                 {sortDirection === 'asc' ? '↑' : '↓'}
-              </Text>
+              </AppText>
             )}
           </TouchableOpacity>
         ))}

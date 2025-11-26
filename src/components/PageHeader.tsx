@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import AppText from './AppText';
 import { typography, spacing } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -28,7 +29,7 @@ export default function PageHeader({ children, subtitle, titleStyle, style }: Pr
   return (
     <View style={[styles.header, style]}>
       <View style={styles.left}>{children}</View>
-      {subtitle ? <Text style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>{subtitle}</Text> : null}
+      {subtitle ? <AppText style={[styles.subtitle, { color: theme.text, opacity: 0.7 }]}>{subtitle}</AppText> : null}
     </View>
   );
 }
