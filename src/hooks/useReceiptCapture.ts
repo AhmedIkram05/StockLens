@@ -140,7 +140,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
           // interface so callers/tests can inspect the handlers (enter manually,
           // rescan). The confirmation prompt will present options that map to
           // existing handlers in the flow.
-          showConfirmationPrompt('No amount detected', {
+          showConfirmationPrompt('No amount', {
             onConfirm: async () => {
               // Do not save when there is no amount — keep behavior consistent
               // by simply closing the overlay and leaving the draft as-is.
