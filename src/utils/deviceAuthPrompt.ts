@@ -15,11 +15,11 @@ export async function promptEnableDeviceAuth(email: string, password: string): P
 
     return new Promise<boolean>((resolve) => {
       Alert.alert(
-        'Enable device passcode login?',
+        'Enable Device Auth?',
         'Use your device passcode or biometrics to sign in faster and securely. Enable now?',
         [
           { 
-            text: 'Not now', 
+            text: 'No', 
             style: 'cancel', 
             onPress: async () => {
               try {
@@ -30,8 +30,8 @@ export async function promptEnableDeviceAuth(email: string, password: string): P
             }
           },
           {
-            text: 'Enable',
-            onPress: async () => {
+            text: 'Yes',
+                onPress: async () => {
               try {
                 await deviceAuth.saveDeviceCredentials(email, password);
                 Alert.alert('Enabled', 'Device passcode login enabled. You can now unlock the app with your device credentials.');

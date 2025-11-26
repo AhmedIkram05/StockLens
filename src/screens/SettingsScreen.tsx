@@ -109,7 +109,7 @@ export default function SettingsScreen() {
       // Successfully authenticated - enable device login
       await deviceAuth.setDeviceEnabled(true);
       setDeviceAuthEnabled(true);
-      Alert.alert('Enabled', 'Device passcode login is enabled. You can now unlock the app with your device credentials.');
+      Alert.alert('Enabled', 'Device passcode login enabled. You can now unlock the app with your device credentials.');
     } catch (err) {
       Alert.alert('Error', 'Failed to enable device login. Please try again.');
       setDeviceAuthEnabled(false);

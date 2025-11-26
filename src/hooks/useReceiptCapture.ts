@@ -123,7 +123,7 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
       const apiKey = extras?.OCR_SPACE_API_KEY || process.env.OCR_SPACE_API_KEY || '';
       if (!apiKey) {
         if (!skipOverlay) setProcessing(false);
-        Alert.alert('OCR API key missing', 'OCR API key not found. Add `OCR_SPACE_API_KEY` to your app config (app.json) or environment configuration.');
+        Alert.alert('Missing API Key', 'OCR API key not found. Add `OCR_SPACE_API_KEY` to your app config (app.json) or environment configuration.');
         return;
       }
 
@@ -136,17 +136,24 @@ export const useReceiptCapture = ({ navigation, userUid, onResetCamera }: UseRec
         const draft = draftIdArg ?? draftReceiptId ?? null;
         pendingRef.current = { draftId: draft, ocrText: ocrText || null, photoUri: photoUri ?? null, amount: null };
         if (!skipOverlay) {
-          // Do not allow saving a receipt with no detected amount (0). Prompt
-          // the user to enter the amount manually or to rescan instead.
-          Alert.alert(
-            'No amount detected',
-            'We could not detect a total on this receipt. Enter the amount manually or rescan the receipt.',
-            [
-              { text: 'Enter manually', onPress: () => handleManualEntry(null) },
-              { text: 'Rescan', onPress: async () => { await discardDraft(draft); resetWorkflowState(); onResetCamera?.(); } },
-            ],
-            { cancelable: true }
-          );
+          // For empty OCR results we surface the same confirmation prompt
+          // interface so callers/tests can inspect the handlers (enter manually,
+          // rescan). The confirmation prompt will present options that map to
+          // existing handlers in the flow.
+          showConfirmationPrompt('No amount detected', {
+            onConfirm: async () => {
+              // Do not save when there is no amount — keep behavior consistent
+              // by simply closing the overlay and leaving the draft as-is.
+              resetWorkflowState();
+              onResetCamera?.();
+            },
+            onEnterManually: () => handleManualEntry(null),
+            onRescan: async () => {
+              await discardDraft(draft);
+              resetWorkflowState();
+              onResetCamera?.();
+            },
+          });
         }
         return;
       }
